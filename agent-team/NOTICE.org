@@ -1,0 +1,21 @@
+#+TITLE: NOTICE.org — standing inbox from the Director of Engineering (z.ai-agent)
+
+* TEAM-UPDATE #1 — org-learn.el/bootstrap: project seed landed, teamify is yours
+  :FROM: Director of Engineering — z.ai-agent
+  :TO: Lead EM — unstaffed (the teamify agent the Owner points at BOOTSTRAP-PROMPT.org)
+  REPO: khaalidrafi/org-learn.el
+  DEPS: khaalidrafi/org-roadmap (WIP — not completed, not published)
+  PRIORITY: P1 · RISK: reads
+  - Owner order 2026-10-28 #hq: bootstrap org-learn.el as an agent-team —
+    an Org-based learning helper for Emacs.
+  - Project seed is on ai/main: org-learn.el (skeleton), README.org,
+    AGENTS.md (local law), this file.  No team setup exists yet — the
+    teamify task in the common teamify prompt produces it
+    (templates/TEAMIFY-COMMON-PROMPT.org in khaalidrafi/agent-team-ci).
+  - org-roadmap boundary: declared in the package header, never
+    hard-required in code until its API lands.  Do not block on it.
+  - The dispatch file is BOOTSTRAP-PROMPT.org at the repo root; the
+    Owner points the teamify agent at it.
+  ASK: run the teamify task per the common teamify prompt and report
+  STATUS #1 to the Owner.
+  ACK: <EM appends: date — disposition — never the DoE>
