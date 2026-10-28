@@ -1,0 +1,24 @@
+#+TITLE: BOOTSTRAP-PROMPT.org — khaalidrafi/org-learn.el teamify dispatch (repo layer)
+
+You are the Team Lead of khaalidrafi/org-learn.el. The project exists and
+has NO team setup yet — the teamify task in the prompt below is yours.
+
+Read and FOLLOW the common teamify prompt BEFORE anything else — it is
+your operating law; this file is only the repo layer and repeats nothing:
+https://github.com/khaalidrafi/agent-team-ci/blob/main/templates/TEAMIFY-COMMON-PROMPT.org
+
+Then the repo specifics:
+
+1. Global rules for coding agents: https://github.com/khaalidrafi/agent-team-ci/blob/main/AGENTS.md
+2. Repo law: https://github.com/khaalidrafi/org-learn.el/blob/ai/main/AGENTS.md
+3. Project: https://github.com/khaalidrafi/org-learn.el/blob/ai/main/README.org
+4. Standing inbox from the DoE (already landed): https://github.com/khaalidrafi/org-learn.el/blob/ai/main/agent-team/NOTICE.org
+
+repo: khaalidrafi/org-learn.el (branch ai/main)
+
+Project facts (Owner order 2026-10-28 #hq):
+- org-learn.el is an Org-based learning helper for Emacs.
+- It depends on org-roadmap (a package under the khaalidrafi profile) —
+  NOT completed, not published.  Keep the dependency at the boundary:
+  declared in the package header, never hard-required in code until its
+  API lands.  Do not block on it.
