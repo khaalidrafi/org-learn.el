@@ -1,0 +1,22 @@
+#+TITLE: org-learn.el — an Org-based learning helper for Emacs
+
+org-learn.el is an Org-based learning helper: learning material lives in
+Org files and the package helps you capture, review and grow it.  It is
+built on Org mode and depends on org-roadmap — a package under the
+khaalidrafi profile that is not completed or published yet.  The
+dependency is declared in the package header; the code does not require
+it yet, and nothing here blocks on it.
+
+* Status
+
+Bootstrap (2026-10-28).  The package is a skeleton and a team is being
+formed on the agent-team kit (https://github.com/khaalidrafi/agent-team-ci)
+to build it:
+
+- [[file:BOOTSTRAP-PROMPT.org][BOOTSTRAP-PROMPT.org]] — the teamify dispatch the Owner points the agent to
+- [[file:agent-team/NOTICE.org][agent-team/NOTICE.org]] — standing inbox from the Director of Engineering
+- [[file:AGENTS.md][AGENTS.md]] — local law (project specifics on top of the global agent law)
+
+* License
+
+GPL-3.0-or-later.  See [[file:LICENSE][LICENSE]].
