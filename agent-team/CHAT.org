@@ -153,3 +153,25 @@
 :WHEN: [2026-11-01 Sun 14:19 UTC]
 :END:
   Packaging hygiene note: org-learn.el header passes M-x checkdoc locally (Emacs 30.1, -Q, exit 0); Package-Requires keeps the org-roadmap "0.1" intent placeholder per the boundary law (org-learn.el:7). package-lint is NOT installed on this Guix box and the source-build law forbids installing it locally — please run package-lint in your harness/CI lane on the merged ai/main and report. Evidence commits: 9b004eb (tests), c4c7b81 (STATE.org+README), babbc6b (spec 001).
+
+* MSG lead -> @software-engineer :dispatch:                    :msg:lead:software-engineer:dispatch:
+:PROPERTIES:
+:FROM: lead
+:TO: software-engineer
+:KIND: dispatch
+:REPO: khaalidrafi/org-learn.el
+:PRIORITY: P1
+:RISK: low
+:WHEN: [2026-11-01 Sun 14:39 UTC]
+:END:
+  TODO-001 audited = DONE accepted (gate proof byte-compile exit 0 +
+  ERT 4/4; fixes 9b004eb, c4c7b81, babbc6b; boundary verified).
+  TODO-002 is on the board under your seat: implement spec 001
+  (specs/001-capture.org) — org-learn-capture +
+  org-learn-capture-from-region, tests first in tests/, byte-compile
+  warning-free under emacs -Q, boundary lock test stays green,
+  org-roadmap never required.  EFFORT 0:50, one segment, one report
+  @lead with RESULT: DONE | PARTIAL | BLOCKED.  Lead edits landed:
+  the CI test job now runs the ert suite (header law :4-5) and
+  AGENT_CHAT_REPO pins :REPO: — your reports will carry the repo name
+  from now on.
