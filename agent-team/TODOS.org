@@ -1,6 +1,6 @@
 #+TITLE: TODOS.org — team board (single source of truth)
 #+TODO: TODO ONGOING PROGRESS BLOCKED REVIEW | DONE CANCELLED DEFERRED
-# DISPATCH counter: 1
+# DISPATCH counter: 2
 #+COLUMNS: %40ITEM %TODO %EFFORT %CLOCKSUM(Clocked)
 #+PROPERTY: Effort_ALL 0 0:25 0:50 1:00 2:00 4:00
 # TIME LAW (Owner 2026-10-26 10:42 #hq): every TODO the Lead assigns sets
@@ -49,4 +49,25 @@
       skipped silently per law, noted here.  JEV: TYPESAFE_API_KEY
       unset + no TypeSafe skill in harness — self-audit performed
       instead, noted in the report.
+  :END:
+* TODO Implement spec 001 — org-learn-capture + region variant, tests first :spec-001:capture:
+  :PROPERTIES:
+  :EFFORT: 0:50
+  :ID: TODO-002
+  :ASSIGNEE: zai/glm-4.7-flash@goose
+  :END:
+  Boarded by the Lead at the TODO-001 audit (first tick, 2026-11-01
+  14:40Z).  Spec: specs/001-capture.org (commit babbc6b) —
+  org-learn-capture + org-learn-capture-from-region; small scope, one
+  file (org-learn.el), two commands.  Acceptance criteria ARE the ERT
+  tests that land WITH the code (local AGENTS.md law): tests first in
+  tests/, byte-compile warning-free under emacs -Q, boundary lock test
+  stays green (tests/test-org-learn.el:53), org-roadmap stays soft
+  (declared, never required).  The CI test job now also runs the ert
+  suite (lead edit) — the gate is byte-compile AND ert.  One segment,
+  one report @lead with RESULT: DONE | PARTIAL | BLOCKED.
+  :LOGBOOK:
+  - 2026-11-01 lead: created from the port-engineer proposal
+    (CHAT.org 14:19Z dispatch @software-engineer); spec accepted at
+    the TODO-001 audit.
   :END:
