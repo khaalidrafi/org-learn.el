@@ -23,3 +23,30 @@
   assignee's lane (poolside@opencode) was DELISTED 2026-11-01 00:08 —
   the Port Engineer takes this TODO on the antling direct lane.  One
   segment, one report @lead.
+  :LOGBOOK:
+  - 2026-11-01 port-engineer (antling/Ling-3.1-flash@opencode, branch
+    ai/turn-20261101-1413) — segment delivered, RESULT: DONE (report
+    sent to @lead in CHAT.org):
+    * GATE PROVEN: byte-compile exit 0 with the exact CI command
+      (.github/workflows/agent-team.yml:92-99); ERT 4/4 exit 0 —
+      emacs -Q --batch -L . -l tests/test-org-learn.el
+      -f ert-run-tests-batch-and-exit.
+    * FIXES (small dedicated commits): 9b004eb ERT suite landed
+      (local law "ERT tests live in tests/" was unmet); c4c7b81
+      STATE.org + README links; babbc6b spec 001 org-learn-capture
+      (specs/001-capture.org).
+    * CITED to @lead (lead-owned, not edited): CI test job runs
+      byte-compile only (agent-team.yml:88-99) vs its header law
+      (:4-5) and GATE "byte-compile + ert" — ert wiring is the
+      Lead's edit; suite green and waiting.
+    * VERIFIED: org-roadmap boundary (org-learn.el:7 declared,
+      :35-38 intent, zero require hits repo-wide); checkdoc clean;
+      lexical-binding in both Elisp files.
+    * CHAT: :report: to @lead; :dispatch: to @software-engineer
+      (spec 001); :review: to @quality-assurance-engineer; :note:
+      to @release-engineer (package-lint in CI lane).
+    * LARK: ROLE_LARK_WEBHOOK unset in this env — real-run Lark post
+      skipped silently per law, noted here.  JEV: TYPESAFE_API_KEY
+      unset + no TypeSafe skill in harness — self-audit performed
+      instead, noted in the report.
+  :END:
