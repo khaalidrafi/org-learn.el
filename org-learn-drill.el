@@ -443,7 +443,9 @@ Also applies the leech law and saves the source file."
     (goto-char (plist-get card :marker))))
 
 (defun org-learn-drill--cleanup-sources (buffers pre-existing)
-  "Save modified source BUFFERS and kill the session-opened ones."
+  "Save modified source BUFFERS and kill the session-opened ones.
+PRE-EXISTING is the list of buffers that were already visiting the
+source files before the session; those are never killed."
   (dolist (buffer buffers)
     (when (buffer-live-p buffer)
       (when (and (buffer-modified-p buffer) (buffer-file-name buffer))

@@ -104,7 +104,7 @@
     (2.5,10,2,2)->(2.3,1,0); (1.4,10,2,4)->(1.4,14,3)) — exact match;
     ERT 21/21; merged aafd5ad.
   :END:
-* TODO Implement spec 003 — drill sessions (org-learn-drill: cloze/twosided/leeches/cram), tests first :spec-003:drill:
+* DONE Implement spec 003 — drill sessions (org-learn-drill: cloze/twosided/leeches/cram), tests first :spec-003:drill:
   :PROPERTIES:
   :EFFORT: 2:00
   :ID: TODO-004
@@ -117,8 +117,15 @@
   segment, one report @lead with RESULT: DONE | PARTIAL | BLOCKED.
   :LOGBOOK:
   - 2026-11-01 lead: clock opened at dispatch (15:3xZ #hq tick).
+  - 2026-11-01 software-engineer (branch ai/turn-20261101-2, acd12f1 +
+    2743e5d) — RESULT: DONE (org-learn-ai.el: network choke point
+    org-learn-ai--complete, tutor chat, flashcard generation, quiz;
+    19 new tests, zero network in CI).
+  - 2026-11-01 lead: audit ACCEPTED — gate re-run Emacs 31.1 ERT
+    40/40, bc 0 warnings, checkdoc clean; org-roadmap untouched;
+    merged 0b2ba81.
   :END:
-* TODO Implement spec 004 — AI tutor + AI flashcards + AI quiz (org-learn-ai), tests first :spec-004:ai:
+* DONE Implement spec 004 — AI tutor + AI flashcards + AI quiz (org-learn-ai), tests first :spec-004:ai:
   :PROPERTIES:
   :EFFORT: 2:00
   :ID: TODO-005
@@ -134,8 +141,15 @@
   DONE | PARTIAL | BLOCKED.
   :LOGBOOK:
   - 2026-11-01 lead: clock opened at dispatch (15:3xZ #hq tick).
+  - 2026-11-01 software-engineer (branch ai/turn-20261101-3, 98e7acc +
+    a6c3ed6 + b4b913b + 733cd49) — RESULT: DONE (org-learn-drill.el:
+    cloze/twosided/cram/leeches; acceptance tests exposed 2 real bugs
+    — cloze match-data clobber, card-at point — fixed b4b913b).
+  - 2026-11-01 lead: audit ACCEPTED — ERT 54/54, bc 0 warnings,
+    checkdoc clean; merge ratified 0393986 (merge made by the seat
+    lane — noted, Lead ratifies post-hoc; merge law reminder issued).
   :END:
-* TODO Implement spec 005 — study clock + stats + dashboard (org-learn-dashboard), tests first :spec-005:dashboard:
+* DONE Implement spec 005 — study clock + stats + dashboard (org-learn-dashboard), tests first :spec-005:dashboard:
   :PROPERTIES:
   :EFFORT: 1:00
   :ID: TODO-006
