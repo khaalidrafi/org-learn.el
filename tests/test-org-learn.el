@@ -17,12 +17,9 @@
 ;;; Commentary:
 
 ;; ERT suite for the org-learn bootstrap skeleton.  It runs under the
-;; same batch Emacs the CI gate uses, so the gate proof is reproducible
-;; locally and in CI:
-;;
-;;   emacs -Q --batch -L . -l tests/test-org-learn.el \
-;;         -f ert-run-tests-batch-and-exit
-;;
+;; same batch Emacs (invoked with -Q) and the same
+;; `ert-run-tests-batch-and-exit' entry point the CI gate uses, so the
+;; gate proof is reproducible locally and in CI.
 ;; Suite law (repo AGENTS.md): every public behavior lands with a
 ;; test; the org-roadmap boundary is locked here too.  Spec 001
 ;; (capture) acceptance criteria land here too -- tests first, the
@@ -50,7 +47,7 @@
     count))
 
 (ert-deftest org-learn-open-visits-the-notes-file ()
-  "org-learn-open visits `org-learn-file' via find-file."
+  "`org-learn-open' visits `org-learn-file' via `find-file'."
   (let ((org-learn-file (make-temp-file "org-learn-test-" nil ".org")))
     (unwind-protect
         (progn
@@ -61,7 +58,7 @@
         (when buf (kill-buffer buf))))))
 
 (ert-deftest org-learn-open-is-an-interactive-command ()
-  "org-learn-open is a command, so M-x org-learn-open works."
+  "`org-learn-open' is a command, so it can be invoked by name."
   (should (commandp 'org-learn-open)))
 
 (ert-deftest org-learn-default-notes-file ()
@@ -110,8 +107,12 @@ property drawer with an ISO-8601 timestamp."
                           "^#\\+TITLE:" content)))
             (should (= 2 (org-learn-test-count-matches
                           "^\\* TODO " content)))
+            ;; First note precedes Second note.  The any-char
+            ;; alternative is the Emacs idiom for PCRE's [\s\S]:
+            ;; inside a character alternative \s introduces a syntax
+            ;; class, so [\s\S] would match only "S" and backslash.
             (should (string-match-p
-                     "\\* TODO First note[\\s\\S]*\\* TODO Second note"
+                     "\\* TODO First note\\(?:.\\|\n\\)*\\* TODO Second note"
                      content))))
       (when (file-exists-p file) (delete-file file)))))
 
@@ -145,7 +146,7 @@ heading body."
       (when (file-exists-p file) (delete-file file)))))
 
 (ert-deftest org-learn-capture-commands-are-interactive-commands ()
-  "Spec 001: both capture entry points are commands (M-x works)."
+  "Spec 001: both capture entry points are commands, runnable by name."
   (should (commandp 'org-learn-capture))
   (should (commandp 'org-learn-capture-from-region)))
 
@@ -183,4 +184,22 @@ with an ellipsis."
   (should (string-suffix-p "..."
                            (org-learn--truncate-title (make-string 100 ?x)))))
 
-;;; tests/test-org-learn.el ends here
+;;; Review scheduler tests (spec 002) -- loaded here so the single CI
+;;; entry (one -l of this file) runs the whole suite.
+
+(load (expand-file-name "tests/test-org-learn-review.el" default-directory))
+
+;;; AI tutor tests (spec 004) -- same single-entry law.
+
+(load (expand-file-name "tests/test-org-learn-ai.el" default-directory))
+
+;;; Drill session tests (spec 003) -- same single-entry law.
+
+(load (expand-file-name "tests/test-org-learn-drill.el" default-directory))
+
+;;; Dashboard tests (spec 005) -- same single-entry law.
+
+(load (expand-file-name "tests/test-org-learn-dashboard.el" default-directory))
+
+(provide 'test-org-learn)
+;;; test-org-learn.el ends here

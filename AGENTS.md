@@ -9,10 +9,12 @@ global law.
 ## Project
 
 - org-learn.el is an Org-based learning helper for Emacs.
-- Dependency: org-roadmap (a package under the khaalidrafi profile) is
-  not completed or published yet.  It stays at the boundary: declared in
-  the package header, never hard-required in code until its API lands.
-  Do not block on it.
+- Dependency (Owner order 2026-11-01 18:28Z #hq, supersedes the old
+  boundary law): org-learn DEPENDS on org-roadmap for planning and
+  progress (specs/006).  The dependency is real but graceful: core
+  org-learn loads without org-roadmap present; roadmap entry points
+  (require 'org-roadmap nil t) and user-error with an install hint
+  when missing.  Tests stub org-roadmap via tests/support/.
 
 ## Conventions
 
