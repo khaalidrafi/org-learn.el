@@ -12,9 +12,14 @@
   :PROPERTIES:
   :EFFORT: 1:00
   :ID: TODO-001
-  :ASSIGNEE: openrouter/poolside/laguna-s-2.1:free@opencode
+  :ASSIGNEE: antling/Ling-3.1-flash@opencode
   :END:
   Owner order 2026-11-01 #hq: 'Teamify them.'  Dispatched by the Lead in
   agent-team/CHAT.org (MSG lead -> @principal-engineer).  One segment, one
   report: @lead with RESULT: DONE | PARTIAL | BLOCKED.  pause-after-todo is
   ON — the chain halts for the Lead's audit after this delivers.
+
+  RE-DISPATCH (docneural-lead, 2026-11-01 09:45Z): the original
+  assignee's lane (poolside@opencode) was DELISTED 2026-11-01 00:08 —
+  the Port Engineer takes this TODO on the antling direct lane.  One
+  segment, one report @lead.
