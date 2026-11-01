@@ -817,25 +817,8 @@ jobs:
           SID=""; [ -s "$SID_FILE" ] && SID="$(cat "$SID_FILE")"
           mkdir -p "$SID_DIR"
           printf '%s\n' "$BRIEF" > /tmp/segment-brief.txt
-          case "$SEAT" in
-            principal-engineer)
-              BATCH_PROVIDER=opencode
-              BATCH_MODEL="openrouter/poolside/laguna-s-2.1:free"
-              BATCH_CMD="opencode acp" ;;
-            software-engineer|release-engineer)
-              BATCH_PROVIDER=goose
-              BATCH_MODEL="glm-4.7-flash"
-              BATCH_CMD="env GOOSE_PROVIDER=openai GOOSE_MODEL=glm-4.7-flash OPENAI_API_KEY=$ZAI_API_KEY OPENAI_HOST=https://api.z.ai OPENAI_BASE_PATH=/api/paas/v4/chat/completions goose acp" ;;
-            quality-assurance-engineer)
-              BATCH_PROVIDER=opencode
-              BATCH_MODEL="zai/glm-4.7-flash"
-              BATCH_CMD="opencode acp" ;;
-            platform-engineer)
-              BATCH_PROVIDER=qoder
-              BATCH_MODEL=""
-              BATCH_CMD="env HOME=/usr/local/lib/qoder-home qoder --acp" ;;
-            *) BATCH_PROVIDER="" ;;
-          esac
+          source "$PWD/.github/scripts/turn-lanes.sh"
+          seat_batch_config "$SEAT"
           if [ -n "$BATCH_PROVIDER" ] && command -v emacs >/dev/null 2>&1 \
              && [ -f /opt/acp-site/acp.el ] && [ -f /opt/agent-org/agent-org-batch.el ]; then
             if env AGENT_ORG_PROVIDER="$BATCH_PROVIDER" \
@@ -862,102 +845,7 @@ jobs:
             echo "agent-org batch lane not baked in this image — direct CLI lane"
           fi
           if [ "${BATCH_DONE:-0}" != "1" ]; then
-          case "$SEAT" in
-            principal-engineer)
-              # OpenCode body + poolside: OpenCode cannot host the model
-              # (absent from its models.dev catalog — demo/01 evidence) and
-              # OpenRouter's free quota is exhausted. Attempt order:
-              # 1. opencode (in case the catalog/defect is repaired);
-              # 2. goose via OpenRouter poolside — SELF-HEALS the moment the
-              #    Owner adds ~10 credits (harness/01 item 1/2); OpenRouter
-              #    normalizes Goose's developer role server-side (demo/01
-              #    evidence: qwen3.8-27b worked via OpenRouter, Groq didn't).
-              if opencode run --print-logs --model "openrouter/poolside/laguna-s-2.1:free" "$BRIEF"; then
-                echo "TURN_RESULT=opencode run OK"
-              elif env GOOSE_PROVIDER=openai GOOSE_MODEL="poolside/laguna-s-2.1:free" \
-                   OPENAI_API_KEY="$OPENROUTER_API_KEY" \
-                   OPENAI_HOST="https://openrouter.ai/api/v1" \
-                   goose run --no-session -t "$BRIEF"; then
-                echo "TURN_RESULT=goose run OK (lane: openrouter/poolside@goose — credits landed)"
-              elif env GOOSE_PROVIDER=openai GOOSE_MODEL=minimax/minimax-m3.1-flash:free \
-                   OPENAI_API_KEY="$OPENROUTER_API_KEY" \
-                   OPENAI_HOST="https://openrouter.ai/api/v1" \
-                   goose run --no-session -t "$BRIEF"; then
-                echo "TURN_RESULT=goose run OK (lane: minimax-m3.1-flash:free@goose — promo hire 05:33Z)"
-              elif codebuddy -p "$BRIEF"; then
-                echo "TURN_RESULT=codebuddy run OK (lane: fallback codebuddy@cli — poolside dead)"
-              elif env HOME=/usr/local/lib/qoder-home \
-                   qoder -p "$BRIEF" --output-format json \
-                   --permission-mode accept_edits --max-turns 100; then
-                echo "TURN_RESULT=qoder run OK (lane: fallback qwen3.8@qoder — poolside dead)"
-              else
-                echo "TURN_RESULT=BLOCKED (poolside dead on opencode+goose, fallbacks codebuddy+qoder dead too — harness/01)"
-              fi
-              ;;
-            quality-assurance-engineer|software-engineer|release-engineer)
-              # LANE (mesh/01 repair, Lead, 2026-10-20 15:45Z): every lane on
-              # the hired/fallback brains is dead — Groq rejects the
-              # `developer` role Goose sends (400, req_01m5cqbghke9),
-              # OpenRouter free-models-per-day exhausted (chain evidence:
-              # "Add 10 credits"), OpenCode body headless-defective. The ONE
-              # live lane with its own quota: ZAI glm-4.7-flash — same
-              # OpenAI-compatible schema. Goose goes through its openai
-              # provider with OPENAI_HOST pointed at ZAI. Fallback: the
-              # rostered nemotron lane (in case OpenRouter quota resets).
-              if env GOOSE_PROVIDER=openai GOOSE_MODEL=glm-4.7-flash \
-                   OPENAI_API_KEY="$ZAI_API_KEY" \
-                   OPENAI_HOST="https://api.z.ai" \
-                   OPENAI_BASE_PATH="/api/paas/v4/chat/completions" \
-                   goose run --no-session -t "$BRIEF"; then
-                echo "TURN_RESULT=goose run OK (lane: zai/glm-4.7-flash@goose)"
-              elif env GOOSE_PROVIDER=openai GOOSE_MODEL=minimax/minimax-m3.1-flash:free \
-                   OPENAI_API_KEY="$OPENROUTER_API_KEY" \
-                   OPENAI_HOST="https://openrouter.ai/api/v1" \
-                   goose run --no-session -t "$BRIEF"; then
-                echo "TURN_RESULT=goose run OK (lane: minimax-m3.1-flash:free@goose — OpenRouter promo hire 05:33Z)"
-              elif goose run --no-session -t "$BRIEF"; then
-                echo "TURN_RESULT=goose run OK (lane: ${GOOSE_MODEL} — OpenRouter quota recovered)"
-              elif codebuddy -p "$BRIEF"; then
-                echo "TURN_RESULT=codebuddy run OK (lane: fallback codebuddy@cli — zai+openrouter dead)"
-              elif env HOME=/usr/local/lib/qoder-home \
-                   qoder -p "$BRIEF" --output-format json \
-                   --permission-mode accept_edits --max-turns 100; then
-                echo "TURN_RESULT=qoder run OK (lane: fallback qwen3.8@qoder — zai+openrouter dead)"
-              else
-                echo "TURN_RESULT=BLOCKED (all rostered lanes dead: zai+openrouter+codebuddy+qoder — harness/01)"
-              fi
-              ;;
-            platform-engineer)
-              # Acting Platform Engineer qwen3.8-flash@qoder — Qoder-on-CI
-              # PROOF dispatch (AUTH-READY 2026-10-21: Owner delivered the
-              # PAT; repo secret QODER_PERSONAL_ACCESS_TOKEN). The CLI
-              # auto-detects CI and uses the PAT — no browser. HOME is
-              # pinned to the install dir: the `qoder` launcher resolves
-              # its CLI under ITS HOME (proof run 39467719908 failed with
-              # the default /home/agent — "Qoder CLI is not installed").
-              # Fallback lane per roster: zai/glm-4.7-flash@goose (acting).
-              if env HOME=/usr/local/lib/qoder-home \
-                   qoder -p "$BRIEF" --output-format json \
-                   --permission-mode accept_edits --max-turns 100; then
-                echo "TURN_RESULT=qoder run OK (lane: qwen3.8-flash@qoder — body PROVEN on CI)"
-              elif env GOOSE_PROVIDER=openai GOOSE_MODEL=glm-4.7-flash \
-                   OPENAI_API_KEY="$ZAI_API_KEY" \
-                   OPENAI_HOST="https://api.z.ai" \
-                   OPENAI_BASE_PATH="/api/paas/v4/chat/completions" \
-                   goose run --no-session -t "$BRIEF"; then
-                echo "TURN_RESULT=goose run OK (acting lane: zai/glm-4.7-flash@goose — qoder CLI failed)"
-              elif env GOOSE_PROVIDER=openai GOOSE_MODEL=minimax/minimax-m3.1-flash:free \
-                   OPENAI_API_KEY="$OPENROUTER_API_KEY" \
-                   OPENAI_HOST="https://openrouter.ai/api/v1" \
-                   goose run --no-session -t "$BRIEF"; then
-                echo "TURN_RESULT=goose run OK (lane: minimax-m3.1-flash:free@goose — promo hire 05:33Z)"
-              elif codebuddy -p "$BRIEF"; then
-                echo "TURN_RESULT=codebuddy run OK (lane: fallback codebuddy@cli — qoder+zai dead)"
-              else
-                echo "TURN_RESULT=BLOCKED (qoder+zai+codebuddy all failed — harness/01)"
-              fi
-              ;;
-          esac
+          seat_direct_run "$SEAT" "$BRIEF"
           fi
           # SESSION COLLECT (Owner order 18:27Z): persist THIS turn's CLI
           # session files — the container is --rm, they die here unless
