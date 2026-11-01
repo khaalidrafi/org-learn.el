@@ -1,0 +1,48 @@
+#+TITLE: Spec 006 — roadmap bridge: org-learn DEPENDS on org-roadmap
+#+STATUS: SPEC — Lead-authored.  LAW CHANGE by Owner order 2026-11-01
+#+STATUS: 18:28Z #hq: "org-learn should depend on org-roadmap for
+#+STATUS: planning, progress etc."  This supersedes the old boundary
+#+STATUS: law (declared-never-required).  The dependency is now REAL.
+
+* Source
+Owner verbatim (above).  Planning + progress = what org-roadmap does
+(ASCII roadmaps from Org TODO trees + roadmap.sh import).
+
+* File law
+New file org-learn-roadmap.el.  The entry points below (require
+'org-roadmap nil t) INSIDE the command (autoloads from org-learn.el);
+if the feature is missing -> user-error with a one-line install hint.
+Core org-learn.el must still LOAD without org-roadmap present (CI -Q).
+
+* Interface (API discovery law: read org-roadmap.el first, reuse its
+* public functions — do not re-implement roadmap rendering)
+- =org-learn-plan-from-roadmap= (interactive): at a roadmap TODO tree
+  (org-roadmap format), for every topic heading (configurable level,
+  defcustom org-learn-roadmap-topic-level default 2) ensure a matching
+  review item exists in org-learn-file: heading of the same title,
+  :LEARN_SOURCE: roadmap, tagged :drill:, LEARN_* properties reset;
+  idempotent (existing titles are not duplicated).  Report n added.
+- =org-learn-progress-report= (interactive): for the roadmap tree at
+  point: per topic — review items due/done, avg ease, retention; write
+  :LEARN_PROGRESS: percent property onto each roadmap node; then
+  render the ASCII roadmap via org-roadmap's public API into
+  *org-learn-progress* (read-only, org-mode).
+- =org-learn-roadmap-import= (interactive): thin pass-through to the
+  org-roadmap import (roadmap.sh -> Org TODO tree) then offers
+  org-learn-plan-from-roadmap.  Never re-implements import logic.
+
+* Tests (tests/test-org-learn-roadmap.el, land WITH the code)
+- Stub strategy: tests/support/org-roadmap-stub.el (provide
+  'org-roadmap + minimal public API the bridge calls) on the
+  load-path ONLY inside these tests — proves the integration contract
+  without the real package.
+- plan-from-roadmap on a temp roadmap file: n topics -> n review items
+  in a temp org-learn-file, idempotent on second run.
+- progress-report writes :LEARN_PROGRESS: per node and the report
+  buffer contains the topic titles.
+- Dependency law test (REPLACES tests/test-org-learn.el
+  org-learn-keeps-the-org-roadmap-boundary — legal edit, cite Owner
+  18:28Z order in the test docstring): core org-learn feature loads
+  with org-roadmap ABSENT; org-learn-plan-from-roadmap signals
+  user-error when the feature is missing (stub not loaded).
+- Gate: byte-compile warning-free + ERT green + checkdoc.

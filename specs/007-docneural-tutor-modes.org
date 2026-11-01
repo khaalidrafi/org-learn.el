@@ -1,0 +1,30 @@
+#+TITLE: Spec 007 — docneural tutor modes: TRACE / FOCUS / CLEAR
+#+STATUS: SPEC — Lead-authored.  Owner order 2026-11-01 18:28Z #hq:
+#+STATUS: "take advantage of all the projects under your custody,
+#+STATUS: integrate them well."  docneural's tutor pedagogy (stage
+#+STATUS: directions TRACE/FOCUS/CLEAR, proven in docneural-ui tutor)
+#+STATUS: becomes org-learn AI study modes.
+
+* File law
+Extend org-learn-ai.el (same network choke point org-learn-ai--complete;
+tests keep mocking it).  No new file.
+
+* Modes (each: interactive, works on the current subtree, renders in
+* the *org-learn-ai-chat* buffer with the same turn rendering)
+- =org-learn-ai-trace= — TRACE: the model walks the subtree material
+  step by step (numbered steps, one idea per step, tiny example per
+  step).  System prompt variant; the chat history stays multi-turn
+  (follow-ups allowed).
+- =org-learn-ai-focus= — FOCUS: the model asks ONE probing question on
+  the material; read-string answer; model grades + explains + maps to
+  quality 5|3|1 and offers org-learn-review--process-entry scheduling
+  (same contract as spec 004 quiz — reuse its internals).
+- =org-learn-ai-clear= — CLEAR: the model produces a compact summary:
+  3 takeaway bullets + 3 cloze card suggestions in [answer||hint]
+  form; offers org-learn-ai-generate-flashcards on the subtree.
+
+* Tests (extend tests/test-org-learn-ai.el)
+- Each mode sends its own system prompt variant (captured mock).
+- FOCUS grade mapping 5|3|1; CLEAR output passes through and the
+  follow-up offer calls the flashcard generator (mocked).
+- Gate: byte-compile warning-free + ERT green + checkdoc.

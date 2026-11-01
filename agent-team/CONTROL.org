@@ -67,3 +67,9 @@
 # org-contrib ships its own org-learn.el (SuperMemo scheduler used by
 # org-drill) — MELPA rename decision is the Owner's, not blocking.
 # #+TURN stays at the Software Engineer; #+STALL-COUNT 0.
+#+DISPATCH: 2026-11-01 18:35Z — docneural-lead (Owner order 18:28Z #hq):
+# org-roadmap becomes a REAL dependency for planning/progress (law
+# change, AGENTS.md updated; TODO-007 spec 006); docneural tutor modes
+# TRACE/FOCUS/CLEAR integrate the custody projects (TODO-008 spec 007);
+# org-learn-mode one-keymap FAST start (TODO-009 spec 008).
+# TODO-004+006 (drill+dashboard) re-dispatched after a canceled run.

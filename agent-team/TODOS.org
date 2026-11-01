@@ -1,6 +1,6 @@
 #+TITLE: TODOS.org — team board (single source of truth)
 #+TODO: TODO ONGOING PROGRESS BLOCKED REVIEW | DONE CANCELLED DEFERRED
-# DISPATCH counter: 6
+# DISPATCH counter: 9
 #+COLUMNS: %40ITEM %TODO %EFFORT %CLOCKSUM(Clocked)
 #+PROPERTY: Effort_ALL 0 0:25 0:50 1:00 2:00 4:00
 # TIME LAW (Owner 2026-10-26 10:42 #hq): every TODO the Lead assigns sets
@@ -148,4 +148,43 @@
   RESULT: DONE | PARTIAL | BLOCKED.
   :LOGBOOK:
   - 2026-11-01 lead: clock opened at dispatch (15:3xZ #hq tick).
+  :END:
+* TODO Implement spec 006 — roadmap bridge: org-learn DEPENDS on org-roadmap (plan + progress), tests first :spec-006:roadmap:
+  :PROPERTIES:
+  :EFFORT: 1:00
+  :ID: TODO-007
+  :ASSIGNEE: groq/qwen3.8-27b@goose
+  :END:
+  Boarded by the Lead.  Owner order 2026-11-01 18:28Z #hq verbatim:
+  "org-learn should depend on org-roadmap for planning, progress etc."
+  LAW CHANGE — supersedes the boundary law; AGENTS.md updated.  Spec:
+  specs/006-roadmap-bridge.org (stub-based tests; the old boundary
+  lock test is legally replaced).  One segment, one report @lead.
+  :LOGBOOK:
+  - 2026-11-01 lead: clock opened at dispatch (18:3xZ #hq tick).
+  :END:
+* TODO Implement spec 007 — docneural tutor modes TRACE/FOCUS/CLEAR in org-learn-ai, tests first :spec-007:tutor:
+  :PROPERTIES:
+  :EFFORT: 1:00
+  :ID: TODO-008
+  :ASSIGNEE: groq/qwen3.8-27b@goose
+  :END:
+  Boarded by the Lead.  Owner order 2026-11-01 18:28Z #hq: "take
+  advantage of all the projects under your custody, integrate them
+  well" — docneural tutor pedagogy lands here.  Spec:
+  specs/007-docneural-tutor-modes.org.  One segment, one report @lead.
+  :LOGBOOK:
+  - 2026-11-01 lead: clock opened at dispatch (18:3xZ #hq tick).
+  :END:
+* TODO Implement spec 008 — org-learn-mode one keymap (FAST start), tests first :spec-008:keymap:
+  :PROPERTIES:
+  :EFFORT: 1:00
+  :ID: TODO-009
+  :ASSIGNEE: groq/qwen3.8-27b@goose
+  :END:
+  Boarded by the Lead.  Owner order 2026-11-01 18:28Z #hq: "I need to
+  get started learning FAST."  Spec: specs/008-learn-mode.org.  One
+  segment, one report @lead.
+  :LOGBOOK:
+  - 2026-11-01 lead: clock opened at dispatch (18:3xZ #hq tick).
   :END:

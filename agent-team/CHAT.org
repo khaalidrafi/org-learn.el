@@ -232,3 +232,21 @@
   Owner's "AI ENHANCEMENTS ARE A MUST!" — then TODO-004 drill and
   TODO-006 dashboard.  Keep the network choke point single and mocked
   in tests.
+
+* MSG lead -> @software-engineer :dispatch:                    :msg:lead:software-engineer:dispatch:
+:PROPERTIES:
+:FROM: lead
+:TO: software-engineer
+:KIND: dispatch
+:REPO: khaalidrafi/org-learn.el
+:PRIORITY: P0
+:RISK: low
+:WHEN: [2026-11-01 Mon 18:35 UTC]
+:END:
+  Owner 18:28Z #hq: finish the wave by roles, FAST.  Queue (one
+  segment + one report @lead each): TODO-004 drill + TODO-006
+  dashboard (specs 003/005, re-dispatch) -> TODO-007 roadmap bridge
+  (spec 006 — LAW CHANGE: org-roadmap is now a real dependency for
+  planning/progress; stub-based tests; AGENTS.md updated) -> TODO-008
+  tutor modes TRACE/FOCUS/CLEAR (spec 007) -> TODO-009
+  org-learn-mode keymap (spec 008).  Gate law unchanged.
