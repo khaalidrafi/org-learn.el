@@ -8,7 +8,7 @@
 # closed without clock evidence bounces at review.
 # REVIEW CLOCK LAW (Owner 2026-10-26 10:55 #hq): review is a clocked task too.
 
-* TODO Bootstrap the team layer: verify byte-compile gate green, whole-repo compliance audit vs local AGENTS.md + ci/AGENTS.md (fix, not report), land STATE.org + first improvement spec :bootstrap:teamify:
+* DONE Bootstrap the team layer: verify byte-compile gate green, whole-repo compliance audit vs local AGENTS.md + ci/AGENTS.md (fix, not report), land STATE.org + first improvement spec :bootstrap:teamify:
   :PROPERTIES:
   :EFFORT: 1:00
   :ID: TODO-001
@@ -50,7 +50,7 @@
       unset + no TypeSafe skill in harness — self-audit performed
       instead, noted in the report.
   :END:
-* TODO Implement spec 001 — org-learn-capture + region variant, tests first :spec-001:capture:
+* DONE Implement spec 001 — org-learn-capture + region variant, tests first :spec-001:capture:
   :PROPERTIES:
   :EFFORT: 0:50
   :ID: TODO-002
@@ -70,8 +70,17 @@
   - 2026-11-01 lead: created from the port-engineer proposal
     (CHAT.org 14:19Z dispatch @software-engineer); spec accepted at
     the TODO-001 audit.
+  - 2026-11-01 software-engineer (seat 5-a, branch ai/turn-20261101-1,
+    commit 0db5486) — segment delivered, RESULT: DONE (org-learn.el:
+    org-learn-capture + org-learn-capture-from-region; header
+    idempotent incl. empty-file case).  QA's red-by-design acceptance
+    tests (08f59b1) turned green; one Emacs-regex fix in the ordering
+    assertion ([\s\S] PCRE-ism -> (?:.|\n), assertions preserved).
+  - 2026-11-01 lead: audit ACCEPTED — gate re-run locally (Emacs 31.1):
+    ERT 21/21, byte-compile exit 0 zero warnings, checkdoc clean;
+    merged aafd5ad.
   :END:
-* TODO Implement spec 002 — review scheduler (org-learn-sm2 + org-learn-review + agenda view), tests first :spec-002:srs:
+* DONE Implement spec 002 — review scheduler (org-learn-sm2 + org-learn-review + agenda view), tests first :spec-002:srs:
   :PROPERTIES:
   :EFFORT: 2:00
   :ID: TODO-003
@@ -85,6 +94,15 @@
   report @lead with RESULT: DONE | PARTIAL | BLOCKED.
   :LOGBOOK:
   - 2026-11-01 lead: clock opened at dispatch (15:3xZ #hq tick).
+  - 2026-11-01 software-engineer (seat 5-a, branch ai/turn-20261101-1,
+    commit cddce43) — segment delivered, RESULT: DONE
+    (org-learn-review.el: pure org-learn-sm2, process-entry via Org
+    API only, review session file|agenda|directory, agenda view;
+    tests/test-org-learn-review.el + additive load line).
+  - 2026-11-01 lead: audit ACCEPTED — SM-2 spot-check re-computed
+    independently ((2.5,1,0,5)->(2.6,1,1); (2.5,6,1,3)->(2.36,6,2);
+    (2.5,10,2,2)->(2.3,1,0); (1.4,10,2,4)->(1.4,14,3)) — exact match;
+    ERT 21/21; merged aafd5ad.
   :END:
 * TODO Implement spec 003 — drill sessions (org-learn-drill: cloze/twosided/leeches/cram), tests first :spec-003:drill:
   :PROPERTIES:
