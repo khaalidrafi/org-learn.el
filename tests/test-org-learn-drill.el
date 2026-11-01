@@ -224,6 +224,80 @@ source entry, through `org-learn-review--process-entry'."
       (when (file-exists-p file)
         (delete-file file)))))
 
+;;; Leech law (spec 003: lapses at the threshold tag :leech:,
+;;; idempotently).
+
+(ert-deftest org-learn-drill-leech-threshold-tags-the-entry ()
+  "Spec 003: lapses at `org-learn-drill-leech-threshold' tag the \
+entry :leech:; below the threshold nothing is tagged, and applying \
+the law again is idempotent."
+  (let* ((file (make-temp-file "org-learn-leech-" nil ".org"))
+         (org-learn-file file)
+         buffer)
+    (unwind-protect
+        (progn
+          (setq buffer (find-file-noselect file))
+          (with-current-buffer buffer
+            (insert "* Leech candidate :drill:\n   body\n"))
+          (let ((card (with-current-buffer buffer
+                        (goto-char (point-min))
+                        (list :marker (copy-marker (point))))))
+            ;; 14 lapses, just below the default threshold of 15: no
+            ;; tag.
+            (with-current-buffer buffer
+              (goto-char (point-min))
+              (org-entry-put (point) "LEARN_LAPSES" "14"))
+            (org-learn-drill--apply-leech-law (plist-get card :marker))
+            (with-current-buffer buffer
+              (goto-char (point-min))
+              (should-not (member "leech" (org-get-tags (point) t))))
+            ;; 15 lapses, at the threshold: tagged once.
+            (with-current-buffer buffer
+              (goto-char (point-min))
+              (org-entry-put (point) "LEARN_LAPSES" "15"))
+            (org-learn-drill--apply-leech-law (plist-get card :marker))
+            (with-current-buffer buffer
+              (goto-char (point-min))
+              (should (member "leech" (org-get-tags (point) t))))
+            ;; Idempotent: applying again keeps exactly one tag.
+            (org-learn-drill--apply-leech-law (plist-get card :marker))
+            (with-current-buffer buffer
+              (goto-char (point-min))
+              (should (= 1 (org-learn-drill-test--count-matches
+                            ":leech:" (buffer-string)))))))
+      (org-learn-drill-test--kill-file-buffer file)
+      (when (file-exists-p file)
+        (delete-file file)))))
+
+(ert-deftest org-learn-drill-grade-applies-the-leech-law ()
+  "Spec 003: a grade that lapses past the threshold tags the source \
+entry :leech:; a further lapse never duplicates the tag."
+  (let* ((file (make-temp-file "org-learn-leech2-" nil ".org"))
+         (org-learn-file file)
+         (org-learn-drill-leech-threshold 1)
+         buffer)
+    (unwind-protect
+        (progn
+          (setq buffer (find-file-noselect file))
+          (let ((card (with-current-buffer buffer
+                        (insert "* Lapse card :drill:\n   hard body\n")
+                        (goto-char (point-min))
+                        (list :marker (copy-marker (point))))))
+            ;; One failed grade: one lapse, at the threshold of 1.
+            (org-learn-drill--grade card 2)
+            (with-current-buffer buffer
+              (goto-char (point-min))
+              (should (string= (org-entry-get (point) "LEARN_LAPSES") "1"))
+              (should (member "leech" (org-get-tags (point) t))))
+            ;; A second lapse stays exactly one :leech: tag.
+            (org-learn-drill--grade card 0)
+            (let ((content (org-learn-drill-test--file-string file)))
+              (should (= 1 (org-learn-drill-test--count-matches
+                            ":leech:" content))))))
+      (org-learn-drill-test--kill-file-buffer file)
+      (when (file-exists-p file)
+        (delete-file file)))))
+
 ;;; Cram window (spec 003: reviewed-within-hours cards stay away).
 
 (ert-deftest org-learn-drill-cram-hours-filter ()
