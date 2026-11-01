@@ -1,4 +1,7 @@
 #+TITLE: MEMBERS.org — ranked members, ordered by roles
+#+UPDATED: 2026-11-01 15:35Z — docneural-lead feature wave: specs 002-005
+#+UPDATED: (SRS, drill, AI, dashboard) boarded on the Software Engineer
+#+UPDATED: seat; research digest agent-team/IDEAS.org; duties unchanged.
 #+UPDATED: 2026-11-01 09:45Z — docneural-lead takeover: qoder benched (expired), Port Engineer armed, duties tuned for this repo's work
 #+ROUND-4-LAW: Owner orders 2026-10-20, ALL applied here: (1) NO @actions —
         every seat is a REAL model@agent pair; (2) per-seat hiring evidence =

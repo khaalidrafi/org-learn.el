@@ -175,3 +175,40 @@
   the CI test job now runs the ert suite (header law :4-5) and
   AGENT_CHAT_REPO pins :REPO: — your reports will carry the repo name
   from now on.
+
+* MSG lead -> @software-engineer :dispatch:                    :msg:lead:software-engineer:dispatch:
+:PROPERTIES:
+:FROM: lead
+:TO: software-engineer
+:KIND: dispatch
+:REPO: khaalidrafi/org-learn.el
+:PRIORITY: P1
+:RISK: low
+:WHEN: [2026-11-01 Sun 15:35 UTC]
+:END:
+  Feature wave (Owner #hq 15:12Z: "add features there", AI a MUST).
+  Research landed at agent-team/IDEAS.org; specs 002-005 are law.
+  Your queue in order, one segment + one report @lead each:
+  TODO-002 capture (already yours) -> TODO-003 spec 002 SRS ->
+  TODO-004 spec 003 drill -> TODO-005 spec 004 AI -> TODO-006 spec 005
+  dashboard.  Tests first always; byte-compile warning-free; the
+  org-roadmap boundary lock test stays green; zero network in tests
+  (mock org-learn-ai--complete).  The Lead runs the full gate locally
+  (Emacs 31.1) at audit; PASS there or it bounces.
+
+* MSG lead -> @quality-assurance-engineer :note:                    :msg:lead:quality-assurance-engineer:note:
+:PROPERTIES:
+:FROM: lead
+:TO: quality-assurance-engineer
+:KIND: note
+:REPO: khaalidrafi/org-learn.el
+:PRIORITY: P2
+:RISK: low
+:WHEN: [2026-11-01 Sun 15:35 UTC]
+:END:
+  Heads-up: four feature segments are queued behind TODO-002 (specs
+  002-005, see TODOS.org).  Your audit lane stays: whole-repo
+  compliance after each segment lands, checkdoc, ERT suite ownership.
+  New law bits to audit: specs demand tests-first files
+  tests/test-org-learn-{review,drill,ai,dashboard}.el and warning-free
+  byte-compile of the new org-learn-{review,drill,ai,dashboard}.el.

@@ -5,7 +5,7 @@
         and the LEAD transcribes it into #+OBJECTIVE verbatim in intent.
         One line per switch, do not reformat the keywords.
 
-#+OBJECTIVE: bootstrap per BOOTSTRAP-PROMPT.org + agent-team/NOTICE.org TEAM-UPDATE #1 (Owner order 2026-10-28 #hq; teamify completed 2026-11-01 #hq 'Teamify them'): keep org-roadmap at the boundary (declared, never hard-required, do not block on it), prove the byte-compile gate, run the whole-repo compliance audit vs the local AGENTS.md + ci/AGENTS.md, land fixes, then deliver the first learning-helper improvement per README.org
+#+OBJECTIVE: complete org-learn.el into the ultimate learning tool for Emacs powered by Org — Owner order 2026-11-01 #hq verbatim intent: "Is org-learn.el complete, the ultimate learning tool for Emacs powered by Org? Read the Org manual and WORG on orgmode.org to brainstorm cool ideas for learning, and add features there." + standing Owner law "AI ENHANCEMENTS ARE A MUST!" — research digest agent-team/IDEAS.org, specs 002-005 boarded as TODO-003..TODO-006; org-roadmap stays at the boundary (declared, never required, do not block)
 #+OBJECTIVE-STATE: OPEN
 #+KILL-SWITCH: OFF
 
@@ -58,3 +58,12 @@
 # lane (the QA segment between ticks ran zero-progress — the two no-op
 # segments are the SW/QA seats finding no boarded TODO for their seats);
 # #+STALL-COUNT 2 -> 0.
+#+DISPATCH: 2026-11-01 15:35Z — docneural-lead feature wave (Owner order
+# 15:12Z #hq): research vs orgmode.org done (WORG org-contrib/org-drill,
+# contrib index, manual index) -> agent-team/IDEAS.org; specs
+# 002-review-scheduler, 003-drill-sessions, 004-ai-tutor, 005-dashboard
+# landed; TODO-003..TODO-006 boarded on the Software Engineer seat
+# (EFFORT per ladder).  NAME-COLLISION flagged for the Owner:
+# org-contrib ships its own org-learn.el (SuperMemo scheduler used by
+# org-drill) — MELPA rename decision is the Owner's, not blocking.
+# #+TURN stays at the Software Engineer; #+STALL-COUNT 0.
