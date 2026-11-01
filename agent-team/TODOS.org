@@ -162,6 +162,12 @@
   RESULT: DONE | PARTIAL | BLOCKED.
   :LOGBOOK:
   - 2026-11-01 lead: clock opened at dispatch (15:3xZ #hq tick).
+  - 2026-11-01 software-engineer (branch ai/turn-20261101-3) —
+    RESULT: DONE (org-learn-dashboard.el + org-learn-study pomodoro +
+    tests/test-org-learn-dashboard.el: retention math, --data order,
+    read-only buffer law).
+  - 2026-11-01 lead: audit ACCEPTED (same gate run, ERT 54/54);
+    merged 0393986.
   :END:
 * TODO Implement spec 006 — roadmap bridge: org-learn DEPENDS on org-roadmap (plan + progress), tests first :spec-006:roadmap:
   :PROPERTIES:
