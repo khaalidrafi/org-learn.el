@@ -9,13 +9,8 @@
 #+OBJECTIVE-STATE: OPEN
 #+KILL-SWITCH: OFF
 
-<<<<<<< HEAD
 #+TURN: groq/qwen3.8-27b@goose (Release Engineer)
 #+STALL-COUNT: 5
-=======
-#+TURN: groq/qwen3.8-27b@goose (Release Engineer)
-#+STALL-COUNT: 5
->>>>>>> ddab92a (control: #+TURN back to the Port Engineer — the antling lane is wired now (turn-lanes b17f11d + brief guard ac55b1b))
 
 #+LAST-VERDICT: none
 #+LAST-BLOCKED-NOTIFY: 0
