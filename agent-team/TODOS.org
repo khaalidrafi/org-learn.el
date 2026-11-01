@@ -1,6 +1,6 @@
 #+TITLE: TODOS.org — team board (single source of truth)
 #+TODO: TODO ONGOING PROGRESS BLOCKED REVIEW | DONE CANCELLED DEFERRED
-# DISPATCH counter: 2
+# DISPATCH counter: 6
 #+COLUMNS: %40ITEM %TODO %EFFORT %CLOCKSUM(Clocked)
 #+PROPERTY: Effort_ALL 0 0:25 0:50 1:00 2:00 4:00
 # TIME LAW (Owner 2026-10-26 10:42 #hq): every TODO the Lead assigns sets
@@ -70,4 +70,64 @@
   - 2026-11-01 lead: created from the port-engineer proposal
     (CHAT.org 14:19Z dispatch @software-engineer); spec accepted at
     the TODO-001 audit.
+  :END:
+* TODO Implement spec 002 — review scheduler (org-learn-sm2 + org-learn-review + agenda view), tests first :spec-002:srs:
+  :PROPERTIES:
+  :EFFORT: 2:00
+  :ID: TODO-003
+  :ASSIGNEE: zai/glm-4.7-flash@goose
+  :END:
+  Boarded by the Lead 2026-11-01 (Owner feature order #hq: "add
+  features there").  Spec: specs/002-review-scheduler.org.  New file
+  org-learn-review.el; pure SM-2 core + review session + agenda view;
+  tests first in tests/test-org-learn-review.el; byte-compile
+  warning-free; boundary lock test stays green.  One segment, one
+  report @lead with RESULT: DONE | PARTIAL | BLOCKED.
+  :LOGBOOK:
+  - 2026-11-01 lead: clock opened at dispatch (15:3xZ #hq tick).
+  :END:
+* TODO Implement spec 003 — drill sessions (org-learn-drill: cloze/twosided/leeches/cram), tests first :spec-003:drill:
+  :PROPERTIES:
+  :EFFORT: 2:00
+  :ID: TODO-004
+  :ASSIGNEE: zai/glm-4.7-flash@goose
+  :END:
+  Boarded by the Lead 2026-11-01.  Spec: specs/003-drill-sessions.org.
+  New file org-learn-drill.el, requires org-learn-review (same
+  package).  Tests first in tests/test-org-learn-drill.el;
+  byte-compile warning-free; boundary lock test stays green.  One
+  segment, one report @lead with RESULT: DONE | PARTIAL | BLOCKED.
+  :LOGBOOK:
+  - 2026-11-01 lead: clock opened at dispatch (15:3xZ #hq tick).
+  :END:
+* TODO Implement spec 004 — AI tutor + AI flashcards + AI quiz (org-learn-ai), tests first :spec-004:ai:
+  :PROPERTIES:
+  :EFFORT: 2:00
+  :ID: TODO-005
+  :ASSIGNEE: zai/glm-4.7-flash@goose
+  :END:
+  Boarded by the Lead 2026-11-01.  Owner order verbatim: "AI
+  ENHANCEMENTS ARE A MUST!"  Spec: specs/004-ai-tutor.org.  New file
+  org-learn-ai.el; keyless default lane (Pollinations, OpenAI-compat,
+  overridable); single network choke point org-learn-ai--complete;
+  tests MOCK the network (cl-letf) — zero network in CI.  Tests first
+  in tests/test-org-learn-ai.el; byte-compile warning-free; boundary
+  lock test stays green.  One segment, one report @lead with RESULT:
+  DONE | PARTIAL | BLOCKED.
+  :LOGBOOK:
+  - 2026-11-01 lead: clock opened at dispatch (15:3xZ #hq tick).
+  :END:
+* TODO Implement spec 005 — study clock + stats + dashboard (org-learn-dashboard), tests first :spec-005:dashboard:
+  :PROPERTIES:
+  :EFFORT: 1:00
+  :ID: TODO-006
+  :ASSIGNEE: zai/glm-4.7-flash@goose
+  :END:
+  Boarded by the Lead 2026-11-01.  Spec: specs/005-dashboard.org.
+  New file org-learn-dashboard.el; pure compute path; tests first in
+  tests/test-org-learn-dashboard.el; byte-compile warning-free;
+  boundary lock test stays green.  One segment, one report @lead with
+  RESULT: DONE | PARTIAL | BLOCKED.
+  :LOGBOOK:
+  - 2026-11-01 lead: clock opened at dispatch (15:3xZ #hq tick).
   :END:
