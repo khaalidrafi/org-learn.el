@@ -26,6 +26,12 @@ seat_batch_config() {
               BATCH_PROVIDER=qoder
               BATCH_MODEL=""
               BATCH_CMD="env HOME=/usr/local/lib/qoder-home qoder --acp" ;;
+            port-engineer)
+              # Port Engineer (hired 2026-11-01 00:08 #hq): antling direct
+              # lane — ANTLING_API_KEY, burn-verified live (CANDIDATES).
+              BATCH_PROVIDER=goose
+              BATCH_MODEL="Ling-3.1-flash"
+              BATCH_CMD="env GOOSE_PROVIDER=openai GOOSE_MODEL=Ling-3.1-flash OPENAI_API_KEY=$ANTLING_API_KEY OPENAI_HOST=https://api.ant-ling.com OPENAI_BASE_PATH=/v1/chat/completions goose acp" ;;
             *) BATCH_PROVIDER="" ;;
           esac
 }
@@ -47,12 +53,12 @@ seat_direct_run() {
                 echo "TURN_RESULT=opencode run OK"
               elif env GOOSE_PROVIDER=openai GOOSE_MODEL="poolside/laguna-s-2.1:free" \
                    OPENAI_API_KEY="$OPENROUTER_API_KEY" \
-                   OPENAI_HOST="https://openrouter.ai/api/v1" \
+                   OPENAI_HOST="https://openrouter.ai/api" \
                    goose run --no-session -t "$BRIEF"; then
                 echo "TURN_RESULT=goose run OK (lane: openrouter/poolside@goose — credits landed)"
               elif env GOOSE_PROVIDER=openai GOOSE_MODEL=minimax/minimax-m3.1-flash:free \
                    OPENAI_API_KEY="$OPENROUTER_API_KEY" \
-                   OPENAI_HOST="https://openrouter.ai/api/v1" \
+                   OPENAI_HOST="https://openrouter.ai/api" \
                    goose run --no-session -t "$BRIEF"; then
                 echo "TURN_RESULT=goose run OK (lane: minimax-m3.1-flash:free@goose — promo hire 05:33Z)"
               elif codebuddy -p "$BRIEF"; then
@@ -83,7 +89,7 @@ seat_direct_run() {
                 echo "TURN_RESULT=goose run OK (lane: zai/glm-4.7-flash@goose)"
               elif env GOOSE_PROVIDER=openai GOOSE_MODEL=minimax/minimax-m3.1-flash:free \
                    OPENAI_API_KEY="$OPENROUTER_API_KEY" \
-                   OPENAI_HOST="https://openrouter.ai/api/v1" \
+                   OPENAI_HOST="https://openrouter.ai/api" \
                    goose run --no-session -t "$BRIEF"; then
                 echo "TURN_RESULT=goose run OK (lane: minimax-m3.1-flash:free@goose — OpenRouter promo hire 05:33Z)"
               elif goose run --no-session -t "$BRIEF"; then
@@ -119,13 +125,44 @@ seat_direct_run() {
                 echo "TURN_RESULT=goose run OK (acting lane: zai/glm-4.7-flash@goose — qoder CLI failed)"
               elif env GOOSE_PROVIDER=openai GOOSE_MODEL=minimax/minimax-m3.1-flash:free \
                    OPENAI_API_KEY="$OPENROUTER_API_KEY" \
-                   OPENAI_HOST="https://openrouter.ai/api/v1" \
+                   OPENAI_HOST="https://openrouter.ai/api" \
                    goose run --no-session -t "$BRIEF"; then
                 echo "TURN_RESULT=goose run OK (lane: minimax-m3.1-flash:free@goose — promo hire 05:33Z)"
               elif codebuddy -p "$BRIEF"; then
                 echo "TURN_RESULT=codebuddy run OK (lane: fallback codebuddy@cli — qoder+zai dead)"
               else
                 echo "TURN_RESULT=BLOCKED (qoder+zai+codebuddy all failed — harness/01)"
+              fi
+              ;;
+            port-engineer)
+              # Port Engineer antling/Ling-3.1-flash (hired 2026-11-01 00:08
+              # #hq after the poolside delisting). PRIMARY: antling direct
+              # (goose openai provider, same shape as the proven zai lane;
+              # OPENAI_HOST = origin, OPENAI_BASE_PATH carries the /v1 path —
+              # the openrouter double-/v1 lesson, run 41290677537).
+              if env GOOSE_PROVIDER=openai GOOSE_MODEL=Ling-3.1-flash \
+                   OPENAI_API_KEY="$ANTLING_API_KEY" \
+                   OPENAI_HOST="https://api.ant-ling.com" \
+                   OPENAI_BASE_PATH="/v1/chat/completions" \
+                   goose run --no-session -t "$BRIEF"; then
+                echo "TURN_RESULT=goose run OK (lane: antling/Ling-3.1-flash direct@goose)"
+              elif opencode run --print-logs --model "openrouter/antling/ling-3.1-flash" "$BRIEF"; then
+                echo "TURN_RESULT=opencode run OK (lane: antling/Ling-3.1-flash@opencode — rostered body)"
+              elif env GOOSE_PROVIDER=openai GOOSE_MODEL=minimax/minimax-m3.1-flash:free \
+                   OPENAI_API_KEY="$OPENROUTER_API_KEY" \
+                   OPENAI_HOST="https://openrouter.ai/api" \
+                   goose run --no-session -t "$BRIEF"; then
+                echo "TURN_RESULT=goose run OK (lane: minimax-m3.1-flash:free@goose)"
+              elif env GOOSE_PROVIDER=openai GOOSE_MODEL=glm-4.7-flash \
+                   OPENAI_API_KEY="$ZAI_API_KEY" \
+                   OPENAI_HOST="https://api.z.ai" \
+                   OPENAI_BASE_PATH="/api/paas/v4/chat/completions" \
+                   goose run --no-session -t "$BRIEF"; then
+                echo "TURN_RESULT=goose run OK (lane: zai/glm-4.7-flash@goose)"
+              elif codebuddy -p "$BRIEF"; then
+                echo "TURN_RESULT=codebuddy run OK (lane: fallback codebuddy@cli)"
+              else
+                echo "TURN_RESULT=BLOCKED (antling+opencode+openrouter+zai+codebuddy all failed — harness/01)"
               fi
               ;;
           esac
