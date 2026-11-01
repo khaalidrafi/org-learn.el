@@ -1,0 +1,53 @@
+#+TITLE: IDEAS.org — feature brainstorm for the ultimate learning tool
+#+SOURCE: Owner order 2026-11-01 #hq: "Read the Org manual and WORG on
+#+SOURCE: orgmode.org to brainstorm cool ideas for learning, and add
+#+SOURCE: features there. AI ENHANCEMENTS ARE A MUST!"
+#+RESEARCH: done 2026-11-01 by the Lead against orgmode.org (live fetch):
+#+RESEARCH: WORG org-contrib/org-drill.html, org-contrib/index.html,
+#+RESEARCH: manual/index.html (capture, agenda, dates, clocking,
+#+RESEARCH: properties/drawers, TODO keywords, sparse trees, export).
+
+* What the research says (digest)
+- org-drill (WORG, now MELPA-only): Org headings as flashcards, tag
+  =:drill:=, card types via the =DRILL_CARD_TYPE= property (simple,
+  cloze =[answer||hint]=, twosided, multisided, hide1/show1 cloze
+  variants), recall rated 0-5 (SuperMemo labels), SM2/SM5/Simple8
+  scheduling, cram sessions, leeches =:leech:= at repeated failures,
+  scopes (buffer/tree/agenda/directory), session item/time limits,
+  overdue factor, per-file local vars.
+- Org manual building blocks we should compose, not reinvent:
+  capture templates, agenda views (custom commands), SCHEDULED /
+  deadlines with repeaters, clocking + LOGBOOK, properties + columns,
+  TODO keyword workflows, sparse trees, export.
+- NAME COLLISION WARNING (Lead finding, Owner decision needed):
+  org-contrib already ships an =org-learn.el= (SuperMemo incremental
+  learning algorithm, the scheduler org-drill uses).  Our package has
+  the same name — fine on GitHub, a real conflict for MELPA/ELPA.
+  Options: keep the name (documented), or rename (e.g. org-study.el)
+  before any MELPA push.  NOT blocking this feature wave.
+
+* The loop (README law): capture -> review -> grow
+- CAPTURE: spec 001 (landed, TODO-002 in flight).
+- REVIEW: spec 002 (SM-2 scheduler + review sessions + agenda view)
+  and spec 003 (drill sessions: cloze/twosided cards, leeches, cram).
+- GROW: spec 004 (AI tutor, AI flashcard + quiz generation) and
+  spec 005 (dashboard, study clock/pomodoro, stats).
+
+* AI enhancements (Owner: MUST) — differentiators over org-drill
+- Multi-turn AI tutor with the current subtree as context (keyless
+  default lane: Pollinations text API, OpenAI-compatible; overridable
+  endpoint/model/key — same keyless pattern the docneural tutor runs).
+- One-command flashcard generation from any subtree (model returns
+  Q/A pairs, we insert =:drill:= cards with =:CREATED_BY: ai=).
+- AI quiz mode: model asks, user answers, model grades + explains.
+- Everything degrades gracefully offline (user-error with a clear
+  message); tests mock the network layer.
+
+* Backlog (not this wave, keep on the radar)
+- FSRS algorithm alongside SM-2 (modern, per-card difficulty/stability).
+- Incremental reading (extract -> schedule excerpts).
+- Anki/CSV export of cards; org-crypt for private decks.
+- Roadmap bridge: attach review scheduling to org-roadmap TODO trees
+  the moment its API lands — featurep-gated, never required (boundary
+  law), see AGENTS.md.
+- Babel-graded exercises (run code answers), screenshot/image cards.

@@ -1,0 +1,67 @@
+#+TITLE: Spec 004 — AI enhancements: tutor chat, flashcard generation, quiz
+#+STATUS: SPEC — Lead-authored 2026-11-01.  Owner order: "AI ENHANCEMENTS
+#+STATUS: ARE A MUST!"  Pattern proven at docneural (keyless lane).
+
+* Goal
+AI features native to Org: study any subtree with a tutor that sees the
+subtree, turn the subtree into drill cards, get quizzed by the model.
+
+* File law
+New file org-learn-ai.el.  Network = url.el (built-in) + json.el; NO
+new package dependencies.  Never require org-roadmap.
+
+* Configuration (defcustom group org-learn-ai)
+- =org-learn-ai-endpoint= — default
+  "https://text.pollinations.ai/openai" (keyless, OpenAI-compatible).
+- =org-learn-ai-model= — default "openai".
+- =org-learn-ai-api-key= — default nil; when non-nil sent as Bearer
+  (for any OpenAI-compatible endpoint).  SECRET LAW: travels only as a
+  customization the user sets; never hardcoded, never logged.
+- =org-learn-ai-context-max-chars= — default 8000; subtree context is
+  truncated head-safe (keep the first N chars, note the cut).
+- =org-learn-ai-timeout-seconds= — default 30.
+
+* Network core (testable)
+- =org-learn-ai--complete= (messages) -> assistant text.  POST JSON
+  {model, messages} to endpoint; Authorization header only when key
+  set; sync retrieve with timeout; parse choices[0].message.content.
+- Errors: connection/HTTP failure -> user-error with the status and a
+  "check org-learn-ai-endpoint" hint.  Never leave partial state.
+
+* Features
+- =org-learn-ai-ask= (interactive): multi-turn tutor chat buffer
+  *org-learn-ai-chat*.  System prompt: tutor persona (explain, quiz,
+  correct; concise).  Context: current subtree text at invocation
+  (org-learn-ai-context-max-chars cap), refreshed by prefix arg.
+  Keys in chat buffer: RET send, C-c C-c send+newline-safe, q quit,
+  C-c C-n new chat (history reset).  History kept in buffer-local
+  var.  Turns render quoted, assistant turns plain — plain Org, no
+  markdown leakage.
+- =org-learn-ai-generate-flashcards= (interactive): on the current
+  subtree, ask the model for 5-10 Q/A pairs as JSON
+  [{"q": ..., "a": ...}]; insert each as a child heading
+  "* Q :drill:" with DRILL_CARD_TYPE twosided and two child headings
+  (Question / Answer), property :CREATED_BY: ai, :CREATED: timestamp.
+  Uses org-learn-ai--complete; robust JSON extraction (first JSON
+  array in the reply, tolerating prose around it).  Report n inserted.
+- =org-learn-ai-quiz= (interactive): one question at a time about the
+  current subtree; read user answer; model grades (correct/partly/
+  wrong) + explains; offers to schedule a review via spec 002
+  (grade mapped 5/3/1).  Loop until user says stop or C-g.
+
+* Behavior law
+- All model calls go through org-learn-ai--complete (one choke point,
+  mocked in tests).  No network at byte-compile or test time.
+- Offline/error path: clear user-error, no buffer litter.
+- The AI never edits the notes file except by the explicit flashcard
+  insertion above (no silent writes).
+
+* Acceptance (tests land WITH the code, tests/test-org-learn-ai.el)
+- cl-letf mock of org-learn-ai--complete for every feature: chat turn
+  appended with context line; flashcard generation inserts N cards
+  with the right tag/properties/body; quiz grade mapping 5/3/1.
+- JSON extraction: reply with prose + array parses; garbage reply ->
+  user-error (no insert).
+- Request body: JSON encodes correctly; key header present iff key
+  non-nil (inspect via a captured url mock).
+- Byte-compile warning-free; boundary lock test stays green.

@@ -1,0 +1,51 @@
+#+TITLE: Spec 005 — study sessions, stats, dashboard
+#+STATUS: SPEC — Lead-authored 2026-11-01 (research: agent-team/IDEAS.org).
+
+* Source
+README loop verb "grow".  Manual blocks composed: clocking + LOGBOOK,
+properties/columns, agenda.  The package needs a cockpit: what's due,
+what's leaking, what's mastered.
+
+* Goal
+One dashboard buffer answering: what do I review today, how am I doing
+per topic, where do I lose time.
+
+* File law
+New file org-learn-dashboard.el; requires org-learn-review.
+Public symbols org-learn-dashboard- (stats) / org-learn-study- (clock).
+
+* Interface
+- =org-learn-study= (interactive): at a heading — org-clock-in on it,
+  optional pomodoro via org-timer-set-timer when
+  =org-learn-study-timer-minutes= non-nil (default 25, nil = off);
+  org-clock-out when the timer fires (advice-safe: use the timer
+  callback only, no global hooks).  LOGBOOK carries the evidence.
+- =org-learn-dashboard= (interactive): buffer *org-learn-dashboard*,
+  org-mode, rebuilt from scratch each run (idempotent), sections:
+  1. *Today* — due now count, new count, done-today count; per scope
+     =org-learn-review-scope=.
+  2. *Review queue* — first 10 due items (oldest first) as org links
+     to the entries (org-store-link style; RET jumps, read-only).
+  3. *Leeches* — items tagged :leech: with lapse counts.
+  4. *Stats* — per top-level topic (level-1 heading): items, due,
+     avg ease, retention = 1 - lapses/reps (percent, items without
+     reps excluded), last review date.  Computed from the properties
+     spec 002 writes; nothing new stored.
+  5. Footer: commands legend (M-x org-learn-review / org-learn-drill /
+     org-learn-study / org-learn-ai-ask).
+- =org-learn-dashboard-retention= (pure, testable): (lapses reps) ->
+  percent or nil when reps = 0.
+
+* Behavior law
+- Read-only dashboard (except nothing); jumps via org-id/link only.
+- No org-roadmap require.  Empty state: friendly lines, never an empty
+  buffer.  Batch-safe (no interactive-only APIs in the compute path:
+  =org-learn-dashboard--data= pure over file lists, testable).
+
+* Acceptance (tests land WITH the code, tests/test-org-learn-dashboard.el)
+- retention math: (0 4) -> 100, (1 4) -> 75, (0 0) -> nil.
+- dashboard--data on a seeded temp file (2 topics: due/new/leech mix)
+  returns correct counts and the right queue order.
+- The dashboard buffer builds, is read-only, contains the three
+  section headers and the commands legend.
+- Byte-compile warning-free; boundary lock test stays green.
