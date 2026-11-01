@@ -1,0 +1,53 @@
+#+TITLE: Spec 002 — review scheduler (SM-2) + review sessions
+#+STATUS: SPEC — Lead-authored 2026-11-01 (research: agent-team/IDEAS.org).
+
+* Source
+README loop verb "review".  IDEAS.org digest: SuperMemo quality 0-5,
+ease-factor scheduling (org-drill uses the same family of algorithms;
+org-contrib's org-learn.el proves the name but our code is fresh).
+
+* Goal
+Spaced repetition over the notes file: any heading can become a review
+item; a review session walks due items and schedules the next review.
+
+* File law
+New file org-learn-review.el (one feature per file, AGENTS.md);
+org-learn.el gains only an autoload pointer/require of org-learn-review.
+
+* Interface
+- =org-learn-sm2= (pure): (EASE INTERVAL REPS QUALITY) -> plist
+  (:ease :interval :reps).  SM-2 law:
+  - QUALITY < 3 -> REPS 0, INTERVAL 1, ease = max(1.3, ease - 0.20)
+  - REPS 0 -> 1 day; REPS 1 -> 6 days; else round(INTERVAL * EASE)
+  - QUALITY >= 3 -> ease = max(1.3, ease + (0.1 - (5-q)*(0.08+(5-q)*0.02)))
+- Properties on the item heading (properties drawer):
+  :LEARN_EASE: (default 2.5), :LEARN_INTERVAL: (days), :LEARN_REPS:,
+  :LEARN_LAPSES:, and next due as SCHEDULED (org native).
+- =org-learn-review= (interactive): session over due items per
+  =org-learn-review-scope= (file | agenda | directory, default file).
+  Per item: show the entry content, prompt quality 0-5 (or s=skip,
+  q=quit), then write properties + SCHEDULED + LOGBOOK note.
+- =org-learn-review--process-entry= (non-interactive core, testable):
+  takes quality, updates the entry at point.  Sessions are a thin loop
+  over it.
+- Agenda integration: =org-learn-agenda-view= — custom agenda command
+  listing items with LEARN_REPS set and SCHEDULED <= today (new items
+  = REPS missing/0, shown after due).
+
+* Behavior law
+- No org-roadmap require (boundary).  Day-granularity, no timers.
+- Due = SCHEDULED date <= today; unscheduled with body = new.
+- Item content shown = heading text + body, subheadings hidden.
+- All writes idempotent, via the Org API (org-entry-put /
+  org-schedule), no regex surgery on the drawer.
+
+* Acceptance (tests land WITH the code, tests/test-org-learn-review.el)
+- SM-2 math table: fixed vectors for q=0..5 over reps 0,1,2,n and
+  ease floor 1.3 (exact expected values, no float slop beyond 1e-9).
+- process-entry on a temp org file: grade 5 -> reps 1, interval 1,
+  SCHEDULED tomorrow; second grade -> interval 6; grade 2 -> reps 0,
+  lapses incremented, interval 1, ease dropped.
+- Due selection: temp file with overdue/due/future/new items returns
+  exactly the right order (due first oldest-first, then new).
+- Agenda command is a commandp; scope custom honored.
+- Byte-compile warning-free; boundary lock test stays green.

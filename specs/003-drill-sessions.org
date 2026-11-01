@@ -1,0 +1,62 @@
+#+TITLE: Spec 003 — drill sessions (flashcards: cloze, two-sided, leeches, cram)
+#+STATUS: SPEC — Lead-authored 2026-11-01 (research: agent-team/IDEAS.org).
+
+* Source
+README loop verb "review" taken to flashcards, org-drill-style card
+syntax (WORG digest in IDEAS.org) but a clean-room implementation on
+top of spec 002's scheduler.
+
+* Goal
+Interactive drill sessions in a dedicated buffer: cards hidden until
+revealed, graded 0-5, scheduled by org-learn-review.
+
+* File law
+New file org-learn-drill.el; requires org-learn-review (same package).
+Public symbols org-learn-drill-.
+
+* Card model
+- A card = a heading tagged =org-learn-drill-tag= (default "drill").
+- Card type = DRILL_CARD_TYPE property, default "simple":
+  - simple: body visible, child subheadings hidden until reveal.
+  - cloze: =[answer||hint]= spans in the body; answers masked as
+    […) until reveal; hints stay visible while masked (org-drill
+    syntax, IDEAS.org L124-138).
+  - twosided: first two child subheadings are the two sides; reveal
+    shows the other side; extra subheadings are always notes.
+- Card enumeration: =org-learn-drill--cards= scope arg same semantics
+  as org-learn-review-scope (file | agenda | directory).
+
+* Session
+- =org-learn-drill= (interactive) and =org-learn-drill-cram= (all due
+  regardless of schedule, except items reviewed within
+  =org-learn-drill-cram-hours=, default 12).
+- Dedicated buffer *org-learn-drill*, org-mode, read-only, one card at
+  a time; header line: progress "n/total", scope, session mode.
+- Keys: SPC reveal -> then 0-5 grade (same labels as review), s skip,
+  q quit (progress kept — graded items stay graded), e pop to the
+  source entry for editing (save-match marker first).
+- Grading delegates to org-learn-review--process-entry (single source
+  of scheduling truth).
+- Session limits: =org-learn-drill-max-items= (default 30, nil = no
+  limit).
+
+* Leeches
+- =org-learn-drill-leech-threshold= (default 15) lapses -> tag :leech:
+  (idempotent).  =org-learn-drill-leech-method= (warn | skip | nil),
+  default warn: a warning line shows when a leech is presented.
+
+* Behavior law
+- No org-roadmap require.  Masking via text properties/overlays on a
+  COPY of the content in the session buffer — the source file is never
+  modified by presentation.
+- Empty cards (no body, no children) are skipped.
+
+* Acceptance (tests land WITH the code, tests/test-org-learn-drill.el)
+- Cloze parse: split a body into segments, answers and hints extracted
+  exactly ([answer||hint], [answer], multiple spans).
+- Card enumeration on a temp file: right cards found (tag law), empty
+  cards skipped, twosided sides resolved.
+- Grading a card updates the source entry properties (via the review
+  core) — one grade, one SCHEDULED.
+- Cram hours filter honored.
+- Byte-compile warning-free; boundary lock test stays green.
