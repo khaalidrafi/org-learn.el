@@ -1,0 +1,54 @@
+#+TITLE: Spec 001 — org-learn-capture (first learning-helper improvement)
+#+STATUS: SPEC — landed by port-engineer TODO-001; implementation is a
+#+STATUS: new board TODO for the Lead to dispatch (tests land with it).
+
+* Source
+README.org: the package "helps you capture, review and grow it".  The
+skeleton has only =org-learn-open=; capture is the first verb of the
+loop and the smallest verifiable improvement.
+
+* Goal
+Capture a learning note into the org-learn notes file from anywhere in
+Emacs, without leaving the current buffer.
+
+* Interface
+- =org-learn-capture= (interactive): prompt for a short title
+  (default: thing-at-point or region text when active, truncated).
+  Append to =org-learn-file= (create the file with a minimal header
+  when missing):
+  #+begin_src org
+    * TODO <title>
+      :PROPERTIES:
+      :CREATED: <ISO-8601 timestamp>
+      :END:
+  #+end_src
+- =org-learn-capture-from-region= (interactive, region active): same,
+  plus the region text indented as the heading body.
+
+Both are =org-learn-=-prefixed commands (local law); both live in
+org-learn.el (one feature per file).
+
+* Behavior law
+- Never =(require 'org-roadmap)= — the soft boundary stays (audit
+  evidence: STATE.org, org-learn.el:35-38); the boundary ERT test must
+  stay green.
+- Idempotent file header: written once, never duplicated on later
+  captures.
+- Honors the =org-learn-file= custom (tests rebind it to a temp file).
+- Timestamps: =format-time-string= ISO-8601; sorting-safe.
+- No orphan buffers: the notes file is edited via with-temp-file /
+  append, not by leaving a visited buffer behind.
+
+* Acceptance (tests land WITH the implementation — local AGENTS.md)
+- capturing into a missing file creates it with header + one TODO
+  heading
+- capturing twice appends and does NOT duplicate the header
+- region capture embeds the region text under the heading
+- =org-learn-file= custom is honored (temp file in tests)
+- =org-learn-capture= and =org-learn-capture-from-region= are commands
+- ERT suite stays 100% green; both Elisp files byte-compile
+  warning-free under =emacs -Q --batch=
+
+* Out of scope (later specs)
+Review scheduling (spaced repetition), growth/rewrite ops, any
+org-roadmap integration — that API has not landed (boundary law).
