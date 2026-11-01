@@ -184,5 +184,10 @@ with an ellipsis."
   (should (string-suffix-p "..."
                            (org-learn--truncate-title (make-string 100 ?x)))))
 
+;;; Review scheduler tests (spec 002) -- loaded here so the single CI
+;;; entry (one -l of this file) runs the whole suite.
+
+(load (expand-file-name "tests/test-org-learn-review.el" default-directory))
+
 (provide 'test-org-learn)
 ;;; test-org-learn.el ends here
