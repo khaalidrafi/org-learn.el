@@ -41,6 +41,8 @@
 ;;; Code:
 
 (require 'org)
+(require 'subr-x)
+(require 'thingatpt)
 
 (defgroup org-learn nil
   "Org-based learning helper."
@@ -52,11 +54,123 @@
   :type 'file
   :group 'org-learn)
 
+(defconst org-learn--title-max 60
+  "Maximum capture title length before an ellipsis is appended.")
+
+(defconst org-learn--file-header
+  "#+TITLE: Learning notes\n\n"
+  "Minimal Org header written when the notes file is created.")
+
 ;;;###autoload
 (defun org-learn-open ()
   "Open the org-learn notes file."
   (interactive)
   (find-file org-learn-file))
+
+;;; Spec 001 -- capture (specs/001-capture.org).
+
+(defun org-learn--truncate-title (title)
+  "Truncate TITLE to `org-learn--title-max' with an ellipsis.
+TITLE is trimmed of surrounding whitespace; nil becomes the empty
+string.  Long titles lose their tail and end with \"...\"."
+  (let ((title (string-trim (or title ""))))
+    (if (<= (length title) org-learn--title-max)
+        title
+      (concat (substring title 0 (- org-learn--title-max 3)) "..."))))
+
+(defun org-learn--default-title ()
+  "Return the default title for a new capture.
+The active region wins over the thing at point; the result is
+collapsed to a single line and truncated (see
+`org-learn--truncate-title')."
+  (let ((raw (if (use-region-p)
+                 (buffer-substring-no-properties
+                  (region-beginning) (region-end))
+               (thing-at-point 'symbol t))))
+    (org-learn--truncate-title
+     (and raw (string-trim (replace-regexp-in-string "[ \t\n\r]+" " " raw))))))
+
+(defun org-learn--iso8601-now ()
+  "Return the current time as a sorting-safe ISO-8601 timestamp."
+  (format-time-string "%Y-%m-%dT%H:%M:%S%:z"))
+
+(defun org-learn--format-entry (title &optional body)
+  "Return the Org text for a TODO heading TITLE with optional BODY.
+BODY must already be indented as heading body text, without a
+trailing newline; a CREATED property drawer is always included."
+  (concat "* TODO " title
+          "\n  :PROPERTIES:\n  :CREATED: " (org-learn--iso8601-now)
+          "\n  :END:\n"
+          (if (and body (not (string= body ""))) (concat body "\n") "")))
+
+(defun org-learn--indent-block (text)
+  "Return TEXT with every non-blank line indented two spaces.
+Leading and trailing blank lines are removed, so the result fits
+under a heading as its body."
+  (with-temp-buffer
+    (insert (string-trim text))
+    (goto-char (point-min))
+    (while (not (eobp))
+      (unless (looking-at-p "[ \t]*$")
+        (insert "  "))
+      (forward-line 1))
+    (string-trim-right (buffer-string))))
+
+(defun org-learn--append-entry (entry)
+  "Append ENTRY text to `org-learn-file'.
+When the file is missing or empty it is created with the minimal
+header from `org-learn--file-header', written exactly once.  The
+file is never visited: the work happens in a temp buffer, so no
+orphan buffer is left behind."
+  (let ((file (expand-file-name org-learn-file))
+        (exists (file-exists-p org-learn-file)))
+    (with-temp-buffer
+      (when exists
+        (insert-file-contents file))
+      (goto-char (point-max))
+      (unless (bolp)
+        (insert "\n"))
+      (when (or (not exists) (bobp))
+        (insert org-learn--file-header))
+      (insert entry)
+      (write-region (point-min) (point-max) file nil 'quiet))))
+
+;;;###autoload
+(defun org-learn-capture (&optional title)
+  "Capture a learning note titled TITLE into `org-learn-file'.
+Appends a TODO heading with a CREATED property; the notes file is
+created with a minimal header when missing and the header is
+never duplicated.  Interactively, TITLE is prompted for and
+defaults to the region or the thing at point, truncated."
+  (interactive
+   (list (read-string "Learning note title: " nil nil
+                      (org-learn--default-title))))
+  (let ((title (string-trim (or title (org-learn--default-title) ""))))
+    (when (string= title "")
+      (setq title "Untitled"))
+    (org-learn--append-entry
+     (org-learn--format-entry (org-learn--truncate-title title)))))
+
+;;;###autoload
+(defun org-learn-capture-from-region (beg end &optional title)
+  "Capture the region BEG..END as the body of a new learning note.
+The region text is indented as the heading body below the TODO
+heading.  Interactively this requires an active region and prompts
+for TITLE (default: the region text, truncated)."
+  (interactive
+   (progn
+     (unless (use-region-p)
+       (user-error "No active region; mark the text to capture first"))
+     (list (region-beginning) (region-end)
+           (read-string "Learning note title: " nil nil
+                        (org-learn--default-title)))))
+  (let ((title (string-trim (or title (org-learn--default-title) ""))))
+    (when (string= title "")
+      (setq title "Untitled"))
+    (org-learn--append-entry
+     (org-learn--format-entry (org-learn--truncate-title title)
+                              (org-learn--indent-block
+                               (buffer-substring-no-properties beg end))))))
 
 (provide 'org-learn)
 ;;; org-learn.el ends here
