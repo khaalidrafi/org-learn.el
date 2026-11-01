@@ -16,6 +16,13 @@ to build it:
 - [[file:BOOTSTRAP-PROMPT.org][BOOTSTRAP-PROMPT.org]] — the teamify dispatch the Owner points the agent to
 - [[file:agent-team/NOTICE.org][agent-team/NOTICE.org]] — standing inbox from the Director of Engineering
 - [[file:AGENTS.md][AGENTS.md]] — local law (project specifics on top of the global agent law)
+- [[file:STATE.org][STATE.org]] — project state: gate proof, compliance audit, next step
+
+Gate (proven 2026-11-01, TODO-001): byte-compile and the ERT suite in
+[[file:tests/test-org-learn.el][tests/test-org-learn.el]] both run green under =emacs -Q --batch= —
+commands and the one CI gap (the =test= job lacks the ert step; that
+workflow is Lead-owned) are recorded in [[file:STATE.org][STATE.org]].  First
+improvement spec: [[file:specs/001-capture.org][specs/001-capture.org]].
 
 * License
 
