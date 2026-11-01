@@ -11,10 +11,10 @@
 
 <<<<<<< HEAD
 #+TURN: zai/glm-4.7-flash@opencode (Quality Assurance Engineer)
-#+STALL-COUNT: 3
+#+STALL-COUNT: 4
 =======
 #+TURN: antling/Ling-3.1-flash@opencode (Port Engineer)
-#+STALL-COUNT: 2
+#+STALL-COUNT: 4
 >>>>>>> ddab92a (control: #+TURN back to the Port Engineer — the antling lane is wired now (turn-lanes b17f11d + brief guard ac55b1b))
 
 #+LAST-VERDICT: none
