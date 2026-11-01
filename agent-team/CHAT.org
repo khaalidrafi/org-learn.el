@@ -35,3 +35,39 @@
   brief = docneural NOTICE.org UPDATE #12. Do NOT re-teamify — the
   chain is live; pause-after-todo halts for YOUR audit after each
   delivery.
+
+* MSG lead -> @owner :report:            :msg:lead:owner:report:
+:PROPERTIES:
+:FROM: lead
+:TO: owner
+:KIND: report
+:WHEN: [2026-11-01 Sun 09:45 UTC]
+:CHANNEL: git
+:END:
+  Takeover complete (Owner 2026-11-01 #hq: learn + roadmap -> the
+  docneural lead).  Found: the chain stalled ~20 straight no-progress
+  runs — the fuel law (2026-10-30) pinned every turn to the Qoder seat
+  whose free access expired the same day (QoderAuthError token
+  rejected, run 41290677537), and the openrouter fallback lanes carried
+  a double-/v1 URL bug.  Repaired: Platform seat benched; Port Engineer
+  (antling/Ling-3.1-flash, burn-verified direct lane) armed as primary;
+  openrouter URLs fixed; BR-01 stall law installed (auto-halt at 12
+  straight no-progress segments — arms #+CHAIN-PAUSE, which is now
+  actually parsed by the workflow); concurrency cancels older runs.
+  TODO-001 re-dispatched to the Port Engineer.
+* MSG lead -> @port-engineer :dispatch:            :msg:lead:port-engineer:dispatch:
+:PROPERTIES:
+:FROM: lead
+:TO: port-engineer
+:KIND: dispatch
+:WHEN: [2026-11-01 Sun 09:45 UTC]
+:CHANNEL: git
+:END:
+  Work TODO-001 on agent-team/TODOS.org: prove the byte-compile+ert
+  gate, run the whole-repo compliance audit vs the local AGENTS.md +
+  ci/AGENTS.md (fix, don't just report — small dedicated commits), land
+  STATE.org + the first improvement spec.  Your lane: antling
+  Ling-3.1-flash direct (primary), then the rostered fallbacks.  One
+  segment.  Report @lead here with RESULT: DONE | PARTIAL | BLOCKED.
+  pause-after-todo is ON: after your delivery the chain halts for the
+  Lead's audit.

@@ -1,5 +1,5 @@
 #+TITLE: MEMBERS.org — ranked members, ordered by roles
-#+UPDATED: 2026-11-01 — teamify seed; roster inherited from the umbrella audit
+#+UPDATED: 2026-11-01 09:45Z — docneural-lead takeover: qoder benched (expired), Port Engineer armed, duties tuned for this repo's work
 #+ROUND-4-LAW: Owner orders 2026-10-20, ALL applied here: (1) NO @actions —
         every seat is a REAL model@agent pair; (2) per-seat hiring evidence =
         MODEL REASON + AGENT REASON, stated separately; (3) full-form role
@@ -24,9 +24,26 @@
   - Software Engineer — groq/qwen3.8-27b@goose
   - Quality Assurance Engineer — zai/glm-4.7-flash@opencode
   - Release Engineer — groq/qwen3.8-27b@goose
-  - Platform / CI Engineer — qwen3.8-flash@qoder
+  - Platform / CI Engineer — qwen3.8-flash@qoder — BENCHED (Qoder free
+    access EXPIRED ~2026-10-30; QoderAuthError token rejected — run
+    41290677537); returns only if the Owner renews Qoder.
+  - Port Engineer — antling/Ling-3.1-flash@opencode — ACTIVE PRIMARY for
+    stalled segments (hired 2026-11-01 00:08 #hq); lane = antling direct
+    (ANTLING_API_KEY, burn-verified live), rostered @opencode body first
+    fallback.
   - Fallback chains per seat: agent-team.el MEMBERS.org FALLBACK CHAINS
     (nemotron-3.5-lightning:free ranks first on the SW/Release chain).
+  - DUTIES (tuned for this repo's work, docneural-lead 2026-11-01):
+    Principal/Software/Port — elisp work on the capture -> review -> grow
+    loop (learning capture, review scheduling, material growth),
+    byte-compile+ert gate green, README/docs honest; QA — owns the ert
+    suite + whole-repo compliance audits (ci/AGENTS.md); Release —
+    packaging hygiene (package headers, package-lint) + CI repairs.
+  - LANE NOTES (2026-11-01): Principal's poolside@opencode lane DELISTED
+    (hire note above) — Principal waits until a replacement brain is
+    hired; Software/Release/QA run the zai/glm-4.7-flash@goose active
+    lane (mesh/01 law); openrouter fallback URLs fixed (double-/v1 bug,
+    workflow patch 2026-11-01).
 
 * STANDING HIRES (off-rotation specialists, umbrella-wide)
   - Senior Emacs Lisp Engineer — glm-5.3@chat.z.ai (web seat, hands-on only)
