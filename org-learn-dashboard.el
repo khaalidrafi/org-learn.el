@@ -88,9 +88,9 @@ is non-nil, starts an org-timer pomodoro whose callback clocks out
 when it fires.  The LOGBOOK carries the evidence."
   (interactive)
   (unless (derived-mode-p 'org-mode)
-    (user-error "org-learn-study: not in an Org buffer"))
+    (user-error "Not in an Org buffer; org-learn-study needs one"))
   (unless (ignore-errors (org-back-to-heading t))
-    (user-error "org-learn-study: point is not on a heading"))
+    (user-error "No heading at point; org-learn-study needs one"))
   (org-clock-in)
   (when org-learn-study-timer-minutes
     (add-hook 'org-timer-done-hook #'org-learn-study--timer-fired)
