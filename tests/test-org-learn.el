@@ -193,5 +193,13 @@ with an ellipsis."
 
 (load (expand-file-name "tests/test-org-learn-ai.el" default-directory))
 
+;;; Drill session tests (spec 003) -- same single-entry law.
+
+(load (expand-file-name "tests/test-org-learn-drill.el" default-directory))
+
+;;; Dashboard tests (spec 005) -- same single-entry law.
+
+(load (expand-file-name "tests/test-org-learn-dashboard.el" default-directory))
+
 (provide 'test-org-learn)
 ;;; test-org-learn.el ends here
