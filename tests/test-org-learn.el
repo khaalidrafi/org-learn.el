@@ -189,5 +189,9 @@ with an ellipsis."
 
 (load (expand-file-name "tests/test-org-learn-review.el" default-directory))
 
+;;; AI tutor tests (spec 004) -- same single-entry law.
+
+(load (expand-file-name "tests/test-org-learn-ai.el" default-directory))
+
 (provide 'test-org-learn)
 ;;; test-org-learn.el ends here
