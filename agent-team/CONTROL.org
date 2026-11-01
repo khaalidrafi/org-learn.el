@@ -8,8 +8,10 @@
 #+OBJECTIVE: bootstrap per BOOTSTRAP-PROMPT.org + agent-team/NOTICE.org TEAM-UPDATE #1 (Owner order 2026-10-28 #hq; teamify completed 2026-11-01 #hq 'Teamify them'): keep org-roadmap at the boundary (declared, never hard-required, do not block on it), prove the byte-compile gate, run the whole-repo compliance audit vs the local AGENTS.md + ci/AGENTS.md, land fixes, then deliver the first learning-helper improvement per README.org
 #+OBJECTIVE-STATE: OPEN
 #+KILL-SWITCH: OFF
-#+TURN: qwen3.8-flash@qoder (Platform Engineer)
-#+STALL-COUNT: 25
+
+#+TURN: antling/Ling-3.1-flash@opencode (Port Engineer)
+#+STALL-COUNT: 0
+
 #+LAST-VERDICT: none
 #+LAST-BLOCKED-NOTIFY: 0
 #+PAUSE-AFTER-TODO: ON
@@ -39,3 +41,10 @@
 # after a draining pre-takeover run re-pinned the Platform seat (old fuel-law
 # rotation map). TODO-001 runs on the antling direct lane, as delivered on
 # org-roadmap (DONE, ert 7/7).
+#+DISPATCH: 2026-11-01 13:32Z — docneural-lead un-stall tick (Owner order
+# 13:13Z #hq): the finalize rotation map was a qoder SELF-LOOP (release and
+# platform both rotated back into the benched qoder seat) — 23 straight
+# no-progress segments.  Workflow synced from org-roadmap: cancel-in-progress
+# ON, CHAIN-PAUSE parse, BR-01 12-stall halt, antling lane mapping + BODIES,
+# live-lane rotation (SW -> QA -> Release -> Port -> SW).  #+TURN re-pointed
+# at the Port Engineer; #+STALL-COUNT 23 -> 0.
