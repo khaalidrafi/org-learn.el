@@ -98,6 +98,14 @@ jobs:
               "(unless (byte-compile-file \"$f\") (kill-emacs 1))"
           done
 
+      - name: ERT suite
+        # Header law (:4-5): CI verifies the same things we verify locally --
+        # ert suite AND byte-compile, not one without the other.  Gap cited
+        # by the port engineer TODO-001 (lead-owned edit, 2026-11-01).
+        run: |
+          emacs -Q --batch -L . -l tests/test-org-learn.el \
+            -f ert-run-tests-batch-and-exit
+
 
   # Seat-liveness heartbeat. One real completion per accountable API seat,
   # direct to the provider. Results land in the run summary; NOTHING here can
@@ -282,6 +290,10 @@ jobs:
       LARK_WEBHOOK_SOFTWARE_ENGINEER: ${{ secrets.LARK_WEBHOOK_SOFTWARE_ENGINEER }}
       LARK_WEBHOOK_QUALITY_ASSURANCE_ENGINEER: ${{ secrets.LARK_WEBHOOK_QUALITY_ASSURANCE_ENGINEER }}
       LARK_WEBHOOK_RELEASE_ENGINEER: ${{ secrets.LARK_WEBHOOK_RELEASE_ENGINEER }}
+      # Kit-bug workaround (cited by port-engineer 2026-11-01 13:33Z,
+      # agent-team.el:304 chat-repo regex single-backslash bug): pins the
+      # :REPO: drawer in CHAT.org entries until the kit fix lands.
+      AGENT_CHAT_REPO: khaalidrafi/org-learn.el
     steps:
       - uses: actions/checkout@v4
         with:
