@@ -114,7 +114,10 @@ dropped, so answers and hints are extracted exactly."
     (while (string-match "\\[\\([^][]+\\)\\]" body pos)
       (let* ((before (substring body pos (match-beginning 0)))
              (raw (match-string 1 body))
-             (parts (string-split raw "||" t)))
+             ;; string-split runs string-match internally and would
+             ;; clobber the body match data; save it so the (match-end
+             ;; 0) below still indexes BODY.
+             (parts (save-match-data (string-split raw "||" t))))
         (unless (string-empty-p before)
           (push (list :type 'text :text before) segments))
         (push (list :type 'cloze
@@ -187,7 +190,10 @@ The plist carries :marker :title :tags :type :scheduled :lapses
            (lapses (string-to-number
                     (or (org-entry-get (point) "LEARN_LAPSES") "0")))
            (level (org-current-level))
-           (end (org-end-of-subtree))
+           ;; save-excursion: org-end-of-subtree leaves point at the
+           ;; subtree end; the body and children below must be read
+           ;; from the heading itself.
+           (end (save-excursion (org-end-of-subtree)))
            (children-beg (save-excursion
                            (and (org-goto-first-child) (point))))
            (body (org-learn-drill--body-text
