@@ -62,7 +62,7 @@ on:
 
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true   # Owner mission 2026-11-01: newer runs cancel older queued ones
 
 permissions:
   contents: write
@@ -256,6 +256,8 @@ jobs:
       GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
       OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
       ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+      # Port Engineer lane (hired 2026-11-01 00:08 #hq): antling direct.
+      ANTLING_API_KEY: ${{ secrets.ANTLING_API_KEY }}
       # Acting Platform Engineer's key (Owner delivered the PAT 2026-10-21).
       QODER_PERSONAL_ACCESS_TOKEN: ${{ secrets.QODER_PERSONAL_ACCESS_TOKEN }}
       # CodeBuddy seat (Owner order 2026-10-21: auth on Lead box, cred ->
@@ -306,6 +308,13 @@ jobs:
             echo "mode=complete" >> "$GITHUB_OUTPUT"
             exit 0
           fi
+          # CHAIN-PAUSE (BR-01 stall law / Lead switch): ON = the automation
+          # takes a break — no turns run until the Lead clears it to OFF.
+          CPAUSE=$(grep -oP '^\#\+CHAIN-PAUSE:\s*\K\w+' "$CTL" | head -1 || true)
+          if [ "${CPAUSE:-OFF}" = "ON" ]; then
+            echo "mode=paused" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           # Placeholder objective = nothing specified by the Owner yet.
           if [ -z "$OBJECTIVE" ] || echo "$OBJECTIVE" | grep -q "the Owner writes"; then
             echo "mode=no-objective" >> "$GITHUB_OUTPUT"
@@ -320,6 +329,7 @@ jobs:
             zai/glm-4.7-flash@opencode*)                     NEXT_SEAT=quality-assurance-engineer ;;
             groq/qwen3.8-27b@goose*Release*)                 NEXT_SEAT=release-engineer ;;
             qwen3.8-flash@qoder*)                            NEXT_SEAT=platform-engineer ;;
+            antling/Ling-3.1-flash@opencode*)                NEXT_SEAT=port-engineer ;;
             *)                                               NEXT_SEAT=principal-engineer ;;
           esac
           echo "seat=$NEXT_SEAT" >> "$GITHUB_OUTPUT"
@@ -333,6 +343,7 @@ jobs:
             killed)       MSG="TEAM STOPPED BY KILL SWITCH — no turns run until #+KILL-SWITCH: OFF" ;;
             complete)     MSG="OBJECTIVE COMPLETE — team standing down (set #+OBJECTIVE-STATE: OPEN with a new objective to restart)" ;;
             no-objective) MSG="NO OBJECTIVE SET — write one line into #+OBJECTIVE in agent-team/CONTROL.org; rotation idle until then" ;;
+            paused)       MSG="CHAIN-PAUSE ARMED (BR-01 stall halt or Lead switch) — no turns until #+CHAIN-PAUSE: OFF" ;;
           esac
           echo "$MSG" >> "$SUMMARY"
 
@@ -501,6 +512,7 @@ jobs:
             principal-engineer)                                            BODIES="opencode goose codebuddy qoder" ;;
             quality-assurance-engineer|software-engineer|release-engineer) BODIES="opencode goose codebuddy qoder" ;;
             platform-engineer)                                             BODIES="qoder goose codebuddy" ;;
+            port-engineer)                                                 BODIES="goose opencode codebuddy" ;;
             *)                                                             BODIES="" ;;
           esac
           bash ci/bin/harness_run_build.sh \
@@ -956,16 +968,17 @@ jobs:
           echo "branch=${TURN_BRANCH:-}" >> "$GITHUB_OUTPUT"
           CTL=agent-team/CONTROL.org
           case "${{ steps.control.outputs.seat }}" in
-            principal-engineer)          NEXT="qwen3.8-flash@qoder (Platform Engineer)" ;;
+            principal-engineer)          NEXT="groq/qwen3.8-27b@goose (Software Engineer)" ;;
             software-engineer)           NEXT="zai/glm-4.7-flash@opencode (Quality Assurance Engineer)" ;;
             quality-assurance-engineer)  NEXT="groq/qwen3.8-27b@goose (Release Engineer)" ;;
-            release-engineer)            NEXT="qwen3.8-flash@qoder (Platform Engineer)" ;;
-            # One-off Lead-paced proof dispatch (AUTH-READY 2026-10-21):
-            # after the Platform segment the rotation returns to the top.
-            # Fuel law 2026-10-30: poolside@opencode is the documented-
-            # defective body — rotation re-arms the LIVE Qoder lane instead
-            # (paid qoder ids stay dead until the Owner refuels).
-            platform-engineer)          NEXT="qwen3.8-flash@qoder (Platform Engineer)" ;;
+            release-engineer)            NEXT="antling/Ling-3.1-flash@opencode (Port Engineer)" ;;
+            port-engineer)               NEXT="groq/qwen3.8-27b@goose (Software Engineer)" ;;
+            # Fuel law 2026-10-30 SUPERSEDED (docneural-lead, 2026-11-01):
+            # Qoder free access expired ~2026-10-30 (QoderAuthError token
+            # rejected — run 41290677537). Platform seat BENCHED until the
+            # Owner renews Qoder; rotation runs live lanes only:
+            # SW -> QA -> Release -> Port -> SW.
+            platform-engineer)          NEXT="groq/qwen3.8-27b@goose (Software Engineer)" ;;
           esac
           git checkout -f ai/main
           # Race-proof the control commit: my (Lead's) pushes or another
@@ -1271,6 +1284,19 @@ jobs:
           if [ "$NEW" -ge 4 ] && [ "$DECISION" = "dispatch" ]; then
             DECISION="backoff-dispatch"   # slow-poll: transient dead lanes recover on their own
           fi
+          # BR-01 stall law (Owner mission 2026-11-01): TWELVE straight
+          # no-progress segments halt the chain — arm #+CHAIN-PAUSE so
+          # scheduled/dispatched runs idle until the Lead clears it OFF.
+          if [ "$NEW" -ge 12 ] && { [ "$DECISION" = "dispatch" ] || [ "$DECISION" = "backoff-dispatch" ]; }; then
+            DECISION="stall-halt-BR01"
+            git fetch origin ai/main
+            git reset --hard origin/ai/main
+            sed -i "s|^\#+CHAIN-PAUSE:.*|\#+CHAIN-PAUSE: ON|" "$CTL"
+            git add "$CTL"
+            git commit -m "control: arm #+CHAIN-PAUSE — BR-01 stall halt at ${NEW} no-progress segments" \
+              -m "Co-authored-by: z.ai-agent <z.ai-agent@z.ai>" || echo "::notice::BR-01 arm commit empty"
+            git push origin "ai/main" || echo "::warning::BR-01 arm push failed"
+          fi
           # Export for the Telegram mirror step below (same job, later step).
           echo "CHAIN_DECISION=$DECISION" >> "$GITHUB_ENV"
           echo "CHAIN_STALL=$NEW" >> "$GITHUB_ENV"
@@ -1293,7 +1319,7 @@ jobs:
           echo "" >> "$SUMMARY"
           echo "- merge: ${OUTCOME} (${{ steps.merge.outputs.branch }})" >> "$SUMMARY"
           echo "- byte-compile gate: ${GATE:-skipped}" >> "$SUMMARY"
-          echo "- stall count: ${NEW} (>=4 = 5-min backoff mode)" >> "$SUMMARY"
+          echo "- stall count: ${NEW} (>=4 = 5-min backoff, >=12 = BR-01 halt)" >> "$SUMMARY"
           echo "- chain decision: **${DECISION}** (dispatch HTTP ${DISPATCH_CODE})" >> "$SUMMARY"
           echo "" >> "$SUMMARY"
           echo "kill=${KILL:-OFF} state=${OBJSTATE:-OPEN}" >> "$SUMMARY"
