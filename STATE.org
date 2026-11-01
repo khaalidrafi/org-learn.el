@@ -1,0 +1,56 @@
+#+TITLE: STATE.org — org-learn.el project state (kept current by the team)
+
+* PROJECT
+  - khaalidrafi/org-learn.el — an Org-based learning helper for Emacs:
+    learning material lives in Org files; the package helps you capture,
+    review and grow it (README.org).
+  - Language: Emacs Lisp.  Conventions (root AGENTS.md): every Elisp file
+    carries =-*- lexical-binding: t; -*-=, one feature per file, public
+    symbols use the =org-learn-= prefix, header passes =checkdoc=
+    (Author: Khalid, GPL-3.0-or-later).
+  - Dependency boundary: org-roadmap is declared in the package header
+    (org-learn.el:7) and commented as intent (org-learn.el:35-38); the
+    code never =(require 'org-roadmap)= (grep-verified 2026-11-01, zero
+    hits outside the header/commentary).  Locked by ERT test
+    =org-learn-keeps-the-org-roadmap-boundary= (tests/test-org-learn.el:53).
+
+* GATE — proven green 2026-11-01 (port-engineer, TODO-001)
+  - byte-compile (the exact CI command,
+    .github/workflows/agent-team.yml:92-99):
+    #+begin_src sh
+      emacs -Q --batch -L . --eval '(byte-compile-file "org-learn.el")'
+    #+end_src
+    -> exit 0 (also warning-free for tests/test-org-learn.el).
+  - ert:
+    #+begin_src sh
+      emacs -Q --batch -L . -l tests/test-org-learn.el \
+            -f ert-run-tests-batch-and-exit
+    #+end_src
+    -> exit 0, "Ran 4 tests, 4 results as expected".
+  - CI GAP (lead-owned file, cited not edited): the =test= job runs
+    byte-compile only (.github/workflows/agent-team.yml:88-99) while its
+    own header law (:4-5, "ert suite AND byte-compile, not one without
+    the other") and agent-team/STATE.org GATE ("byte-compile + ert")
+    require ert too.  The suite is green locally; wiring the ert step
+    into CI is the Lead's edit.  Cited to @lead in CHAT.org.
+
+* COMPLIANCE AUDIT 2026-11-01 (root AGENTS.md + ci/AGENTS.md)
+  - FIXED   ERT suite landed — tests/test-org-learn.el (commit 9b004eb);
+    local law "ERT tests live in tests/; new features land with tests"
+    was unmet (no tests/ dir existed).
+  - FIXED   this STATE.org landed; README.org Status links it.
+  - FIXED   first improvement spec landed — specs/001-capture.org.
+  - CITED   CI =ert= gap above (workflow is Lead-owned; file:line
+    evidence in CHAT.org, not edited here).
+  - VERIFIED org-roadmap boundary (see PROJECT above).
+  - VERIFIED checkdoc header clean (=M-x checkdoc= exit 0);
+    lexical-binding cookie present in both Elisp files.
+  - ACCEPTED agent-team/CHARTER.md is Markdown: kit-provided by the
+    agent-team-ci teamify template; global law prefers Org but the kit
+    owns that file — noted, not converted (avoid kit drift).
+
+* NEXT
+  - Spec 001 (first improvement): =org-learn-capture= —
+    specs/001-capture.org.  Implementation is a new board TODO
+    (Lead's dispatch); tests land with it, per local law.
+  - Team layer state (board, chat, roster): agent-team/STATE.org.
