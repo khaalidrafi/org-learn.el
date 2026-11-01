@@ -828,7 +828,11 @@ jobs:
           SID_FILE="$SID_DIR/${SEAT}.sid"
           SID=""; [ -s "$SID_FILE" ] && SID="$(cat "$SID_FILE")"
           mkdir -p "$SID_DIR"
-          printf '%s\n' "$BRIEF" > /tmp/segment-brief.txt
+          # The composed brief arrives MOUNTED READ-ONLY (host law_brief.sh
+          # already wrote it); only fall back to writing the raw env BRIEF
+          # when the mount is empty — a blind rewrite here died on
+          # "Read-only file system" (run 41311918357 turn, port-engineer).
+          [ -s /tmp/segment-brief.txt ] || printf '%s\n' "$BRIEF" > /tmp/segment-brief.txt
           source "$PWD/.github/scripts/turn-lanes.sh"
           seat_batch_config "$SEAT"
           if [ -n "$BATCH_PROVIDER" ] && command -v emacs >/dev/null 2>&1 \
