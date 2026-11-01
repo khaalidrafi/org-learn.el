@@ -1,0 +1,33 @@
+#+TITLE: Spec 008 — org-learn-mode: one keymap, the whole learning loop
+#+STATUS: SPEC — Lead-authored.  Owner order 2026-11-01 18:28Z #hq:
+#+STATUS: "I need to get started learning FAST" — one entry point.
+
+* File law
+New file org-learn-mode.el (global minor mode org-learn-mode-everywhere
++ buffer-local org-learn-mode).  Autoloads from org-learn.el.  No
+eager requires of the sibling modules (autoload the commands).
+
+* Keymap (prefix C-c l, defcustom org-learn-mode-keymap-prefix)
+- c org-learn-capture            o org-learn-open
+- r org-learn-review             d org-learn-drill (cram: C-u)
+- a org-learn-ai-ask             f org-learn-ai-generate-flashcards
+- Q org-learn-ai-quiz            D org-learn-dashboard
+- p org-learn-plan-from-roadmap  P org-learn-progress-report
+- s org-learn-study              T / F / C — ai-trace / ai-focus / ai-clear
+- ? a help popup (with-temp-buffer window listing the map — the
+  "Make it clear which button does what" law from the Owner's UX
+  orders, applied to Emacs)
+
+* Behavior law
+- Map binds lazily: a missing optional module's key is still bound
+  (autoload) and errors with the module's own friendly user-error.
+- Global mode turns it on in org-mode buffers only (org-learn-mode is
+  meaningless elsewhere): (setq-default ...) via
+  global-org-learn-mode-everywhere enabling in org-mode-hook.
+- Menus: easy-menu entry "Learn" so M-x discoverability works.
+
+* Tests (tests/test-org-learn-mode.el, land WITH the code)
+- org-learn-mode is a minor mode; the keymap binds every key above to
+  a commandp symbol (lookup-key assertions).
+- The help popup builds without error.
+- Gate: byte-compile warning-free + ERT green + checkdoc.
