@@ -11,10 +11,10 @@
 
 <<<<<<< HEAD
 #+TURN: groq/qwen3.8-27b@goose (Release Engineer)
-#+STALL-COUNT: 4
+#+STALL-COUNT: 5
 =======
 #+TURN: groq/qwen3.8-27b@goose (Release Engineer)
-#+STALL-COUNT: 4
+#+STALL-COUNT: 5
 >>>>>>> ddab92a (control: #+TURN back to the Port Engineer — the antling lane is wired now (turn-lanes b17f11d + brief guard ac55b1b))
 
 #+LAST-VERDICT: none
