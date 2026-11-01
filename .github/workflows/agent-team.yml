@@ -212,6 +212,12 @@ jobs:
 
       - uses: docker/build-push-action@v6
         if: env.SKIP != 'true'
+        # The GHCR package `agent-team-harness' is bound to its first
+        # publisher repo — sibling repos get write_package denied (run
+        # 41281219347 evidence). The prebuild is cache-warm only: the turn
+        # job builds the image in-run, so a denied push must not redden the
+        # run or stop the chain.
+        continue-on-error: true
         with:
           context: .
           file: ci/docker/harness/Dockerfile

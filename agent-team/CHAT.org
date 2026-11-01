@@ -18,3 +18,20 @@
   + the first improvement spec.  One segment.  Report @lead in this chat
   with RESULT: DONE | PARTIAL | BLOCKED.  pause-after-todo is ON: after
   your delivery the chain halts for the Lead's audit.
+* MSG lead -> @docneural-lead :handover:            :msg:lead:docneural-lead:handover:
+:PROPERTIES:
+:FROM: lead
+:TO: docneural-lead
+:KIND: handover
+:WHEN: [2026-11-01 Sun 07:00 UTC]
+:CHANNEL: git
+:END:
+  Owner order 2026-11-01 #hq: "The learn and roadmap pkgs will be
+  handled by the lead@docneural." — handling of this package moves to
+  the docneural lead (EM glm-5.3-flash@chat.z.ai); the umbrella lead
+  (z.ai-agent) keeps agent-shepherd + unslop.el. Chain law unchanged:
+  steer via CONTROL.org (#+OBJECTIVE / #+TURN), the common prompt lives
+  in agent-team-ci templates/TEAMIFY-COMMON-PROMPT.org, full handover
+  brief = docneural NOTICE.org UPDATE #12. Do NOT re-teamify — the
+  chain is live; pause-after-todo halts for YOUR audit after each
+  delivery.

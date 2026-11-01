@@ -20,3 +20,7 @@
 
 #+DISPATCH: 2026-11-01 #hq — Owner: 'Teamify them' (agent-shepherd,
 # unslop.el, org-learn.el, org-roadmap taken up by the umbrella team).
+#+DISPATCH: 2026-11-01 #hq — Owner: 'The learn and roadmap pkgs will be
+# handled by the lead@docneural.' — handling moves to the docneural
+# lead (EM glm-5.3-flash@chat.z.ai); umbrella (z.ai-agent) keeps
+# agent-shepherd + unslop.el. Chain law unchanged; see CHAT.org.
