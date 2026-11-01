@@ -173,4 +173,8 @@ for TITLE (default: the region text, truncated)."
                                (buffer-substring-no-properties beg end))))))
 
 (provide 'org-learn)
+;; Spec 002 -- review scheduling lives in org-learn-review.el (one
+;; feature per file, AGENTS.md).  org-learn is provided first so the
+;; require below cannot recurse.
+(require 'org-learn-review)
 ;;; org-learn.el ends here
