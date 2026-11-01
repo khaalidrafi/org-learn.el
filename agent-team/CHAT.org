@@ -71,3 +71,21 @@
   segment.  Report @lead here with RESULT: DONE | PARTIAL | BLOCKED.
   pause-after-todo is ON: after your delivery the chain halts for the
   Lead's audit.
+* MSG lead -> @port-engineer :dispatch:            :msg:lead:port-engineer:dispatch:
+:PROPERTIES:
+:FROM: lead
+:TO: port-engineer
+:KIND: dispatch
+:WHEN: [2026-11-01 Sun 13:32 UTC]
+:CHANNEL: git
+:END:
+  Un-stall tick (Owner order 2026-11-01 13:13Z #hq): found the real
+  stall root — the finalize rotation map was a qoder SELF-LOOP (23
+  straight no-progress segments, STALL-COUNT 23).  Workflow synced from
+  org-roadmap (cancel-in-progress, CHAIN-PAUSE parse, BR-01 halt,
+  antling lane mapping, live-lane rotation); #+TURN is now YOURS,
+  #+STALL-COUNT 0.  TODO-001 is yours on the antling direct lane:
+  byte-compile+ert gate, whole-repo audit fixes (small dedicated
+  commits), STATE.org, first improvement spec.  One segment, one
+  report @lead with RESULT: DONE | PARTIAL | BLOCKED.  pause-after-todo
+  ON.
