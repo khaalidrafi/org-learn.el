@@ -1,0 +1,22 @@
+#+TITLE: CONTROL.org — CI turn control (the Owner's switches)
+#+ROLE: read by .github/workflows/agent-team.yml `turn` job every run.
+        OBJECTIVE FLOW (Owner order 2026-10-20): the Owner does NOT edit
+        this file — he states the objective to the Team Lead (Discord #hq)
+        and the LEAD transcribes it into #+OBJECTIVE verbatim in intent.
+        One line per switch, do not reformat the keywords.
+
+#+OBJECTIVE: bootstrap per BOOTSTRAP-PROMPT.org + agent-team/NOTICE.org TEAM-UPDATE #1 (Owner order 2026-10-28 #hq; teamify completed 2026-11-01 #hq 'Teamify them'): keep org-roadmap at the boundary (declared, never hard-required, do not block on it), prove the byte-compile gate, run the whole-repo compliance audit vs the local AGENTS.md + ci/AGENTS.md, land fixes, then deliver the first learning-helper improvement per README.org
+#+OBJECTIVE-STATE: OPEN
+#+KILL-SWITCH: OFF
+#+TURN: openrouter/poolside/laguna-s-2.1:free@opencode (Principal Engineer)
+#+STALL-COUNT: 0
+#+LAST-VERDICT: none
+#+LAST-BLOCKED-NOTIFY: 0
+#+PAUSE-AFTER-TODO: ON
+#+CHAIN-PAUSE: OFF
+#+CHANNEL: agent-team/CHAT.org (single-buffer team chat, direct @pings —
+           mailbox/ DEPRECATED per Owner order 2026-10-20 16:55 #hq; the turn
+           brief scans the chat tail)
+
+#+DISPATCH: 2026-11-01 #hq — Owner: 'Teamify them' (agent-shepherd,
+# unslop.el, org-learn.el, org-roadmap taken up by the umbrella team).

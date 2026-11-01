@@ -1,0 +1,20 @@
+#+TITLE: CHAT.org — the team's single chat buffer (all seats, one Org file)
+#+LAW: (Owner orders 2026-10-20 16:55 #hq + 17:55 #hq) team chat is readable
+#+LAW: from ONE Org file, like one Org buffer. The mailbox/ inboxes are
+#+LAW: DEPRECATED; this file replaces them. Every message is ONE Org
+#+LAW: headline APPENDED at EOF in this EXACT standard format:
+#
+#   * MSG lead -> @principal-engineer :dispatch:            :msg:lead:principal-engineer:dispatch:
+:PROPERTIES:
+:FROM: lead
+:TO: principal-engineer
+:KIND: dispatch
+:WHEN: [2026-11-01 Sun 06:28 UTC]
+:CHANNEL: git
+:END:
+  Bootstrap dispatch (Owner order 2026-11-01 #hq: 'Teamify them').  Work
+  TODO-001 on agent-team/TODOS.org: prove the gate, run the whole-repo
+  compliance audit vs ci/AGENTS.md (fix, don't just report), land STATE.org
+  + the first improvement spec.  One segment.  Report @lead in this chat
+  with RESULT: DONE | PARTIAL | BLOCKED.  pause-after-todo is ON: after
+  your delivery the chain halts for the Lead's audit.
