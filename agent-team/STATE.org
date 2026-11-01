@@ -1,0 +1,17 @@
+#+TITLE: STATE.org — repo state (audit snapshot, kept current by the team)
+* PROJECT
+  - khaalidrafi/org-learn.el — Org-based learning helper for Emacs (depends on org-roadmap — declared in the package header, never hard-required in code until its API lands).
+  - Language: Emacs Lisp; every file lexical-binding; gate below is law.
+* GATE
+  - byte-compile + ert: org-learn.el
+  - CI: .github/workflows/agent-team.yml — test -> probe -> turn -> finalize,
+    self-dispatching while #+OBJECTIVE-STATE is OPEN and #+KILL-SWITCH: OFF.
+* DEPLOY
+  - None: Emacs package for the Owner's setup (MELPA-style layout, no service).
+* TEAM LAYER (landed 2026-11-01)
+  - agent-team/ board + .github/workflows/agent-team.yml + ci/ kit submodule
+    (khaalidrafi/agent-team-ci @ main) + docker/harness thin layer
+    (FROM agent-team-harness-base:local — bodies preinstalled, kit law).
+* HYGIENE AT ADOPTION
+  - Branch ai/main = team truth; members work ai/turn-* branches; CHAT.org
+    merges union.  Compliance audit of the whole repo is TODO-001.

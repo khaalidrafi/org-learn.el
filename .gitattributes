@@ -1,0 +1,7 @@
+# Peer mesh merge law (Owner order 2026-10-20 #hq; 16:55 amendment:
+# ONE chat buffer replaces mailbox inboxes).  CHAT.org and the board are
+# append-only streams written by many seats from many turn branches — the
+# union driver takes BOTH sides on conflict so concurrent messages are
+# never lost by a merge.
+agent-team/CHAT.org             merge=union
+agent-team/mailbox/*.org        merge=union

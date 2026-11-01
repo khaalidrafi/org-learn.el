@@ -1,0 +1,20 @@
+#+TITLE: TODOS.org — team board (single source of truth)
+#+TODO: TODO ONGOING PROGRESS BLOCKED REVIEW | DONE CANCELLED DEFERRED
+# DISPATCH counter: 1
+#+COLUMNS: %40ITEM %TODO %EFFORT %CLOCKSUM(Clocked)
+#+PROPERTY: Effort_ALL 0 0:25 0:50 1:00 2:00 4:00
+# TIME LAW (Owner 2026-10-26 10:42 #hq): every TODO the Lead assigns sets
+# :EFFORT: from the ladder; the send instant opens an Org clock; a TODO
+# closed without clock evidence bounces at review.
+# REVIEW CLOCK LAW (Owner 2026-10-26 10:55 #hq): review is a clocked task too.
+
+* TODO Bootstrap the team layer: verify byte-compile gate green, whole-repo compliance audit vs local AGENTS.md + ci/AGENTS.md (fix, not report), land STATE.org + first improvement spec :bootstrap:teamify:
+  :PROPERTIES:
+  :EFFORT: 1:00
+  :ID: TODO-001
+  :ASSIGNEE: openrouter/poolside/laguna-s-2.1:free@opencode
+  :END:
+  Owner order 2026-11-01 #hq: 'Teamify them.'  Dispatched by the Lead in
+  agent-team/CHAT.org (MSG lead -> @principal-engineer).  One segment, one
+  report: @lead with RESULT: DONE | PARTIAL | BLOCKED.  pause-after-todo is
+  ON — the chain halts for the Lead's audit after this delivers.
