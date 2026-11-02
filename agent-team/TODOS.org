@@ -307,6 +307,7 @@
   :PROPERTIES:
   :EFFORT: 1:00
   :ID: TODO-011
+  :DEADLINE: <2026-11-02 Mon 18:30>
   :ASSIGNEE: groq/qwen3.8-27b@goose
   :END:
   Boarded by the Lead 2026-11-02.  Owner order 14:16Z verbatim:
