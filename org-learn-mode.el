@@ -77,6 +77,7 @@
     (define-key map (kbd "T") 'org-learn-ai-trace)
     (define-key map (kbd "F") 'org-learn-ai-focus)
     (define-key map (kbd "C") 'org-learn-ai-clear)
+    (define-key map (kbd "q") 'org-learn-quickstart)
     (define-key map (kbd "?") 'org-learn-mode-help)
     map)
   "Prefix keymap holding the whole org-learn learning loop.
