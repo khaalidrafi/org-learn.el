@@ -51,8 +51,10 @@
 ;;   from whole-file parses and `org-learn-roadmap-rollup-line' renders
 ;;   the summary the dashboard shows.  `org-learn-progress-report'
 ;;   computes its rollup through `org-roadmap-progress' when that API
-;;   exists (org-roadmap board TODO-006) and records the path it ran
-;;   ("rollup: org-roadmap" vs "rollup: local fallback").
+;;   exists (org-roadmap board TODO-006) -- called with the roadmap
+;;   buffer current and no arguments, because the real API parses the
+;;   current buffer -- and records the path it ran ("rollup:
+;;   org-roadmap" vs "rollup: local fallback").
 ;;
 ;; org-roadmap is required lazily INSIDE the commands (`require'
 ;; with nil t): the org-learn core keeps loading under CI -Q, and a
@@ -89,15 +91,16 @@
 ;; The bridge calls org-roadmap lazily inside its commands, so the
 ;; byte-compiler never sees the definitions; declare them to keep the
 ;; gate warning-free (spec 006: org-roadmap is never required at load
-;; time).  `org-roadmap-progress' is OPTIONAL (org-roadmap board
-;; TODO-006): it is consumed behind a guarded call with the local
-;; fallback below and is deliberately not part of the spec 011
-;; stub-drift guard.
+;; time).  `org-roadmap-progress' (org-roadmap board TODO-006) is
+;; OPTIONAL at load time: it is consumed behind the
+;; `org-learn-roadmap--progress-api-available-p' seam with the local
+;; fallback below.  The real API takes no arguments and parses the
+;; current buffer.
 (declare-function org-roadmap-get-todo-tree "org-roadmap")
 (declare-function org-roadmap-get-subtree-tree "org-roadmap")
 (declare-function org-roadmap-generate "org-roadmap")
 (declare-function org-roadmap-import-roadmap-sh "org-roadmap")
-(declare-function org-roadmap-progress "org-roadmap")
+(declare-function org-roadmap-progress "org-roadmap" ())
 
 ;;; org-roadmap plumbing (lazy dependency, spec 006).
 
@@ -229,15 +232,29 @@ and dashboard keep loading without org-roadmap (boundary law)."
                            (org-roadmap-get-todo-tree)))))))
       rollup)))
 
-(defun org-learn-roadmap--progress-rollup (tree)
-  "Return the (LABEL . ROLLUP) progress rollup for TREE.
-When `org-roadmap-progress' is defined (org-roadmap board
-TODO-006) it computes the rollup and LABEL is \"org-roadmap\";
-otherwise `org-learn-roadmap-rollup' computes it locally and LABEL
-is \"local fallback\".  The report buffer records LABEL so every
-progress report states which path ran (spec 011)."
-  (if (fboundp 'org-roadmap-progress)
-      (cons "org-roadmap" (org-roadmap-progress tree))
+(defun org-learn-roadmap--progress-api-available-p ()
+  "Return non-nil when the org-roadmap progress API is consumable.
+The guarded call in `org-learn-roadmap--progress-rollup' tests
+this predicate instead of `fboundp' directly, so the local
+fallback can be exercised in tests by binding this seam, never by
+faking the function cell of `org-roadmap-progress' (spec 011)."
+  (fboundp 'org-roadmap-progress))
+
+(defun org-learn-roadmap--progress-rollup (tree buffer)
+  "Return the (LABEL . ROLLUP) progress rollup for TREE from BUFFER.
+BUFFER is the roadmap buffer TREE was parsed from.  When the
+org-roadmap progress API is available (the
+`org-learn-roadmap--progress-api-available-p' seam, org-roadmap
+board TODO-006) the REAL `org-roadmap-progress' computes the
+rollup: it takes no arguments and parses the current buffer, so
+the guarded call runs with BUFFER current, and LABEL is
+\"org-roadmap\".  Otherwise `org-learn-roadmap-rollup' computes
+it locally from TREE and LABEL is \"local fallback\".  The report
+buffer records LABEL so every progress report states which path
+ran (spec 011)."
+  (if (org-learn-roadmap--progress-api-available-p)
+      (cons "org-roadmap"
+            (with-current-buffer buffer (org-roadmap-progress)))
     (cons "local fallback" (org-learn-roadmap-rollup tree))))
 
 ;;; Plan review items from the roadmap.
@@ -462,11 +479,13 @@ lists one summary line per topic and the ASCII roadmap."
 For every roadmap node the matching review items in `org-learn-file'
 are summarized (due/done, average ease, retention) and the
 :LEARN_PROGRESS: percent property is written onto the node.  The
-progress rollup is computed by `org-roadmap-progress' when that
-API exists (org-roadmap board TODO-006; recorded as \"rollup:
-org-roadmap\"), else locally by `org-learn-roadmap-rollup'
-\(recorded as \"rollup: local fallback\"); the report buffer
-records which path ran (spec 011).  The ASCII roadmap is then
+progress rollup is computed by the REAL `org-roadmap-progress'
+when that API exists (org-roadmap board TODO-006; it takes no
+arguments and parses the current buffer, so it runs with this
+roadmap buffer current; recorded as \"rollup: org-roadmap\"),
+else locally by `org-learn-roadmap-rollup' \(recorded as
+\"rollup: local fallback\"); the report buffer records which
+path ran (spec 011).  The ASCII roadmap is then
 rendered through org-roadmap into the read-only
 `org-learn-roadmap-progress-buffer' (org-mode)."
   (interactive)
@@ -478,7 +497,8 @@ rendered through org-roadmap into the read-only
   (let* ((roadmap-buffer (current-buffer))
          (tree (org-roadmap-get-subtree-tree))
          (stats (org-learn-roadmap--scan-review-items))
-         (rollup (org-learn-roadmap--progress-rollup tree))
+         (rollup (org-learn-roadmap--progress-rollup tree
+                                                    roadmap-buffer))
          (topics (apply #'append
                         (mapcar (lambda (node)
                                   (org-learn-roadmap--topics-under
