@@ -63,11 +63,12 @@
     (org-roadmap-get-subtree-tree)
     (org-roadmap-generate (&optional subtree-p))
     (org-roadmap-import-roadmap-sh (source &optional output-file)))
-  "Every org-roadmap symbol the spec 006 bridge consumes, with the
-arglist the bridge (declare-function block of org-learn-roadmap.el)
-and the stub are written against.  The stub-drift guard asserts the
-real package still matches: a rename or reshape here must fail the
-suite, not the user's session.")
+  "Arglist contract of the spec 006 bridge API.
+Each entry is one org-roadmap symbol the bridge consumes with the
+arglist the bridge and the stub are written against.  The
+`declare-function' block of org-learn-roadmap.el and the stub must
+keep matching the real package: the stub-drift guard asserts it, so
+a rename or reshape here fails the suite, not the user's session.")
 
 (defun org-learn-roadmap-real-test--locate-real ()
   "Return the real org-roadmap.el path, or nil when absent.
@@ -197,9 +198,15 @@ records which rollup path ran (local fallback until the
       (delete-directory dir t))))
 
 (ert-deftest org-learn-roadmap-real-subtree-parse-carries-learn-progress ()
-  "Spec 011: the real subtree parse exposes :LEARN_PROGRESS:.
-A leaf-less milestone inherits the percent exactly as encoded by
-the bridge's progress write: (percent . 100) in the rollup."
+  "Spec 011: the real parse plus the written property feeds the rollup.
+The real subtree parse carries the node markers; its :properties
+alist holds special properties only (org-entry-properties with
+'inherited under the default `org-use-property-inheritance' does
+not list own drawer properties), so this test attaches the drawer
+properties the real markers point at -- exactly the adapter a
+consumer needs to bring a real parse into the spec 011 node shape.
+A leaf-less milestone then inherits the percent exactly as encoded
+by the bridge's progress write: (percent . 100) in the rollup."
   (org-learn-roadmap-real-test--require-real)
   (let* ((dir (make-temp-file "org-learn-realp-" t))
          (roadmap-file (expand-file-name "roadmap.org" dir)))
@@ -213,9 +220,19 @@ the bridge's progress write: (percent . 100) in the rollup."
 :END:\n")
           (org-mode)
           (goto-char (point-min))
-          (should (equal (org-learn-roadmap-rollup
-                          (org-roadmap-get-subtree-tree))
-                         (list (cons "Solo milestone" (cons 40 100)))))
+          (let* ((tree (org-roadmap-get-subtree-tree))
+                 (tree (mapcar
+                        (lambda (node)
+                          (let ((loc (plist-get node :location)))
+                            (when (and (markerp loc)
+                                       (buffer-live-p (marker-buffer loc)))
+                              (plist-put node :properties
+                                         (org-entry-properties
+                                          (marker-position loc))))
+                            node))
+                        tree)))
+            (should (equal (org-learn-roadmap-rollup tree)
+                           (list (cons "Solo milestone" (cons 40 100))))))
           (set-buffer-modified-p nil))
       (let ((buffer (get-file-buffer roadmap-file)))
         (when (buffer-live-p buffer) (kill-buffer buffer)))
