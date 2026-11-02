@@ -26,11 +26,12 @@
 ;; the plan-from-roadmap -> progress write -> rollup round-trip on the
 ;; real parse and guards against stub drift: every org-roadmap symbol
 ;; the bridge consumes must exist in the real package with the
-;; signature the bridge (and the stub) are written against.
-;; `org-roadmap-progress' (org-roadmap board TODO-006) is OPTIONAL and
-;; deliberately NOT part of the drift guard: the bridge consumes it
-;; through a guarded, fallback-backed path.  Loaded last by
-;; tests/test-org-learn.el so the single CI entry runs everything.
+;; signature the bridge (and the stub) are written against --
+;; including the 0-arg `org-roadmap-progress' (org-roadmap board
+;; TODO-006; it parses the current buffer) and the
+;; `org-roadmap-parse-todo-tree' parse primitive the bridge's trees
+;; come from.  Loaded last by tests/test-org-learn.el so the single CI
+;; entry runs everything.
 
 ;;; Code:
 
@@ -59,16 +60,21 @@
   "Sibling directories the real org-roadmap may live in.")
 
 (defconst org-learn-roadmap-real-test--bridge-api
-  '((org-roadmap-get-todo-tree (&optional _limit))
+  '((org-roadmap-parse-todo-tree (&optional _limit))
+    (org-roadmap-get-todo-tree (&optional _limit))
     (org-roadmap-get-subtree-tree)
     (org-roadmap-generate (&optional subtree-p))
+    (org-roadmap-progress)
     (org-roadmap-import-roadmap-sh (source &optional output-file)))
   "Arglist contract of the spec 006 bridge API.
-Each entry is one org-roadmap symbol the bridge consumes with the
-arglist the bridge and the stub are written against.  The
-`declare-function' block of org-learn-roadmap.el and the stub must
-keep matching the real package: the stub-drift guard asserts it, so
-a rename or reshape here fails the suite, not the user's session.")
+Each entry is one org-roadmap symbol the bridge consumes (or the
+parse primitive its trees come from) with the arglist the bridge
+and the stub are written against; a 0-arg function is a
+one-element entry, because `help-function-arglist' returns nil
+for it.  The `declare-function' block of org-learn-roadmap.el and
+the stub must keep matching the real package: the stub-drift
+guard asserts it, so a rename or reshape here fails the suite,
+not the user's session.")
 
 (defun org-learn-roadmap-real-test--locate-real ()
   "Return the real org-roadmap.el path, or nil when absent.
@@ -122,9 +128,11 @@ path and asserts the feature really came from it."
 `org-learn-plan-from-roadmap' plans from a real org-roadmap parse,
 `org-learn-progress-report' writes :LEARN_PROGRESS: through the
 real subtree parse and renders the real ASCII roadmap, and
-`org-learn-roadmap-rollup' rolls the real tree up.  The report
-records which rollup path ran (local fallback until the
-`org-roadmap-progress' API lands, org-roadmap board TODO-006)."
+`org-learn-roadmap-rollup' rolls the real tree up.  The 0-arg
+`org-roadmap-progress' API (org-roadmap board TODO-006) is
+exercised exactly the way `org-learn-progress-report' calls it:
+roadmap buffer current, no arguments, alist out.  The report
+records the org-roadmap rollup path that call delivers."
   (org-learn-roadmap-real-test--require-real)
   (let* ((dir (make-temp-file "org-learn-real-" t))
          (notes (expand-file-name "learn.org" dir))
@@ -176,17 +184,26 @@ records which rollup path ran (local fallback until the
             (should (equal (org-learn-roadmap-rollup
                             (org-roadmap-get-subtree-tree))
                            (list (cons "Roadmap: real" (cons 1 2)))))
-            ;; 4. The report states which rollup path ran.
+            ;; 3b. The REAL 0-arg progress API, called exactly the way
+            ;; `org-learn-progress-report' now calls it: the roadmap
+            ;; buffer is current here, no arguments, alist out
+            ;; (org-roadmap board TODO-006).
+            (should (equal (org-roadmap-progress)
+                           (list (cons "Roadmap: real" (cons 1 2)))))
+            ;; 4. The report states which rollup path ran: with the
+            ;; real package loaded the 0-arg API wins, and the
+            ;; recorded line is echoed for the gate log.
             (let ((report (get-buffer "*org-learn-progress*")))
               (should (buffer-live-p report))
               (with-current-buffer report
                 (should (derived-mode-p 'org-mode))
                 (should buffer-read-only)
-                (let ((text (buffer-string)))
-                  (if (fboundp 'org-roadmap-progress)
-                      (should (string-match-p "^rollup: org-roadmap" text))
-                    (should (string-match-p "^rollup: local fallback$"
-                                            text)))
+                (let* ((text (buffer-string))
+                       (path-line (and (string-match "^rollup: .*$" text)
+                                       (match-string 0 text))))
+                  (should (equal path-line "rollup: org-roadmap"))
+                  (message "org-learn: real-dep report records %s"
+                           path-line)
                   ;; The real ASCII roadmap landed in the report.
                   (should (string-match-p "Roadmap: real" text)))))
             (org-learn-roadmap-real-test--kill-render-buffers))
@@ -244,16 +261,14 @@ by the bridge's progress write: (percent . 100) in the rollup."
 (ert-deftest org-learn-roadmap-real-bridge-api-matches-real-package ()
   "Spec 011: every symbol the bridge consumes exists for real.
 Each consumed symbol is fboundp in the REAL package with exactly
-the arglist the bridge is written against."
+the arglist the bridge is written against -- the 0-arg
+`org-roadmap-progress' included now that the bridge consumes it
+for real (org-roadmap board TODO-006)."
   (org-learn-roadmap-real-test--require-real)
   (pcase-dolist (`(,symbol ,expected) org-learn-roadmap-real-test--bridge-api)
     (ert-info ((format "bridge API symbol: %s" symbol))
       (should (fboundp symbol))
-      (should (equal expected (help-function-arglist symbol)))))
-  ;; Optional API (org-roadmap board TODO-006): deliberately NOT in
-  ;; the drift guard -- the bridge consumes it behind a guarded,
-  ;; fallback-backed path and must keep loading without it.
-  (should (symbolp 'org-roadmap-progress)))
+      (should (equal expected (help-function-arglist symbol))))))
 
 (ert-deftest org-learn-roadmap-real-stub-mirrors-real-signatures ()
   "Spec 011: the stub's public signatures still match the real ones.
