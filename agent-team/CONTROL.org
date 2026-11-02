@@ -10,7 +10,7 @@
 #+KILL-SWITCH: OFF
 
 #+TURN: lead (specs 001-008 DONE; AI-pkgs wave specs 009-012 proposed in IDEAS.org awaiting Owner pick)
-#+STALL-COUNT: 1
+#+STALL-COUNT: 2
 
 #+LAST-VERDICT: none
 #+LAST-BLOCKED-NOTIFY: 0
