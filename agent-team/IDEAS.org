@@ -51,3 +51,57 @@
   the moment its API lands — featurep-gated, never required (boundary
   law), see AGENTS.md.
 - Babel-graded exercises (run code answers), screenshot/image cards.
+
+* Emacs AI pkgs research (Owner order 2026-11-02 04:24Z #hq: "Look into
+  Emacs AI pkgs on what you can use for AI features") — digest by the
+  Lead; every package verified live (GNU ELPA / MELPA / GitHub) today.
+
+** The landscape (verified 2026-11-02)
+- gptel (karthink, MELPA) — multi-backend LLM client: Anthropic,
+  OpenAI, Gemini, Ollama, OpenRouter, Azure, GH Copilot and any
+  OpenAI-compatible host; curl or url-retrieve transport; streaming;
+  context from regions/buffers/files; multimodal input; TOOL USE + MCP
+  tools; editable, saveable, branchable conversations; gptel-agent
+  adds agentic personalities.  ALREADY INTEGRATED: spec 007 backend
+  law routes org-learn-ai--complete through gptel when loaded.
+- llm (ahyatt, GNU ELPA 0.34.0 2026-10) — the pluggable BACKEND
+  LIBRARY: sync/async/streaming chat, media input, tool use,
+  EMBEDDINGS, prompt construction; providers incl. OpenAI, Claude,
+  Gemini, Ollama, Deepseek, GPT4All, llama.cpp and a Fake provider
+  made for tests; capability introspection (llm-capabilities,
+  llm-chat-token-limit).  Clients: ellama, magit-gptcommit, ekg.
+- ellama (s-kostyaev, GNU ELPA since 2026-10) — high-level UX on llm:
+  ordinary chat + ONE-SHOT COMMANDS over the current region/buffer +
+  text transformations ("without turning Emacs into a web app").
+- org-ai (rksm, GitHub) — #+begin_ai org blocks, chat/completion in
+  org, text->image, and SPEECH INPUT + OUTPUT (whisper + TTS).
+- whisper.el (sachac fork active 2026-01) — speech-to-text into any
+  buffer/point with insert hooks; voice capture for org.
+
+** Adoption plan (proposed spec wave, Lead recommendation)
+- DONE spec 007: gptel is backend #1 behind org-learn-ai-backend
+  ('auto -> gptel when loaded, keyless Pollinations fallback).
+- spec 009 llm.el backend #2: extend org-learn-ai-backend with 'llm
+  (make-llm-* provider via a defcustom org-learn-ai-llm-provider);
+  embeddings from llm power "related cards" and semantic search over
+  the review file; Fake provider for tests (zero network).
+- spec 010 voice learning loop: whisper.el capture (speak a fact ->
+  org-learn-capture) + read-aloud drill prompts via org-ai TTS path —
+  hands-free review, accessibility win.
+- spec 011 org-learn MCP server via gptel MCP tools: expose
+  review-dashboard / schedule-card / ask-tutor as tools so ANY agent
+  (incl. the docneural field agents) can drive the learner's loop;
+  closing the loop = tutor posts a dn-pulse 'teach' beacon.
+- spec 012 streaming tutor chat: gptel streaming lane renders turns
+  incrementally in *org-learn-ai-chat* (multi-turn stays).
+
+** Sources (opened today)
+- https://github.com/karthink/gptel (+ issues index: MCP tools,
+  bedrock/gptel-agent extensions)
+- https://elpa.gnu.org/packages/llm.html and
+  https://github.com/ahyatt/llm (providers, capabilities, clients)
+- https://elpa.gnu.org/packages/ellama.html and
+  https://github.com/s-kostyaev/ellama
+- https://github.com/rksm/org-ai (speech I/O)
+- https://sachachua.com/blog/2026/01/using-whisper-el-to-capture-text-to-speech-in-emacs
+- https://prelude.emacsredux.com/en/latest/modules/ai (gptel provider list)
