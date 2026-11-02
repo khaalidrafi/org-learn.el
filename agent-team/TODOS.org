@@ -237,7 +237,7 @@
     tree: byte-compile 0 warnings, ERT 75/75 (was 69), checkdoc 0.
     The whole learning loop is ONE keymap now.
   :END:
-* TODO Implement spec 010 — quickstart wizard (M-x org-learn-quickstart, FAST start re-land), tests first :spec-010:quickstart:phase1:
+* DONE Implement spec 010 — quickstart wizard (M-x org-learn-quickstart, FAST start re-land), tests first :spec-010:quickstart:phase1:
   :PROPERTIES:
   :EFFORT: 0:50
   :ID: TODO-010
@@ -258,6 +258,22 @@
   :LOGBOOK:
   - 2026-11-02 lead: clock opened at dispatch (14:1xZ tick); spec
     authored + board committed by Lead.
+  - 2026-11-02 seat groq/qwen3.8-27b@opencode (branch
+    ai/turn-20261102-010, base 0eb2c98) — RESULT: DONE.  RED proven
+    first (4401df4: 5 new tests failing, 75/80), then GREEN
+    (5e3a28b + 75d8cc0): org-learn-quickstart.el 179 lines — 4-step
+    skippable wizard (template create refusing on file-exists-p,
+    capture/review offers, live-map keymap tour via
+    with-help-window), C-c l q bind in org-learn-mode.el, autoload,
+    README Quickstart section.  Deviations ratified by Lead:
+    refuse-as-message (idempotence law), step-1 prompt in both
+    branches, 179-line size, checkdoc keycode escaping commit.
+  - 2026-11-02 lead: audit ACCEPTED — gate re-run on the isolated
+    merged tree acd2035 (Emacs 31.1): byte-compile 0 warnings (all 8
+    root .el), ERT 80/80 (was 75), checkdoc silent on both new
+    files.  Merged acd2035, pushed to origin/ai/main same minute
+    (durability law).  PHASE 1 (quickstart minimum) is now fully
+    landed AND durable.
   :END:
 * TODO Implement spec 011 — roadmap progress rollup + real-dependency ERT, tests first :spec-011:roadmap:progress:phase2:
   :PROPERTIES:
