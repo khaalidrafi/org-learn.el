@@ -362,7 +362,7 @@
   :PROPERTIES:
   :EFFORT: 0:25
   :ID: TODO-012
-  :DEADLINE: <2026-11-02 Mon 21:30>
+  :DEADLINE: <2026-11-03 Tue 05:30>
   :ASSIGNEE: groq/qwen3.8-27b@goose
   :END:
   Boarded by the Lead 2026-11-02 ~19:40Z after the cross-repo
