@@ -220,7 +220,7 @@ read-only org-mode buffer naming every topic."
   "Spec 011: rollup math over a table of fixed input shapes.
 Accepts an org-roadmap parsed tree (spec 006 node shape) or the
 flat list of (TODO-STATE . LEAF-COUNT) conses and returns
-((MILESTONE . (DONE . TOTAL)) ...): leaves count individually, a
+\((MILESTONE . (DONE . TOTAL)) ...): leaves count individually, a
 node counts DONE when its keyword is in `org-done-keywords',
 containers roll up their subtree and a leaf-less milestone
 inherits the :LEARN_PROGRESS: percent.  The table covers the
@@ -260,8 +260,14 @@ leaf-less milestone without a property and multiple milestones."
           (cons '((:headline "M" :todo-state TODO :level 1 :children nil
                              :progress 43))
                 '(("M" . (43 . 100))))
-          ;; 9. Tree: leaf-less milestone without a property -> (0 . 0).
-          (cons '((:headline "M" :todo-state TODO :level 1 :children nil))
+          ;; 9. Tree: milestone whose subtree holds no TODO leaves and
+          ;; carries no property counts nothing -> (0 . 0) (the real
+          ;; org-roadmap progress semantics; the committed RED table
+          ;; duplicated case 4's byte-identical input with a different
+          ;; expectation, which no pure function can satisfy).
+          (cons '((:headline "M" :todo-state TODO :level 1
+                             :children ((:headline "note" :todo-state nil
+                                                   :level 2 :children nil))))
                 '(("M" . (0 . 0))))
           ;; 10. Tree: leaf-less DONE milestone counts itself.
           (cons '((:headline "M" :todo-state DONE :level 1 :children nil))
@@ -276,9 +282,9 @@ leaf-less milestone without a property and multiple milestones."
                      (cdr case))))))
 
 (ert-deftest org-learn-roadmap-rollup-reads-org-done-keywords ()
-  "Spec 011: a node counts DONE exactly when its TODO keyword is
-in `org-done-keywords'; outside Org buffers the (\"DONE\") default
-applies when the variable is unset."
+  "Spec 011: membership in `org-done-keywords' decides DONE.
+Outside Org buffers the (\"DONE\") default applies when the
+variable is unset."
   (let ((org-done-keywords '("DONE" "CANCELLED")))
     (should (equal (org-learn-roadmap-rollup
                     '((:headline "a" :todo-state CANCELLED :level 1 :children nil)
@@ -290,9 +296,10 @@ applies when the variable is unset."
                    '(("a" . (1 . 1)))))))
 
 (ert-deftest org-learn-roadmap-rollup-inherits-learn-progress-in-buffer ()
-  "Spec 011: a leaf-less milestone inherits :LEARN_PROGRESS: from
-the buffer property when the parsed tree carries no :progress key
-(the node shape the real org-roadmap parser produces)."
+  "Spec 011: the buffer property is inherited by milestones.
+A leaf-less milestone reads :LEARN_PROGRESS: when the parsed tree
+carries no :progress key (the node shape the real org-roadmap
+parser produces)."
   (org-learn-roadmap-test--load-stub)
   (let ((org-done-keywords '("DONE"))
         (buffer (get-buffer-create " *org-learn-roadmap-rollup*")))
@@ -309,9 +316,9 @@ the buffer property when the parsed tree carries no :progress key
 ;;; Progress rollup path (spec 011: boundp API preference).
 
 (ert-deftest org-learn-roadmap-progress-prefers-boundp-org-roadmap-api ()
-  "Spec 011: `org-learn-roadmap-progress' prefers the boundp
-`org-roadmap-progress' API (org-roadmap board TODO-006) and labels
-the path \"org-roadmap\" in the returned plist."
+  "Spec 011: `org-learn-roadmap-progress' prefers the boundp API.
+When `org-roadmap-progress' (org-roadmap board TODO-006) is
+boundp it labels the path \"org-roadmap\" in the returned plist."
   (cl-letf (((symbol-function 'org-roadmap-progress)
              (lambda () '(("M" . (3 . 7))))))
     (let ((rollup (org-learn-roadmap-progress)))
@@ -319,7 +326,7 @@ the path \"org-roadmap\" in the returned plist."
       (should (equal (plist-get rollup :rollup) '(("M" . (3 . 7))))))))
 
 (ert-deftest org-learn-roadmap-progress-falls-back-locally ()
-  "Spec 011: without the boundp API the pure local fallback
+  "Spec 011: the pure local fallback runs without the boundp API.
 `org-learn-roadmap-rollup' computes the same alist and the path
 label is honestly \"local fallback\"."
   (cl-letf (((symbol-function 'org-roadmap-progress) nil))
@@ -332,9 +339,10 @@ label is honestly \"local fallback\"."
       (should (equal (plist-get rollup :rollup) '(("M" . (1 . 2))))))))
 
 (ert-deftest org-learn-roadmap-progress-fallback-parses-current-buffer ()
-  "Spec 011: the fallback with no TREE argument parses the current
-buffer's TODO tree through the loaded org-roadmap (stub or real
-alike), so a bare call still yields the milestone alist."
+  "Spec 011: the fallback with no TREE argument parses this buffer.
+The current buffer's TODO tree comes through the loaded
+org-roadmap (stub or real alike), so a bare call still yields the
+milestone alist."
   (org-learn-roadmap-test--load-stub)
   (let ((buffer (get-buffer-create " *org-learn-roadmap-fallback*"))
         (org-done-keywords '("DONE")))
@@ -352,8 +360,8 @@ alike), so a bare call still yields the milestone alist."
 ;;; Progress report rollup path recording (spec 011).
 
 (ert-deftest org-learn-roadmap-progress-report-records-rollup-path ()
-  "Spec 011: the progress report buffer records which rollup path
-ran (\"rollup: org-roadmap ...\" vs \"rollup: local fallback\")
+  "Spec 011: the progress report buffer records the rollup path.
+It states \"rollup: org-roadmap ...\" vs \"rollup: local fallback\"
 and lists one milestone line per rollup cell."
   (org-learn-roadmap-test--load-stub)
   (let* ((dir (make-temp-file "org-learn-rmrp-" t))

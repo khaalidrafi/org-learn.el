@@ -275,8 +275,8 @@ unloaded when this test file is the one that loaded it."
     (unload-feature 'org-roadmap 'force)))
 
 (ert-deftest org-learn-dashboard-render-shows-the-roadmap-line ()
-  "Spec 011: the dashboard renders the Roadmap line from the
-:roadmap data key, e.g. \"Roadmap: 3/7 milestones done (43%),
+  "Spec 011: the dashboard renders the Roadmap line from :roadmap.
+The data key carries e.g. \"Roadmap: 3/7 milestones done (43%),
 next review in 1d\"."
   (with-temp-buffer
     (org-mode)
@@ -284,7 +284,7 @@ next review in 1d\"."
      (list :due 0 :new 0 :done-today 0 :queue nil :leeches nil :stats nil
            :roadmap "Roadmap: 3/7 milestones done (43%), next review in 1d"))
     (should (string-match-p
-             (concat "^- Roadmap: 3/7 milestones done \\(43%\\), "
+             (concat "^- Roadmap: 3/7 milestones done (43%), "
                      "next review in 1d$")
              (buffer-string)))))
 
@@ -323,7 +323,7 @@ the next scheduled review from the scanned files."
           (should (buffer-live-p dashboard))
           (with-current-buffer dashboard
             (should (string-match-p
-                     (concat "^- Roadmap: 0/1 milestones done \\(0%\\), "
+                     (concat "^- Roadmap: 0/1 milestones done (0%), "
                              "next review in 1d$")
                      (buffer-string)))))
       (org-learn-dashboard-test--unload-roadmap-feature loaded-here)
@@ -334,8 +334,9 @@ the next scheduled review from the scanned files."
         (delete-file org-learn-file)))))
 
 (ert-deftest org-learn-dashboard-roadmap-line-silent-without-roadmap-nodes ()
-  "Spec 011: an Org buffer without roadmap nodes (headings with a
-TODO keyword) keeps the dashboard silent about the roadmap."
+  "Spec 011: buffers without roadmap nodes stay silent.
+The dashboard says nothing about the roadmap when no headings
+carry a TODO keyword."
   (let* ((org-learn-review-scope 'file)
          (org-learn-file (make-temp-file "org-learn-dashplain-" nil ".org"))
          (plain (get-buffer-create " *org-learn-dashplain*"))
