@@ -135,7 +135,7 @@ and the wizard completes without error."
       (delete-directory dir t))))
 
 (ert-deftest org-learn-quickstart-binds-q ()
-  "Spec 010: \"q\" under the C-c l prefix runs `org-learn-quickstart'."
+  "Spec 010: the \"q\" key of the prefix keymap runs `org-learn-quickstart'."
   (should (commandp 'org-learn-quickstart))
   (should (eq (lookup-key org-learn-mode-keymap-prefix (kbd "q"))
               'org-learn-quickstart))
