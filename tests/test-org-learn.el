@@ -21,9 +21,12 @@
 ;; `ert-run-tests-batch-and-exit' entry point the CI gate uses, so the
 ;; gate proof is reproducible locally and in CI.
 ;; Suite law (repo AGENTS.md): every public behavior lands with a
-;; test; the org-roadmap boundary is locked here too.  Spec 001
-;; (capture) acceptance criteria land here too -- tests first, the
-;; implementation lands with them (local AGENTS.md).
+;; test.  The org-roadmap boundary test that used to live here was
+;; replaced by the spec 006 dependency law (Owner order 2026-11-01
+;; 18:28Z: org-roadmap is a real dependency now); see
+;; tests/test-org-learn-roadmap.el.  Spec 001 (capture) acceptance
+;; criteria land here too -- tests first, the implementation lands
+;; with them (local AGENTS.md).
 
 ;;; Code:
 
@@ -64,12 +67,6 @@
 (ert-deftest org-learn-default-notes-file ()
   "The default notes file is learn.org."
   (should (equal org-learn-file "learn.org")))
-
-(ert-deftest org-learn-keeps-the-org-roadmap-boundary ()
-  "Loading org-learn never loads org-roadmap (boundary law).
-org-roadmap is unpublished; under -Q it cannot load at all, so this
-asserts the soft boundary holds in the gate environment."
-  (should-not (featurep 'org-roadmap)))
 
 ;;; Spec 001 (specs/001-capture.org) — org-learn-capture acceptance.
 
@@ -200,6 +197,14 @@ with an ellipsis."
 ;;; Dashboard tests (spec 005) -- same single-entry law.
 
 (load (expand-file-name "tests/test-org-learn-dashboard.el" default-directory))
+
+;;; Roadmap bridge tests (spec 006) -- same single-entry law.  The
+;;; org-roadmap stub lives on the `load-path' only inside that suite;
+;;; its dependency-law test replaces the deleted
+;;; org-learn-keeps-the-org-roadmap-boundary test above (Owner order
+;;; 2026-11-01 18:28Z).
+
+(load (expand-file-name "tests/test-org-learn-roadmap.el" default-directory))
 
 (provide 'test-org-learn)
 ;;; test-org-learn.el ends here
