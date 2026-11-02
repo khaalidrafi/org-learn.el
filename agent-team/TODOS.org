@@ -189,7 +189,7 @@
     stub-based suite), gate re-run by Lead on merged tree: byte-compile
     0 warnings, ERT 58/58 (was 54), checkdoc clean.  Merged 70ae388.
   :END:
-* TODO Implement spec 007 — docneural tutor modes TRACE/FOCUS/CLEAR in org-learn-ai, tests first :spec-007:tutor:
+* DONE Implement spec 007 — docneural tutor modes TRACE/FOCUS/CLEAR in org-learn-ai, tests first :spec-007:tutor:
   :PROPERTIES:
   :EFFORT: 1:00
   :ID: TODO-008
@@ -206,6 +206,15 @@
     org-learn-ai-backend defcustom ('auto/'gptel/'keyless), gptel
     delegate inside the existing choke point, keyless lane stays the
     fallback; mock-only dispatch test.  Gate unchanged.
+  - 2026-11-02 lead: DONE accepted at audit (segment
+    ai/turn-20261102-007, zai/opus-seat; worktree recovered after the
+    Task channel died client-side — the seat had finished its gate).
+    Evidence: tests landed first (19aacda, 11 new), backend dispatch +
+    TRACE/FOCUS/CLEAR per amended spec; Lead landing glue = checkdoc
+    cleanup of org-learn-ai.el (23 nits, 4f42847 convention).  Gate on
+    merged tree: byte-compile 0 warnings, ERT 69/69 (was 58), checkdoc
+    0.  Owner's Emacs-AI-pkgs law honored: gptel delegate behind
+    org-learn-ai-backend, zero new network plumbing.
   :END:
 * TODO Implement spec 008 — org-learn-mode one keymap (FAST start), tests first :spec-008:keymap:
   :PROPERTIES:
