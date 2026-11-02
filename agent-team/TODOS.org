@@ -358,7 +358,7 @@
     grandparent candidate, percent = share of fully-done milestones
     (spec's own 3/7 -> 43% arithmetic).
   :END:
-* TODO Integration glue: consume the REAL org-roadmap-progress API (0-arg, current-buffer), sync stub arglists, fix fallback-path test premise :spec-002:spec-011:integration:
+* DONE Integration glue: consume the REAL org-roadmap-progress API (0-arg, current-buffer), sync stub arglists, fix fallback-path test premise :spec-002:spec-011:integration:
   :PROPERTIES:
   :EFFORT: 0:25
   :ID: TODO-012
@@ -386,4 +386,17 @@
   - 2026-11-02 lead: clock opened at dispatch; failure evidence from
     the lead cross-repo run (92 tests, 4 unexpected, backtraces
     captured).
+  - 2026-11-02 seat groq/qwen3.8-27b@goose (branch
+    ai/turn-20261102-012, base 4be9262) — RESULT: DONE (df46dac +
+    7d2da53): 0-arg real API consumed with the roadmap buffer current
+    via the new org-learn-roadmap--progress-api-available-p seam;
+    stub mirrors real arglists exactly (drift contract extended to
+    parse-todo-tree + progress); fallback test cl-letfs the seam.
+    All assertions equal-or-stricter (report ratified).
+  - 2026-11-02 lead: audit ACCEPTED — gate re-run on the isolated
+    merged tree 140e1ad (Emacs 31.1): bc 0 warnings, stub world
+    92/92, real-dep world 92/92 with the report recording "rollup:
+    org-roadmap" (the Owner's MUST-use mandate now proven through
+    the REAL API end-to-end).  checkdoc silent.  Merged + pushed
+    same minute (durability law).
   :END:
