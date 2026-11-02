@@ -4,6 +4,24 @@
 #+STATUS: integrate them well."  docneural's tutor pedagogy (stage
 #+STATUS: directions TRACE/FOCUS/CLEAR, proven in docneural-ui tutor)
 #+STATUS: becomes org-learn AI study modes.
+#+STATUS: AMENDED 2026-11-02 01:54Z #hq — Owner: "AI integrations can
+#+STATUS: be implemented using Emacs' existing AI pkgs."  Backend law
+#+STATUS: below.
+
+* Backend law (Owner order 2026-11-02 01:54Z #hq)
+- New defcustom =org-learn-ai-backend= (values 'auto, 'gptel,
+  'keyless; default 'auto).  =org-learn-ai--complete= dispatches on
+  it: 'auto -> the gptel lane when (featurep 'gptel), else the
+  keyless lane; 'gptel -> require gptel, user-error with a one-line
+  install hint if absent; 'keyless -> the current Pollinations lane
+  unchanged.
+- gptel lane: delegate to gptel's public request API with the same
+  messages; return the same string contract as the keyless lane.  No
+  new network plumbing — gptel IS the integration (Emacs' existing
+  AI pkg; ellama/llm may be added later behind the same defcustom).
+- The choke point's return contract is unchanged, and tests keep
+  mocking =org-learn-ai--complete=; add one dispatch test using a
+  mocked provider check — zero network, zero gptel dependency in CI.
 
 * File law
 Extend org-learn-ai.el (same network choke point org-learn-ai--complete;
@@ -24,6 +42,9 @@ tests keep mocking it).  No new file.
   form; offers org-learn-ai-generate-flashcards on the subtree.
 
 * Tests (extend tests/test-org-learn-ai.el)
+- Backend dispatch: 'auto with gptel absent -> keyless lane called;
+  'gptel with gptel absent -> user-error mentioning install hint;
+  'keyless -> keyless lane called (mocked lane, no network).
 - Each mode sends its own system prompt variant (captured mock).
 - FOCUS grade mapping 5|3|1; CLEAR output passes through and the
   follow-up offer calls the flashcard generator (mocked).

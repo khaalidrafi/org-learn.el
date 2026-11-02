@@ -195,6 +195,11 @@
   specs/007-docneural-tutor-modes.org.  One segment, one report @lead.
   :LOGBOOK:
   - 2026-11-01 lead: clock opened at dispatch (18:3xZ #hq tick).
+  - 2026-11-02 lead: Owner order 01:54Z #hq — "AI integrations can be
+    implemented using Emacs' existing AI pkgs."  Spec 007 amended:
+    org-learn-ai-backend defcustom ('auto/'gptel/'keyless), gptel
+    delegate inside the existing choke point, keyless lane stays the
+    fallback; mock-only dispatch test.  Gate unchanged.
   :END:
 * TODO Implement spec 008 — org-learn-mode one keymap (FAST start), tests first :spec-008:keymap:
   :PROPERTIES:
