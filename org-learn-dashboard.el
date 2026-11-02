@@ -43,9 +43,17 @@
 ;;   it maps a file list to the dashboard data plist, and
 ;;   `org-learn-dashboard-retention' is the pure retention step
 ;;   (nil when nothing was reviewed yet).  Nothing new is stored.
+;; - The Roadmap line (spec 011): when the roadmap bridge is loaded
+;;   AND org-roadmap is present (both checked with `featurep' -- the
+;;   dashboard itself never loads either), the data carries the
+;;   spec 011 rollup of the scoped files' TODO trees and the render
+;;   shows one "Roadmap: X/Y milestones done (Z%)" line (plus the
+;;   next-review clause when the files schedule future reviews).
+;;   Without roadmap nodes the line is silent.
 ;;
 ;; org-roadmap stays at the boundary: it is never required here
-;; (AGENTS.md).
+;; (AGENTS.md); the spec 011 Roadmap line only ever runs through
+;; `featurep' guards into the already-loaded roadmap bridge.
 
 ;;; Code:
 
@@ -56,6 +64,13 @@
 (require 'subr-x)
 (require 'org-learn)
 (require 'org-learn-review)
+
+;; The Roadmap line (spec 011) is computed by the roadmap bridge, and
+;; only when it is already loaded (see `org-learn-dashboard--data'):
+;; no require happens here, the declarations keep the compiler quiet.
+(declare-function org-learn-roadmap-rollup-files "org-learn-roadmap" (files))
+(declare-function org-learn-roadmap-rollup-line
+                  "org-learn-roadmap" (rollup &optional next-review-days))
 
 (defgroup org-learn-dashboard nil
   "Study sessions and dashboard for org-learn."
@@ -221,11 +236,31 @@ LOGBOOK note date.  Position comparisons stay within one file."
                :last (and last (format-time-string "%Y-%m-%d" last)))))
      topics)))
 
+(defun org-learn-dashboard--next-review-days (entries)
+  "Return the days until the next future-scheduled ENTRY, or nil.
+Pure over the scanned ENTRIES: the smallest SCHEDULED date strictly
+after today, in days (the spec 011 `next review in Nd' clause)."
+  (let ((today (org-today))
+        (next nil))
+    (dolist (entry entries)
+      (let ((scheduled (plist-get entry :scheduled)))
+        (when scheduled
+          (let ((days (- (time-to-days
+                          (org-time-string-to-time scheduled))
+                         today)))
+            (when (and (> days 0) (or (not next) (< days next)))
+              (setq next days))))))
+    next))
+
 (defun org-learn-dashboard--data (files)
   "Return the dashboard data plist for the Org FILES.
-Keys: :due :new :done-today :queue :leeches :stats.  Pure over the
-file list (no display, no interactive APIs), so it is batch-safe
-and testable."
+Keys: :due :new :done-today :queue :leeches :stats :next-review
+:roadmap.  Pure over the file list (no display, no interactive
+APIs), so it is batch-safe and testable.  :roadmap carries the
+spec 011 rollup of the files' TODO trees, computed through the
+roadmap bridge ONLY when it and org-roadmap are already loaded
+\(`featurep' guards, no require -- boundary law); nil otherwise,
+which keeps the Roadmap line silent."
   (let* ((file-entries (mapcar (lambda (file)
                                  (cons file
                                        (org-learn-dashboard--scan-file file)))
@@ -251,7 +286,10 @@ and testable."
                        (mapcar (lambda (file-entry)
                                  (org-learn-dashboard--topic-stats
                                   (cdr file-entry)))
-                               file-entries))))
+                               file-entries)))
+         (next-review (org-learn-dashboard--next-review-days entries))
+         (roadmap (when (featurep 'org-learn-roadmap)
+                    (org-learn-roadmap-rollup-files files))))
     (list :due (length due)
           :new (length new)
           :done-today (seq-count (lambda (entry)
@@ -260,7 +298,9 @@ and testable."
           :queue (mapcar #'org-learn-dashboard--queue-item
                          (seq-take due 10))
           :leeches leeches
-          :stats stats)))
+          :stats stats
+          :next-review next-review
+          :roadmap roadmap)))
 
 ;;; Presentation (read-only, rebuilt from scratch).
 
@@ -271,7 +311,14 @@ and testable."
   (insert "* Today\n\n")
   (insert (format "- Due now: %d\n" (plist-get data :due)))
   (insert (format "- New: %d\n" (plist-get data :new)))
-  (insert (format "- Done today: %d\n\n" (plist-get data :done-today)))
+  (insert (format "- Done today: %d\n" (plist-get data :done-today)))
+  ;; Roadmap (spec 011): one line, silent without roadmap nodes.
+  (let ((rollup (plist-get data :roadmap)))
+    (when rollup
+      (insert "- " (org-learn-roadmap-rollup-line
+                    rollup (plist-get data :next-review))
+              "\n")))
+  (insert "\n")
   ;; 2. Review queue
   (insert "* Review queue\n\n")
   (let ((queue (plist-get data :queue)))
