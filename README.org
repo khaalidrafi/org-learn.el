@@ -7,6 +7,28 @@ khaalidrafi profile that is not completed or published yet.  The
 dependency is declared in the package header; the code does not require
 it yet, and nothing here blocks on it.
 
+* Quickstart
+
+Run =M-x org-learn-quickstart= (or press =C-c l q= in an Org buffer with
+org-learn-mode on): one command walks you from zero to the full loop in
+four skippable steps — learning file, first capture, first review, and
+a tour of the =C-c l= keymap.  The wizard never clobbers an existing
+learning file.
+
+The loop in three commands:
+
+1. =M-x org-learn-quickstart= — set up your learning file and see what
+   every key does (=C-c l q=)
+2. =C-c l c= — capture a learning note (=M-x org-learn-capture=)
+3. =C-c l r= — review what is due (=M-x org-learn-review=)
+
+Next steps (optional): plan one review item per topic of a roadmap TODO
+tree with =C-c l p= (=M-x org-learn-plan-from-roadmap=) and watch
+progress with =C-c P= (=M-x org-learn-progress-report=).  These need
+the org-roadmap package installed (see the dependency note at the top
+of this file); =M-x org-learn-quickstart= itself never requires it —
+without it installed, those keys report a friendly install hint.
+
 * Status
 
 Bootstrap (2026-10-28).  The package is a skeleton and a team is being
