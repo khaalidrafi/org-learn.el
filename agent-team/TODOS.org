@@ -182,6 +182,12 @@
   lock test is legally replaced).  One segment, one report @lead.
   :LOGBOOK:
   - 2026-11-01 lead: clock opened at dispatch (18:3xZ #hq tick).
+  - 2026-11-02 lead: DONE accepted at audit (segment
+    ai/turn-20261102-006, zai/opus-seat).  Evidence: tests landed
+    tests-first (2cadc5b), module org-learn-roadmap.el 373 lines (3
+    interactive commands, lazy real dep via org-learn-roadmap--require,
+    stub-based suite), gate re-run by Lead on merged tree: byte-compile
+    0 warnings, ERT 58/58 (was 54), checkdoc clean.  Merged 70ae388.
   :END:
 * TODO Implement spec 007 — docneural tutor modes TRACE/FOCUS/CLEAR in org-learn-ai, tests first :spec-007:tutor:
   :PROPERTIES:
