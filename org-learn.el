@@ -212,6 +212,12 @@ for TITLE (default: the region text, truncated)."
 (autoload 'org-learn-mode-help "org-learn-mode"
   "Pop up a temporary window listing every key of `org-learn-mode-keymap-prefix'." t)
 
+;;; Spec 010 -- quickstart wizard autoload (specs/010-quickstart.org).
+
+;;;###autoload
+(autoload 'org-learn-quickstart "org-learn-quickstart"
+  "Walk a new user from zero to the full loop: file, capture, review, tour." t)
+
 (provide 'org-learn)
 ;; Spec 002 -- review scheduling lives in org-learn-review.el (one
 ;; feature per file, AGENTS.md).  org-learn is provided first so the
