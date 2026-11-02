@@ -43,11 +43,15 @@
 
 (defun org-learn-roadmap-test--load-stub ()
   "Load the org-roadmap stub unless the feature is already there.
-The stub directory is prepended to a LOCAL binding of `load-path'
-only, so the gate environment never picks the stub up on its own."
+The stub file (org-roadmap-stub.el, providing `org-roadmap') is
+loaded explicitly with the stub directory prepended to a LOCAL
+binding of `load-path' only, so the gate environment never picks
+the stub up on its own."
   (unless (featurep 'org-roadmap)
     (let ((load-path (cons org-learn-roadmap-test--stub-dir load-path)))
-      (require 'org-roadmap nil t)))
+      (load (expand-file-name "org-roadmap-stub.el"
+                              org-learn-roadmap-test--stub-dir)
+            nil 'nomessage)))
   (should (featurep 'org-roadmap)))
 
 (defun org-learn-roadmap-test--read-file (file)
@@ -84,7 +88,7 @@ By Owner order 2026-11-01 18:28Z (#hq: \"org-learn should depend on
 org-roadmap for planning, progress etc.\") the old
 org-learn-keeps-the-org-roadmap-boundary law is superseded: the
 dependency is real.  The core still loads with org-roadmap absent
-(feature `org-learn' is up in this suite), the bridge commands are
+\(feature `org-learn' is up in this suite), the bridge commands are
 commands, and each of them signals `user-error' with an install
 hint when the org-roadmap feature is missing (stub not reachable)."
   (should (featurep 'org-learn))
@@ -108,7 +112,7 @@ hint when the org-roadmap feature is missing (stub not reachable)."
 `org-learn-plan-from-roadmap' adds a TODO heading per level-2
 topic to `org-learn-file' -- same title, :LEARN_SOURCE: roadmap,
 reset LEARN_* properties -- and a second run adds nothing
-(idempotence law)."
+\(idempotence law)."
   (org-learn-roadmap-test--load-stub)
   (let* ((dir (make-temp-file "org-learn-rm-" t))
          (notes (expand-file-name "learn.org" dir))
@@ -193,7 +197,7 @@ read-only org-mode buffer naming every topic."
                    ("Roadmap: test" (should (equal progress "50")))
                    ("Alpha" (should (equal progress "100")))
                    ("Beta" (should (equal progress "0"))))))
-             nil 'file))
+             nil nil))
           (let ((report (get-buffer "*org-learn-progress*")))
             (should (buffer-live-p report))
             (with-current-buffer report

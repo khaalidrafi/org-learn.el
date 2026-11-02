@@ -33,6 +33,8 @@
 Nodes carry the org-roadmap plist shape: :headline :todo-state
 :level :children :location."
   (let ((nodes nil))
+    ;; Scope nil: the current buffer (respecting any restriction), so
+    ;; the same parse serves the whole-buffer and subtree paths.
     (org-map-entries
      (lambda ()
        (push (list :headline (org-get-heading t t t t)
@@ -41,8 +43,7 @@ Nodes carry the org-roadmap plist shape: :headline :todo-state
                    :level (org-current-level)
                    :children nil
                    :location (point-marker))
-             nodes))
-     nil 'file)
+             nodes)))
     (nreverse nodes)))
 
 (defun org-roadmap-stub--build-tree (flat)
