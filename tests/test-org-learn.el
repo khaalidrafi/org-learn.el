@@ -206,6 +206,21 @@ with an ellipsis."
 
 (load (expand-file-name "tests/test-org-learn-roadmap.el" default-directory))
 
+;;; Roadmap rollup + dashboard Roadmap line tests (spec 011) -- same
+;;; single-entry law.  The rollup suite is pure plus stub-world; the
+;;; REAL-dependency suite below it ert-skips loudly unless the real
+;;; org-roadmap is on the `load-path' (CI mounts the sibling repo).
+
+(load (expand-file-name "tests/test-org-learn-roadmap-rollup.el"
+                        default-directory))
+
+;;; Real-dependency tests (spec 011) -- loaded LAST: they unload the
+;;; stub and prove the bridge against the real org-roadmap package
+;;; when it is mounted; otherwise they skip with an install hint.
+
+(load (expand-file-name "tests/test-org-learn-roadmap-real.el"
+                        default-directory))
+
 ;;; Learn-mode keymap tests (spec 008) -- same single-entry law.
 
 (load (expand-file-name "tests/test-org-learn-mode.el" default-directory))
