@@ -32,11 +32,14 @@
 ;; formed on the agent-team kit -- see BOOTSTRAP-PROMPT.org at the repo
 ;; root and agent-team/ once the teamify lands.
 ;;
-;; DEPENDENCY: org-roadmap (a package under the khaalidrafi profile) is
-;; planned but NOT completed or published yet.  It is declared in
-;; Package-Requires as intent (version placeholder "0.1"); this skeleton
-;; does NOT (require 'org-roadmap) -- keep the boundary soft until its
-;; API lands.  Do not block on it.
+;; DEPENDENCY: org-roadmap is a REAL dependency since spec 006
+;; (Owner order 2026-11-01 18:28Z: "org-learn should depend on
+;; org-roadmap for planning, progress etc." -- this supersedes the
+;; old boundary law).  It is declared in Package-Requires, the bridge
+;; commands are autoloaded at the end of this file, and the feature
+;; itself is only required lazily inside those commands
+;; (org-learn-roadmap.el), so this core file still loads under CI -Q
+;; when org-roadmap is absent.
 
 ;;; Code:
 
@@ -171,6 +174,25 @@ for TITLE (default: the region text, truncated)."
      (org-learn--format-entry (org-learn--truncate-title title)
                               (org-learn--indent-block
                                (buffer-substring-no-properties beg end))))))
+
+;;; Spec 006 -- roadmap bridge autoloads (specs/006-roadmap-bridge.org).
+
+;; The bridge lives in org-learn-roadmap.el and requires org-roadmap
+;; lazily inside its commands (dependency law: the core loads without
+;; the feature present), so these autoloads are all org-learn.el
+;; declares about it.
+
+;;;###autoload
+(autoload 'org-learn-plan-from-roadmap "org-learn-roadmap"
+  "Ensure a :drill: review item per topic of the roadmap TODO tree." t)
+
+;;;###autoload
+(autoload 'org-learn-progress-report "org-learn-roadmap"
+  "Write :LEARN_PROGRESS: per roadmap node and show the report." t)
+
+;;;###autoload
+(autoload 'org-learn-roadmap-import "org-learn-roadmap"
+  "Import a roadmap.sh roadmap, then offer to plan review items." t)
 
 (provide 'org-learn)
 ;; Spec 002 -- review scheduling lives in org-learn-review.el (one
