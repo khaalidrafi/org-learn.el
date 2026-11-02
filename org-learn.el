@@ -194,6 +194,24 @@ for TITLE (default: the region text, truncated)."
 (autoload 'org-learn-roadmap-import "org-learn-roadmap"
   "Import a roadmap.sh roadmap, then offer to plan review items." t)
 
+;;; Spec 008 -- one-keymap entry point autoloads (specs/008-learn-mode.org).
+
+;; org-learn-mode.el is the single keymap over the whole loop; it binds
+;; the sibling commands lazily (autoload-style), so this core file
+;; never requires it.
+
+;;;###autoload
+(autoload 'org-learn-mode "org-learn-mode"
+  "One keymap for the whole org-learn learning loop, in Org buffers." t)
+
+;;;###autoload
+(autoload 'global-org-learn-mode-everywhere "org-learn-mode"
+  "Enable `org-learn-mode' in every Org buffer." t)
+
+;;;###autoload
+(autoload 'org-learn-mode-help "org-learn-mode"
+  "Pop up a temporary window listing every key of `org-learn-mode-keymap-prefix'." t)
+
 (provide 'org-learn)
 ;; Spec 002 -- review scheduling lives in org-learn-review.el (one
 ;; feature per file, AGENTS.md).  org-learn is provided first so the

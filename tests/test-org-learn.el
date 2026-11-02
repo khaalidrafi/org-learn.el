@@ -206,5 +206,9 @@ with an ellipsis."
 
 (load (expand-file-name "tests/test-org-learn-roadmap.el" default-directory))
 
+;;; Learn-mode keymap tests (spec 008) -- same single-entry law.
+
+(load (expand-file-name "tests/test-org-learn-mode.el" default-directory))
+
 (provide 'test-org-learn)
 ;;; test-org-learn.el ends here
