@@ -26,7 +26,10 @@
 ;; test replaces the old org-learn-keeps-the-org-roadmap-boundary
 ;; test of tests/test-org-learn.el (Owner order 2026-11-01 18:28Z).
 ;; Loaded by tests/test-org-learn.el so the single CI entry runs
-;; everything.
+;; everything.  Spec 011 adds the pure `org-learn-roadmap-rollup'
+;; table, the boundp `org-roadmap-progress' API-preference tests and
+;; the report rollup-path recording here; the real-dependency proofs
+;; live in tests/test-org-learn-roadmap-real.el.
 
 ;;; Code:
 
@@ -207,6 +210,167 @@ read-only org-mode buffer naming every topic."
                 (should (string-match-p "Roadmap: test" text))
                 (should (string-match-p "Alpha" text))
                 (should (string-match-p "Beta" text)))))
+          (kill-buffer "*org-learn-progress*"))
+      (kill-buffer roadmap)
+      (delete-directory dir t))))
+
+;;; Roadmap rollup (spec 011: pure, dashboard-grade).
+
+(ert-deftest org-learn-roadmap-rollup-table ()
+  "Spec 011: rollup math over a table of fixed input shapes.
+Accepts an org-roadmap parsed tree (spec 006 node shape) or the
+flat list of (TODO-STATE . LEAF-COUNT) conses and returns
+((MILESTONE . (DONE . TOTAL)) ...): leaves count individually, a
+node counts DONE when its keyword is in `org-done-keywords',
+containers roll up their subtree and a leaf-less milestone
+inherits the :LEARN_PROGRESS: percent.  The table covers the
+empty tree, flat conses, single-leaf, all-done, mixed TODO/DONE,
+nested containers, the LEARN_PROGRESS-inherited milestone, the
+leaf-less milestone without a property and multiple milestones."
+  (let ((org-done-keywords '("DONE"))
+        (cases
+         (list
+          ;; 1. Empty tree -> no milestones.
+          (cons nil nil)
+          ;; 2. Flat: one all-done leaf-less milestone counts itself.
+          (cons '((DONE . 0)) '((DONE . (1 . 1))))
+          ;; 3. Flat: mixed milestones; the keyword summarizes the leaves.
+          (cons '((TODO . 3) (DONE . 2))
+                '((TODO . (0 . 3)) (DONE . (2 . 2))))
+          ;; 4. Tree: single TODO leaf milestone.
+          (cons '((:headline "M" :todo-state TODO :level 1 :children nil))
+                '(("M" . (0 . 1))))
+          ;; 5. Tree: all-done milestone.
+          (cons '((:headline "M" :todo-state DONE :level 1 :children nil))
+                '(("M" . (1 . 1))))
+          ;; 6. Tree: mixed TODO/DONE leaves roll up to (1 . 3).
+          (cons '((:headline "M" :todo-state nil :level 1
+                             :children ((:headline "a" :todo-state TODO :level 2 :children nil)
+                                        (:headline "b" :todo-state DONE :level 2 :children nil)
+                                        (:headline "c" :todo-state TODO :level 2 :children nil))))
+                '(("M" . (1 . 3))))
+          ;; 7. Tree: nested containers roll up their whole subtree.
+          (cons '((:headline "M" :todo-state nil :level 1
+                             :children ((:headline "grp" :todo-state nil :level 2
+                                                   :children ((:headline "a" :todo-state DONE :level 3 :children nil)
+                                                              (:headline "b" :todo-state TODO :level 3 :children nil)))
+                                        (:headline "c" :todo-state DONE :level 2 :children nil))))
+                '(("M" . (2 . 3))))
+          ;; 8. Tree: leaf-less milestone inherits :LEARN_PROGRESS: 43.
+          (cons '((:headline "M" :todo-state TODO :level 1 :children nil
+                             :progress 43))
+                '(("M" . (43 . 100))))
+          ;; 9. Tree: leaf-less milestone without a property -> (0 . 0).
+          (cons '((:headline "M" :todo-state TODO :level 1 :children nil))
+                '(("M" . (0 . 0))))
+          ;; 10. Tree: leaf-less DONE milestone counts itself.
+          (cons '((:headline "M" :todo-state DONE :level 1 :children nil))
+                '(("M" . (1 . 1))))
+          ;; 11. Tree: multiple milestones keep their own cells.
+          (cons '((:headline "M1" :todo-state DONE :level 1 :children nil)
+                  (:headline "M2" :todo-state TODO :level 1
+                             :children ((:headline "x" :todo-state DONE :level 2 :children nil))))
+                '(("M1" . (1 . 1)) ("M2" . (1 . 1)))))))
+    (dolist (case cases)
+      (should (equal (org-learn-roadmap-rollup (car case))
+                     (cdr case))))))
+
+(ert-deftest org-learn-roadmap-rollup-reads-org-done-keywords ()
+  "Spec 011: a node counts DONE exactly when its TODO keyword is
+in `org-done-keywords'; outside Org buffers the (\"DONE\") default
+applies when the variable is unset."
+  (let ((org-done-keywords '("DONE" "CANCELLED")))
+    (should (equal (org-learn-roadmap-rollup
+                    '((:headline "a" :todo-state CANCELLED :level 1 :children nil)
+                      (:headline "b" :todo-state WAITING :level 1 :children nil)))
+                   '(("a" . (1 . 1)) ("b" . (0 . 1))))))
+  (let ((org-done-keywords nil))
+    (should (equal (org-learn-roadmap-rollup
+                    '((:headline "a" :todo-state DONE :level 1 :children nil)))
+                   '(("a" . (1 . 1)))))))
+
+(ert-deftest org-learn-roadmap-rollup-inherits-learn-progress-in-buffer ()
+  "Spec 011: a leaf-less milestone inherits :LEARN_PROGRESS: from
+the buffer property when the parsed tree carries no :progress key
+(the node shape the real org-roadmap parser produces)."
+  (org-learn-roadmap-test--load-stub)
+  (let ((org-done-keywords '("DONE"))
+        (buffer (get-buffer-create " *org-learn-roadmap-rollup*")))
+    (unwind-protect
+        (with-current-buffer buffer
+          (erase-buffer)
+          (insert "* TODO Solo\n  :PROPERTIES:\n  :LEARN_PROGRESS: 75\n  :END:\n")
+          (org-mode)
+          (let ((tree (org-roadmap-get-todo-tree)))
+            (should (equal (org-learn-roadmap-rollup tree)
+                           '(("Solo" . (75 . 100)))))))
+      (kill-buffer buffer))))
+
+;;; Progress rollup path (spec 011: boundp API preference).
+
+(ert-deftest org-learn-roadmap-progress-prefers-boundp-org-roadmap-api ()
+  "Spec 011: `org-learn-roadmap-progress' prefers the boundp
+`org-roadmap-progress' API (org-roadmap board TODO-006) and labels
+the path \"org-roadmap\" in the returned plist."
+  (cl-letf (((symbol-function 'org-roadmap-progress)
+             (lambda () '(("M" . (3 . 7))))))
+    (let ((rollup (org-learn-roadmap-progress)))
+      (should (string-prefix-p "org-roadmap" (plist-get rollup :path)))
+      (should (equal (plist-get rollup :rollup) '(("M" . (3 . 7))))))))
+
+(ert-deftest org-learn-roadmap-progress-falls-back-locally ()
+  "Spec 011: without the boundp API the pure local fallback
+`org-learn-roadmap-rollup' computes the same alist and the path
+label is honestly \"local fallback\"."
+  (cl-letf (((symbol-function 'org-roadmap-progress) nil))
+    (let ((org-done-keywords '("DONE"))
+          (rollup (org-learn-roadmap-progress
+                   '((:headline "M" :todo-state nil :level 1
+                                :children ((:headline "a" :todo-state DONE :level 2 :children nil)
+                                           (:headline "b" :todo-state TODO :level 2 :children nil)))))))
+      (should (equal (plist-get rollup :path) "local fallback"))
+      (should (equal (plist-get rollup :rollup) '(("M" . (1 . 2))))))))
+
+(ert-deftest org-learn-roadmap-progress-fallback-parses-current-buffer ()
+  "Spec 011: the fallback with no TREE argument parses the current
+buffer's TODO tree through the loaded org-roadmap (stub or real
+alike), so a bare call still yields the milestone alist."
+  (org-learn-roadmap-test--load-stub)
+  (let ((buffer (get-buffer-create " *org-learn-roadmap-fallback*"))
+        (org-done-keywords '("DONE")))
+    (unwind-protect
+        (with-current-buffer buffer
+          (erase-buffer)
+          (insert "* TODO Solo\n")
+          (org-mode)
+          (let ((rollup (org-learn-roadmap-progress)))
+            (should (equal (plist-get rollup :path) "local fallback"))
+            (should (equal (plist-get rollup :rollup)
+                           '(("Solo" . (0 . 1)))))))
+      (kill-buffer buffer))))
+
+;;; Progress report rollup path recording (spec 011).
+
+(ert-deftest org-learn-roadmap-progress-report-records-rollup-path ()
+  "Spec 011: the progress report buffer records which rollup path
+ran (\"rollup: org-roadmap ...\" vs \"rollup: local fallback\")
+and lists one milestone line per rollup cell."
+  (org-learn-roadmap-test--load-stub)
+  (let* ((dir (make-temp-file "org-learn-rmrp-" t))
+         (notes (expand-file-name "learn.org" dir))
+         (org-learn-file notes)
+         (roadmap (org-learn-roadmap-test--roadmap-buffer)))
+    (unwind-protect
+        (with-current-buffer roadmap
+          (org-learn-plan-from-roadmap)
+          (goto-char (point-min))
+          (org-learn-progress-report)
+          (with-current-buffer "*org-learn-progress*"
+            (let ((text (buffer-string)))
+              (if (fboundp 'org-roadmap-progress)
+                  (should (string-match-p "^rollup: org-roadmap" text))
+                (should (string-match-p "^rollup: local fallback$" text)))
+              (should (string-match-p "^- \\*Roadmap: test\\*: " text))))
           (kill-buffer "*org-learn-progress*"))
       (kill-buffer roadmap)
       (delete-directory dir t))))

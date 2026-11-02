@@ -242,5 +242,123 @@ SCHEDULED: <2020-01-01 Wed>
   "Spec 005: the dashboard feature never loads org-roadmap either."
   (should-not (featurep 'org-roadmap)))
 
+;;; Roadmap line (spec 011) -- appended without touching the spec
+;;; 005 tests above; they stay green untouched.
+
+(defconst org-learn-dashboard-test--support-dir
+  (if load-file-name
+      (expand-file-name "support" (file-name-directory load-file-name))
+    (expand-file-name "tests/support"))
+  "Directory holding the org-roadmap test stub.")
+
+(defun org-learn-dashboard-test--load-roadmap-feature ()
+  "Ensure an `org-roadmap' feature is loaded for the roadmap tests.
+Keep an already-loaded feature (stub or real alike); otherwise
+load the stub (tests/support/org-roadmap-stub.el) on a LOCAL
+`load-path' extension only.  Return non-nil when THIS call loaded
+the stub, so the caller can unload it again in its cleanup: the
+dashboard feature must stay org-roadmap-free between tests no
+matter which order ERT picks."
+  (if (featurep 'org-roadmap)
+      nil
+    (let ((load-path (cons org-learn-dashboard-test--support-dir load-path)))
+      (load (expand-file-name "org-roadmap-stub.el"
+                              org-learn-dashboard-test--support-dir)
+            nil 'nomessage))
+    'loaded-by-this-call))
+
+(defun org-learn-dashboard-test--unload-roadmap-feature (loaded-here)
+  "Undo `org-learn-dashboard-test--load-roadmap-feature' when needed.
+LOADED-HERE is that function's return value; the feature is only
+unloaded when this test file is the one that loaded it."
+  (when (and loaded-here (featurep 'org-roadmap))
+    (unload-feature 'org-roadmap 'force)))
+
+(ert-deftest org-learn-dashboard-render-shows-the-roadmap-line ()
+  "Spec 011: the dashboard renders the Roadmap line from the
+:roadmap data key, e.g. \"Roadmap: 3/7 milestones done (43%),
+next review in 1d\"."
+  (with-temp-buffer
+    (org-mode)
+    (org-learn-dashboard--render
+     (list :due 0 :new 0 :done-today 0 :queue nil :leeches nil :stats nil
+           :roadmap "Roadmap: 3/7 milestones done (43%), next review in 1d"))
+    (should (string-match-p
+             (concat "^- Roadmap: 3/7 milestones done \\(43%\\), "
+                     "next review in 1d$")
+             (buffer-string)))))
+
+(ert-deftest org-learn-dashboard-render-is-silent-without-roadmap-data ()
+  "Spec 011: without :roadmap data no Roadmap line renders."
+  (with-temp-buffer
+    (org-mode)
+    (org-learn-dashboard--render
+     (list :due 0 :new 0 :done-today 0 :queue nil :leeches nil :stats nil))
+    (should-not (string-match-p "^- Roadmap:" (buffer-string)))))
+
+(ert-deftest org-learn-dashboard-roadmap-line-appears-for-roadmap-buffers ()
+  "Spec 011: a buffer with roadmap nodes gets the Roadmap line.
+The line carries the milestone rollup of the current buffer plus
+the next scheduled review from the scanned files."
+  (let* ((org-learn-review-scope 'file)
+         (org-learn-file (make-temp-file "org-learn-dashrm-" nil ".org"))
+         (tomorrow (format-time-string
+                    "%Y-%m-%d" (time-add (current-time) (days-to-time 1))))
+         (roadmap (get-buffer-create " *org-learn-dashrm-roadmap*"))
+         (loaded-here (org-learn-dashboard-test--load-roadmap-feature))
+         dashboard)
+    (unwind-protect
+        (progn
+          ;; One review item scheduled tomorrow drives "in 1d".
+          (with-temp-buffer
+            (insert (format "* TODO Review me :drill:\nSCHEDULED: <%s>\n" tomorrow))
+            (write-region (point-min) (point-max) org-learn-file nil 'quiet))
+          (with-current-buffer roadmap
+            (erase-buffer)
+            (org-mode)
+            (insert "* Roadmap: dash\n** TODO Alpha\n** TODO Beta\n")
+            (goto-char (point-min))
+            (org-learn-dashboard))
+          (setq dashboard (get-buffer org-learn-dashboard--buffer))
+          (should (buffer-live-p dashboard))
+          (with-current-buffer dashboard
+            (should (string-match-p
+                     (concat "^- Roadmap: 0/1 milestones done \\(0%\\), "
+                             "next review in 1d$")
+                     (buffer-string)))))
+      (org-learn-dashboard-test--unload-roadmap-feature loaded-here)
+      (org-learn-dashboard-test--kill-dashboard)
+      (kill-buffer roadmap)
+      (org-learn-dashboard-test--kill-file-buffer org-learn-file)
+      (when (file-exists-p org-learn-file)
+        (delete-file org-learn-file)))))
+
+(ert-deftest org-learn-dashboard-roadmap-line-silent-without-roadmap-nodes ()
+  "Spec 011: an Org buffer without roadmap nodes (headings with a
+TODO keyword) keeps the dashboard silent about the roadmap."
+  (let* ((org-learn-review-scope 'file)
+         (org-learn-file (make-temp-file "org-learn-dashplain-" nil ".org"))
+         (plain (get-buffer-create " *org-learn-dashplain*"))
+         (loaded-here (org-learn-dashboard-test--load-roadmap-feature)))
+    (unwind-protect
+        (progn
+          (with-temp-buffer
+            (insert "* Plain notes\nsome body text\n")
+            (write-region (point-min) (point-max) org-learn-file nil 'quiet))
+          (with-current-buffer plain
+            (erase-buffer)
+            (org-mode)
+            (insert "* Plain heading\nbody\n")
+            (goto-char (point-min))
+            (org-learn-dashboard))
+          (with-current-buffer org-learn-dashboard--buffer
+            (should-not (string-match-p "^- Roadmap:" (buffer-string)))))
+      (org-learn-dashboard-test--unload-roadmap-feature loaded-here)
+      (org-learn-dashboard-test--kill-dashboard)
+      (kill-buffer plain)
+      (org-learn-dashboard-test--kill-file-buffer org-learn-file)
+      (when (file-exists-p org-learn-file)
+        (delete-file org-learn-file)))))
+
 (provide 'test-org-learn-dashboard)
 ;;; test-org-learn-dashboard.el ends here

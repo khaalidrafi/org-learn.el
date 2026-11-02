@@ -206,6 +206,13 @@ with an ellipsis."
 
 (load (expand-file-name "tests/test-org-learn-roadmap.el" default-directory))
 
+;;; Real-dependency roadmap tests (spec 011) -- same single-entry
+;;; law.  Every test ert-skips (loudly) when the real org-roadmap is
+;;; not on the `load-path', so CI without the sibling stays green.
+
+(load (expand-file-name "tests/test-org-learn-roadmap-real.el"
+                        default-directory))
+
 ;;; Learn-mode keymap tests (spec 008) -- same single-entry law.
 
 (load (expand-file-name "tests/test-org-learn-mode.el" default-directory))
