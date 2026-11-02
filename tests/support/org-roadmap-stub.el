@@ -19,27 +19,35 @@
 ;; Spec 006 stub strategy (specs/006-roadmap-bridge.org): provide the
 ;; `org-roadmap' feature with just the minimal public API the
 ;; org-learn bridge calls -- whole-buffer/subtree tree parsing, ASCII
-;; generation into *Org Roadmap* and the roadmap.sh import
-;; pass-through.  It goes on the `load-path' only inside
-;; tests/test-org-learn-roadmap.el, proving the integration contract
-;; without the real package.  Never ship or install this file.
+;; generation into *Org Roadmap*, the roadmap.sh import pass-through
+;; and the 0-arg progress alist (org-roadmap board TODO-006).  Every
+;; public defun mirrors the REAL package's signature and return shape
+;; exactly, names included: the spec 011 stub-drift guard compares
+;; `help-function-arglist' symbol by symbol, so a drift here fails the
+;; suite, not the user's session.  The stub goes on the `load-path'
+;; only inside the roadmap test suites, proving the integration
+;; contract without the real package.  Never ship or install this
+;; file.
 
 ;;; Code:
 
 (require 'org)
 
-(defun org-roadmap-stub--parse-tree ()
-  "Parse every heading of the current buffer into flat tree nodes.
-Nodes carry the org-roadmap plist shape: :headline :todo-state
-:level :children :location."
+(defun org-roadmap-parse-todo-tree (&optional _limit)
+  "Stub of `org-roadmap-parse-todo-tree': the flat node list.
+Parses every heading of the current buffer (respecting any
+restriction, so the same parse serves the whole-buffer and
+subtree paths) into the real flat node shape: :headline
+:todo-state :tags :level :children :location per node, document
+order.  _LIMIT is accepted and ignored, exactly like the real
+optional argument."
   (let ((nodes nil))
-    ;; Scope nil: the current buffer (respecting any restriction), so
-    ;; the same parse serves the whole-buffer and subtree paths.
     (org-map-entries
      (lambda ()
        (push (list :headline (org-get-heading t t t t)
                    :todo-state (when (org-get-todo-state)
                                  (intern (org-get-todo-state)))
+                   :tags (org-get-tags nil 'local)
                    :level (org-current-level)
                    :children nil
                    :location (point-marker))
@@ -71,8 +79,9 @@ Nodes carry the org-roadmap plist shape: :headline :todo-state
                  tree)))
 
 (defun org-roadmap-get-todo-tree (&optional _limit)
-  "Stub of `org-roadmap-get-todo-tree': the whole-buffer tree."
-  (org-roadmap-stub--build-tree (org-roadmap-stub--parse-tree)))
+  "Stub of `org-roadmap-get-todo-tree': the whole-buffer tree.
+Mirrors the real composition: the flat parse nested by :level."
+  (org-roadmap-stub--build-tree (org-roadmap-parse-todo-tree)))
 
 (defun org-roadmap-get-subtree-tree ()
   "Stub of `org-roadmap-get-subtree-tree': the tree at point."
@@ -80,7 +89,7 @@ Nodes carry the org-roadmap plist shape: :headline :todo-state
     (org-back-to-heading t)
     (org-narrow-to-subtree)
     (unwind-protect
-        (org-roadmap-stub--build-tree (org-roadmap-stub--parse-tree))
+        (org-roadmap-stub--build-tree (org-roadmap-parse-todo-tree))
       (widen))))
 
 (defun org-roadmap-generate (&optional subtree-p)
@@ -100,6 +109,60 @@ line per node, headline text included."
                           (plist-get node :headline))))
         (goto-char (point-min))))
     (display-buffer buf)))
+
+(defun org-roadmap-stub--progress-cell (node)
+  "Return the (DONE . TOTAL) progress cell for parse NODE.
+Stub mirror of the real private cell: a leaf counts individually
+by keyword (DONE marks it done, any other TODO keyword marks it
+open, no keyword counts nothing), a container rolls up its
+subtree, and a rollup with no TODO leaves falls back to the
+numeric :LEARN_PROGRESS: property of NODE's :location heading
+with 0-100 mapped to X/100, else to (0 . 0).  Pure: reads NODE's
+buffer, never modifies it."
+  (let* ((children (plist-get node :children))
+         (cell (if (not children)
+                   (cond
+                    ((eq (plist-get node :todo-state) 'DONE) (cons 1 1))
+                    ((plist-get node :todo-state) (cons 0 1))
+                    (t (cons 0 0)))
+                 (let ((acc (cons 0 0)))
+                   (dolist (child children acc)
+                     (let ((sub (org-roadmap-stub--progress-cell child)))
+                       (setcar acc (+ (car acc) (car sub)))
+                       (setcdr acc (+ (cdr acc) (cdr sub)))))))))
+    (if (zerop (cdr cell))
+        (let ((loc (plist-get node :location))
+              (fallback (cons 0 0)))
+          (if (and (markerp loc) (marker-buffer loc)
+                   (marker-position loc))
+              (let ((value (with-current-buffer (marker-buffer loc)
+                             (save-excursion
+                               (goto-char (marker-position loc))
+                               (org-entry-get nil "LEARN_PROGRESS")))))
+                (if (and (stringp value)
+                         (string-match-p
+                          "\\`[0-9]+\\(?:\\.[0-9]+\\)?\\'" value))
+                    (let ((n (string-to-number value)))
+                      (if (and (>= n 0) (<= n 100))
+                          (cons (round n) 100)
+                        fallback))
+                  fallback))
+            fallback))
+      cell)))
+
+(defun org-roadmap-progress ()
+  "Stub of `org-roadmap-progress': the whole-buffer progress alist.
+Mirrors the real 0-arg contract: parses the current buffer and
+maps each top-level milestone heading to a (DONE . TOTAL) cell,
+returning ((MILESTONE . (DONE . TOTAL)) ...) in buffer order, nil
+for a buffer with no headings.  No buffer modification, no faces
+-- data only."
+  (let ((tree (org-roadmap-get-todo-tree)))
+    (and tree
+         (mapcar (lambda (node)
+                   (cons (plist-get node :headline)
+                         (org-roadmap-stub--progress-cell node)))
+                 tree))))
 
 (defun org-roadmap-import-roadmap-sh (source &optional output-file)
   "Stub importer: insert a fixed TODO tree for SOURCE.
