@@ -42,6 +42,21 @@
 ;;   answer correct/partly/wrong (SM-2 quality 5/3/1) and offers to
 ;;   schedule a review through `org-learn-review--process-entry'.
 ;;
+;; Spec 007 (specs/007-docneural-tutor-modes.org) adds the docneural
+;; tutor modes over the same choke point and chat buffer:
+;;
+;; - `org-learn-ai-backend' (amendment 2026-11-02 01:54Z) picks the
+;;   lane: `auto' delegates to gptel when its package is loaded and
+;;   to the keyless Pollinations lane otherwise, `gptel' always goes
+;;   through gptel's public request API, `keyless' always uses the
+;;   built-in Pollinations lane.
+;; - `org-learn-ai-trace' walks the subtree material in numbered
+;;   steps, one idea per step, each with a tiny example.
+;; - `org-learn-ai-focus' asks one probing question, reads the
+;;   answer, grades it and offers a scheduled review.
+;; - `org-learn-ai-clear' produces three takeaway bullets and three
+;;   cloze suggestions, then offers flashcard generation.
+;;
 ;; org-roadmap stays at the boundary: it is never required here
 ;; (AGENTS.md).
 
@@ -57,6 +72,17 @@
   "AI tutor, flashcards and quiz for org-learn."
   :group 'org-learn
   :prefix "org-learn-")
+
+(defcustom org-learn-ai-backend 'auto
+  "Backend lane `org-learn-ai--complete' sends requests through.
+`auto' delegates to gptel when its package is loaded and to the
+keyless Pollinations lane otherwise (it never autoloads gptel).
+`gptel' requires gptel and goes through its public request API.
+`keyless' always uses the built-in Pollinations lane (spec 007)."
+  :type '(radio (const :tag "Auto: gptel when loaded, else keyless" auto)
+                (const :tag "gptel (M-x package-install gptel)" gptel)
+                (const :tag "Keyless Pollinations endpoint" keyless))
+  :group 'org-learn-ai)
 
 (defcustom org-learn-ai-endpoint "https://text.pollinations.ai/openai"
   "OpenAI-compatible chat completions endpoint used by org-learn AI.
@@ -100,6 +126,18 @@ kept and the cut is noted in a trailing line."
   "You generate study flashcards.  Reply with only a JSON array of 5-10 objects with keys \"q\" (question) and \"a\" (answer); no prose, no markdown fences."
   "System prompt for flashcard generation (spec 004).")
 
+(defconst org-learn-ai--trace-prompt
+  "You are a study tutor using the TRACE method: walk the material step by step in numbered steps, exactly one idea per step, each step followed by a tiny example.  Answer in plain text without markdown."
+  "System prompt for `org-learn-ai-trace' (spec 007): numbered steps,\none idea per step, a tiny example per step.")
+
+(defconst org-learn-ai--focus-prompt
+  "You are a study tutor using the FOCUS method: ask exactly ONE probing question about the material.  When the user answers, grade it with exactly one of the words correct, partly or wrong, then explain briefly what to fix.  Answer in plain text without markdown."
+  "System prompt for `org-learn-ai-focus' (spec 007): one probing\nquestion, graded correct, partly or wrong.")
+
+(defconst org-learn-ai--clear-prompt
+  "You are a study tutor using the CLEAR method: reply with exactly three takeaway bullets of the core ideas, then exactly three cloze card suggestions in the [answer||hint] form.  Answer in plain text without markdown."
+  "System prompt for `org-learn-ai-clear' (spec 007): three takeaway\nbullets plus three [answer||hint] cloze suggestions.")
+
 ;;; Network core (the one choke point).
 
 (defun org-learn-ai--system-message (content)
@@ -140,41 +178,63 @@ bodies raise `user-error' with the status and an endpoint hint."
                   (or status "malformed") org-learn-ai-endpoint))
     (goto-char (point-min))
     (unless (re-search-forward "\r?\n\r?\n" nil t)
-      (user-error "org-learn-ai: malformed response from %s (check org-learn-ai-endpoint)"
+      (user-error "Malformed response from %s (check org-learn-ai-endpoint)"
                   org-learn-ai-endpoint))
     (unless (search-forward "{" nil t)
-      (user-error "org-learn-ai: no JSON body from %s (check org-learn-ai-endpoint)"
+      (user-error "No JSON body from %s (check org-learn-ai-endpoint)"
                   org-learn-ai-endpoint))
     (let* ((json (condition-case err
                      (json-read-from-string
                       (buffer-substring-no-properties
                        (1- (point)) (point-max)))
                    (error
-                    (user-error "org-learn-ai: unreadable JSON body from %s: %s (check org-learn-ai-endpoint)"
+                    (user-error "Unreadable JSON body from %s: %s (check org-learn-ai-endpoint)"
                                 org-learn-ai-endpoint
                                 (error-message-string err)))))
            (choices (cdr (assq 'choices json))))
       (unless (and (vectorp choices) (> (length choices) 0))
-        (user-error "org-learn-ai: no choices in the reply from %s (check org-learn-ai-endpoint)"
+        (user-error "No choices in the reply from %s (check org-learn-ai-endpoint)"
                     org-learn-ai-endpoint))
       (let ((content (cdr (assq 'content
                                 (cdr (assq 'message (aref choices 0)))))))
         (unless (stringp content)
-          (user-error "org-learn-ai: no message content in the reply from %s (check org-learn-ai-endpoint)"
+          (user-error "No message content in the reply from %s (check org-learn-ai-endpoint)"
                       org-learn-ai-endpoint))
         content))))
 
+(defun org-learn-ai--gptel-available-p ()
+  "Return non-nil when the gptel package is loaded (spec 007).
+The `auto' backend serves requests through gptel only when it is
+already loaded; it never autoloads gptel on its own."
+  (featurep 'gptel))
+
 (defun org-learn-ai--complete (messages)
-  "Send MESSAGES to the endpoint and return the assistant text.
+  "Send MESSAGES to the configured backend and return the reply text.
 MESSAGES is a list of message alists in conversation order, each
-like ((role . \"user\") (content . \"...\")).  The request POSTs
-{model, messages} JSON to `org-learn-ai-endpoint' through
-`url-retrieve-synchronously'; the Authorization header is sent
-only when `org-learn-ai-api-key' is non-nil.  Connection, timeout
-and HTTP failures raise `user-error' with the status and an
-endpoint hint.  This is the single network choke point of the AI
+like ((role . \"user\") (content . \"...\")).  Dispatch follows
+`org-learn-ai-backend' (spec 007): the `gptel' backend delegates
+to gptel's public request API, the `keyless' backend POSTs
+{model, messages} JSON to `org-learn-ai-endpoint', and `auto'
+prefers gptel when its package is loaded.  Every lane keeps the
+same contract: the assistant text on success, `user-error' on
+failure.  This is the single network choke point of the AI
 features (spec 004): every model call goes through here, which is
 what tests mock with `cl-letf'."
+  (pcase org-learn-ai-backend
+    ('gptel (org-learn-ai--complete-gptel messages))
+    ('keyless (org-learn-ai--complete-keyless messages))
+    (_                       ;'auto: gptel when loaded, else keyless
+     (if (org-learn-ai--gptel-available-p)
+         (org-learn-ai--complete-gptel messages)
+       (org-learn-ai--complete-keyless messages)))))
+
+(defun org-learn-ai--complete-keyless (messages)
+  "Send MESSAGES to the keyless endpoint and return the assistant text.
+The request POSTs {model, messages} JSON to
+`org-learn-ai-endpoint' through `url-retrieve-synchronously'; the
+Authorization header is sent only when `org-learn-ai-api-key' is
+non-nil.  Connection, timeout and HTTP failures raise
+`user-error' with the status and an endpoint hint."
   (let* ((url-request-method "POST")
          (url-request-extra-headers
           (cons '("Content-Type" . "application/json")
@@ -190,16 +250,58 @@ what tests mock with `cl-letf'."
                                            t nil
                                            org-learn-ai-timeout-seconds)
              (error
-              (user-error "org-learn-ai: request to %s failed: %s (check org-learn-ai-endpoint)"
+              (user-error "Request to %s failed: %s (check org-learn-ai-endpoint)"
                           org-learn-ai-endpoint
                           (error-message-string err))))))
       (unless (buffer-live-p buffer)
-        (user-error "org-learn-ai: no response from %s within %d seconds (check org-learn-ai-endpoint)"
+        (user-error "No response from %s within %d seconds (check org-learn-ai-endpoint)"
                     org-learn-ai-endpoint org-learn-ai-timeout-seconds))
       (unwind-protect
           (with-current-buffer buffer
             (org-learn-ai--parse-response))
         (kill-buffer buffer)))))
+
+(declare-function gptel-request "gptel-request"
+                  (&optional prompt &rest args) t)
+
+(defun org-learn-ai--complete-gptel (messages)
+  "Send MESSAGES through gptel's public request API.
+The system message travels as gptel's :system directive and the
+remaining turns as gptel's alternating conversation strings, so
+the model sees the same messages as the keyless lane.  The reply
+is collected through gptel's callback and waited for, keeping the
+same contract as the keyless lane: the reply text on success,
+`user-error' on failure, with a one-line install hint when the
+gptel package is absent (spec 007)."
+  (unless (require 'gptel nil t)
+    (user-error "The gptel backend needs the gptel package (M-x package-install gptel)"))
+  (let ((system "") (turns nil) response done status)
+    (dolist (message messages)
+      (let ((role (cdr (assq 'role message)))
+            (content (cdr (assq 'content message))))
+        (if (equal role "system")
+            (setq system content)
+          (push content turns))))
+    (setq turns (nreverse turns))
+    (condition-case err
+        (gptel-request (or turns "")
+          :system system
+          :callback (lambda (reply info)
+                      (setq response (and (stringp reply) reply)
+                            status (plist-get info :status)
+                            done t)))
+      (error
+       (user-error "The gptel request failed: %s"
+                   (error-message-string err))))
+    (with-timeout (org-learn-ai-timeout-seconds
+                   (user-error "No gptel reply within %d seconds"
+                               org-learn-ai-timeout-seconds))
+      (while (not done)
+        (accept-process-output nil 0.1)))
+    (unless (stringp response)
+      (user-error "The gptel request failed (%s)"
+                  (or status "no response")))
+    response))
 
 ;;; Subtree context.
 
@@ -241,6 +343,12 @@ the user and assistant turns in order.")
 (defvar-local org-learn-ai--chat-context-sent nil
   "Non-nil once the study context was embedded in a user turn.")
 
+(defvar-local org-learn-ai--chat-system org-learn-ai--tutor-prompt
+  "Buffer-local system prompt used for every turn of the chat.
+A fresh chat buffer starts with the plain tutor persona; the
+tutor modes (spec 007) set their own variant, which then serves
+all turns, follow-ups included.")
+
 (defvar-local org-learn-ai--chat-input-marker nil
   "Marker at the start of the chat input prompt.")
 
@@ -262,7 +370,7 @@ the user and assistant turns in order.")
   "Initialize the chat buffer contents and the input prompt."
   (erase-buffer)
   (insert "#+TITLE: org-learn AI tutor\n\n"
-          "Type a message after the prompt; RET or C-c C-c sends, "
+          "Type a message after the prompt; RET or \\[org-learn-ai--chat-send] sends, "
           "C-c C-n starts a new chat, q quits when the input is "
           "empty.\n\n")
   (org-learn-ai--chat-prompt))
@@ -281,36 +389,48 @@ the context is already part of the history."
                 org-learn-ai--chat-context input))
     input))
 
+(defun org-learn-ai--chat-turn (content)
+  "Send CONTENT as the next user turn and render the exchange.
+The reply is fetched before the buffer is touched, so a failure
+leaves no litter.  The turn and the reply also extend the chat
+history.  Returns the reply text."
+  (let* ((rendered (org-learn-ai--chat-user-content content))
+         (reply (org-learn-ai--complete
+                 (append (list (org-learn-ai--system-message
+                                org-learn-ai--chat-system))
+                         org-learn-ai--chat-history
+                         (list (org-learn-ai--user-message rendered))))))
+    ;; A pending prompt, if any, makes way for the rendered turn.
+    (when (and (markerp org-learn-ai--chat-input-marker)
+               (buffer-live-p (marker-buffer
+                               org-learn-ai--chat-input-marker)))
+      (goto-char org-learn-ai--chat-input-marker)
+      (beginning-of-line)
+      (delete-region (point) (point-max)))
+    (set-marker org-learn-ai--chat-input-marker nil)
+    (goto-char (point-max))
+    (insert (org-learn-ai--quote-turn content) "\n"
+            (string-trim reply) "\n\n")
+    (setq org-learn-ai--chat-history
+          (append org-learn-ai--chat-history
+                  (list (org-learn-ai--user-message rendered)
+                        (org-learn-ai--assistant-message reply))))
+    (org-learn-ai--chat-prompt)
+    reply))
+
 (defun org-learn-ai--chat-send ()
   "Send the chat input to the tutor and insert the reply.
 The input is the text after the input prompt.  The buffer is only
 touched after a successful reply, so a failure leaves no litter."
   (interactive)
   (unless (markerp org-learn-ai--chat-input-marker)
-    (user-error "org-learn-ai: no chat input here"))
+    (user-error "No chat input here"))
   (let ((input (string-trim (buffer-substring-no-properties
                              org-learn-ai--chat-input-marker
                              (point-max)))))
     (when (string= input "")
-      (user-error "org-learn-ai: type a message first"))
-    (let* ((content (org-learn-ai--chat-user-content input))
-           (reply (org-learn-ai--complete
-                   (append (list (org-learn-ai--system-message
-                                  org-learn-ai--tutor-prompt))
-                           org-learn-ai--chat-history
-                           (list (org-learn-ai--user-message content))))))
-      (goto-char org-learn-ai--chat-input-marker)
-      (beginning-of-line)
-      (delete-region (point) (point-max))
-      (goto-char (point-max))
-      (insert (org-learn-ai--quote-turn input) "\n"
-              (string-trim reply) "\n\n")
-      (setq org-learn-ai--chat-history
-            (append org-learn-ai--chat-history
-                    (list (org-learn-ai--user-message content)
-                          (org-learn-ai--assistant-message reply))))
-      (set-marker org-learn-ai--chat-input-marker nil)
-      (org-learn-ai--chat-prompt))))
+      (user-error "Type a message first"))
+    (org-learn-ai--chat-turn input)))
 
 (defun org-learn-ai--chat-new ()
   "Start a new chat: clear the history and the buffer."
@@ -322,8 +442,7 @@ touched after a successful reply, so a failure leaves no litter."
 
 (defun org-learn-ai--chat-quit-or-self-insert ()
   "Quit the chat when the input is empty, else self-insert Q.
-Typing \"q\" only quits at the fresh prompt; C-q q inserts a
-literal q anywhere."
+Typing \"q\" only quits at the fresh prompt; \\[quoted-insert] q inserts a literal q anywhere."
   (interactive)
   (if (and (eobp)
            (or (not (markerp org-learn-ai--chat-input-marker))
@@ -343,8 +462,10 @@ literal q anywhere."
 
 (define-derived-mode org-learn-ai-chat-mode org-mode "Org-Learn-AI-Chat"
   "Major mode for the org-learn AI tutor chat buffer.
-RET and C-c C-c send the message after the prompt, C-c C-n starts
-a new chat and q quits when the input is empty.
+RET and \\[org-learn-ai--chat-send] send the message after the
+prompt, \\[org-learn-ai--chat-new] starts a new chat and
+\\[org-learn-ai--chat-quit-or-self-insert] quits when the input is
+empty.
 \\{org-learn-ai-chat-mode-map}")
 
 ;;;###autoload
@@ -353,8 +474,9 @@ a new chat and q quits when the input is empty.
 The chat lives in the buffer named by `org-learn-ai--chat-buffer'.
 With prefix REFRESH, or when the chat is new, the current subtree
 text (capped per `org-learn-ai-context-max-chars') is re-captured
-as the study context.  In the chat buffer RET or C-c C-c sends the
-message and C-c C-n starts a new chat."
+as the study context.  In the chat buffer RET or
+\\[org-learn-ai--chat-send] sends the message and
+\\[org-learn-ai--chat-new] starts a new chat."
   (interactive "P")
   ;; The context is captured in the invoking buffer, before the chat
   ;; buffer becomes current.
@@ -366,7 +488,8 @@ message and C-c C-n starts a new chat."
         (org-learn-ai-chat-mode))
       (when context
         (setq org-learn-ai--chat-context context
-              org-learn-ai--chat-context-sent nil))
+              org-learn-ai--chat-context-sent nil
+              org-learn-ai--chat-system org-learn-ai--tutor-prompt))
       (when fresh
         (org-learn-ai--chat-welcome))
       (goto-char (point-max))
@@ -412,7 +535,7 @@ remains, `user-error' reports the garbage reply."
                    (not (string-blank-p q)) (not (string-blank-p a)))
           (push (cons (string-trim q) (string-trim a)) cards))))
     (unless cards
-      (user-error "org-learn-ai: no usable {q, a} flashcards in the model reply"))
+      (user-error "No usable {q, a} flashcards in the model reply"))
     (nreverse cards)))
 
 (defun org-learn-ai--format-flashcard (level q a created)
@@ -468,14 +591,14 @@ headings and CREATED_BY/CREATED properties.  A garbage reply
 inserts nothing and raises `user-error'."
   (interactive)
   (unless (derived-mode-p 'org-mode)
-    (user-error "org-learn-ai-generate-flashcards: not in an Org buffer"))
+    (user-error "Not in an Org buffer; org-learn-ai-generate-flashcards needs one"))
   (unless (ignore-errors (org-back-to-heading t))
-    (user-error "org-learn-ai-generate-flashcards: point is not on a heading"))
+    (user-error "No heading at point; org-learn-ai-generate-flashcards needs one"))
   (let* ((context (org-learn-ai--context))
          (reply (org-learn-ai--complete
                  (org-learn-ai--flashcards-messages context)))
          (items (or (org-learn-ai--extract-json-array reply)
-                    (user-error "org-learn-ai: no JSON flashcard array in the model reply")))
+                    (user-error "No JSON flashcard array in the model reply")))
          (cards (org-learn-ai--cards-from-array items))
          (count (org-learn-ai--insert-flashcards cards)))
     (message "org-learn-ai: inserted %d flashcard%s"
@@ -493,7 +616,7 @@ Without any grade word, `user-error' reports the garbage reply."
    ((string-match-p "\\bpartly\\b" reply) 3)
    ((string-match-p "\\b\\(?:incorrect\\|wrong\\)\\b" reply) 1)
    ((string-match-p "\\bcorrect\\b" reply) 5)
-   (t (user-error "org-learn-ai-quiz: no correct/partly/wrong grade in the reply"))))
+   (t (user-error "No correct/partly/wrong grade in the reply"))))
 
 (defun org-learn-ai--quiz-messages (context history turns)
   "Return the quiz request messages.
@@ -516,12 +639,12 @@ read from the minibuffer and the model grades it correct, partly
 or wrong (SM-2 quality 5, 3 or 1).  After each grade the command
 offers to schedule a review of the entry through
 `org-learn-review--process-entry'.  The loop continues until the
-user says stop; C-g exits at any point."
+user says stop; \\[keyboard-quit] exits at any point."
   (interactive)
   (unless (derived-mode-p 'org-mode)
-    (user-error "org-learn-ai-quiz: not in an Org buffer"))
+    (user-error "Not in an Org buffer; org-learn-ai-quiz needs one"))
   (unless (ignore-errors (org-back-to-heading t))
-    (user-error "org-learn-ai-quiz: point is not on a heading"))
+    (user-error "No heading at point; org-learn-ai-quiz needs one"))
   (let* ((context (org-learn-ai--context))
          (source-buffer (current-buffer))
          (history nil)
@@ -560,6 +683,97 @@ user says stop; C-g exits at any point."
             (when (buffer-file-name)
               (save-buffer))))
         (setq continue (yes-or-no-p "Another question? "))))))
+
+;;; Tutor modes (spec 007).
+
+(defun org-learn-ai--subtree-check (caller)
+  "Signal when a tutor mode cannot act here; CALLER names the command.
+The tutor modes work on the current subtree, so an Org buffer with
+the point on a heading is required."
+  (unless (derived-mode-p 'org-mode)
+    (user-error "%s: not in an Org buffer" caller))
+  (unless (ignore-errors (org-back-to-heading t))
+    (user-error "%s: point is not on a heading" caller)))
+
+(defun org-learn-ai--mode-chat (prompt directive)
+  "Start a tutor-mode chat about the current subtree and return the reply.
+The chat buffer is reset with the mode's system PROMPT and the
+current subtree as the study context, then DIRECTIVE is sent as
+the first user turn.  Both turns render through the regular chat
+turn machinery, so follow-ups share the multi-turn history."
+  (let ((context (org-learn-ai--context)))
+    (with-current-buffer (get-buffer-create org-learn-ai--chat-buffer)
+      (unless (derived-mode-p 'org-learn-ai-chat-mode)
+        (org-learn-ai-chat-mode))
+      (setq org-learn-ai--chat-history nil
+            org-learn-ai--chat-system prompt
+            org-learn-ai--chat-context context
+            org-learn-ai--chat-context-sent nil)
+      (org-learn-ai--chat-welcome)
+      (prog1 (org-learn-ai--chat-turn directive)
+        (goto-char (point-max))
+        (pop-to-buffer (current-buffer))))))
+
+;;;###autoload
+(defun org-learn-ai-trace ()
+  "TRACE the current subtree with the AI tutor, step by step.
+The model walks the study context in numbered steps, one idea per
+step, each step with a tiny example, in the *org-learn-ai-chat*
+buffer; follow-ups continue the same multi-turn chat."
+  (interactive)
+  (org-learn-ai--subtree-check "org-learn-ai-trace")
+  (org-learn-ai--mode-chat
+   org-learn-ai--trace-prompt
+   "Walk me through this study context step by step."))
+
+;;;###autoload
+(defun org-learn-ai-focus ()
+  "FOCUS the current subtree: one probing question, graded.
+The model asks one probing question about the study context, the
+answer is read from the minibuffer and the grading reply
+is mapped to the SM-2 quality 5, 3 or 1 (correct, partly or wrong)
+1 through `org-learn-ai--grade-quality'.  Both turns render in
+the *org-learn-ai-chat* buffer; the command then offers to
+schedule a spaced review of the entry through
+`org-learn-review--process-entry'."
+  (interactive)
+  (org-learn-ai--subtree-check "org-learn-ai-focus")
+  (let* ((source-buffer (current-buffer))
+         (question (org-learn-ai--mode-chat
+                    org-learn-ai--focus-prompt
+                    "Ask me ONE probing question about the study context.  Reply with the question only."))
+         (answer (read-string (format "AI focus: %s\nYour answer: "
+                                      (string-trim question))))
+         (grade-reply
+          (with-current-buffer org-learn-ai--chat-buffer
+            (org-learn-ai--chat-turn
+             (format "My answer: %s\n\nGrade it with exactly one of the words correct, partly or wrong, then explain briefly."
+                     answer))))
+         (quality (org-learn-ai--grade-quality grade-reply)))
+    (message "org-learn-ai focus grade: %s" grade-reply)
+    (when (yes-or-no-p "Schedule a spaced review of this entry? ")
+      (with-current-buffer source-buffer
+        (org-learn-review--process-entry quality)
+        (when (buffer-file-name)
+          (save-buffer))))))
+
+;;;###autoload
+(defun org-learn-ai-clear ()
+  "CLEAR the current subtree: summary and cloze suggestions.
+The model produces a compact summary of the study context, three
+takeaway bullets plus three cloze card suggestions in
+[answer||hint] form, rendered in the *org-learn-ai-chat* buffer.
+The command then offers to turn the subtree into drill flashcards
+with `org-learn-ai-generate-flashcards'."
+  (interactive)
+  (org-learn-ai--subtree-check "org-learn-ai-clear")
+  (let ((source-buffer (current-buffer)))
+    (org-learn-ai--mode-chat
+     org-learn-ai--clear-prompt
+     "Give me the CLEAR summary of this study context: three takeaway bullets, then three cloze card suggestions in [answer||hint] form.")
+    (when (yes-or-no-p "Turn this subtree into drill flashcards? ")
+      (with-current-buffer source-buffer
+        (org-learn-ai-generate-flashcards)))))
 
 (provide 'org-learn-ai)
 ;;; org-learn-ai.el ends here
