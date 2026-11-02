@@ -325,55 +325,64 @@ Roadmap line."
 ;;; Rollup-path record (spec 011 deliverable 3).
 
 (ert-deftest org-learn-roadmap-rollup-progress-records-local-fallback ()
-  "Spec 011: without `org-roadmap-progress' the fallback is recorded.
-The report says \"rollup: local fallback\" and the rollup feeds
-the summary line."
+  "Spec 011: with the progress API seamed away the fallback is recorded.
+`org-learn-roadmap--progress-api-available-p' is the seam the
+bridge's guarded call tests; binding it to nil exercises the
+local fallback path honestly even though the API exists in this
+session (org-roadmap board TODO-006 landed it) -- without faking
+`fboundp'.  The report says \"rollup: local fallback\" and the
+local rollup feeds the summary line."
   (org-learn-roadmap-rollup-test--load-stub)
-  (should-not (fboundp 'org-roadmap-progress))
-  (let* ((dir (make-temp-file "org-learn-rollupp-" t))
-         (notes (expand-file-name "learn.org" dir))
-         (org-learn-file notes)
-         (roadmap (org-learn-roadmap-rollup-test--roadmap-buffer
-                   "\
+  (cl-letf (((symbol-function 'org-learn-roadmap--progress-api-available-p)
+             (lambda () nil)))
+    (let* ((dir (make-temp-file "org-learn-rollupp-" t))
+           (notes (expand-file-name "learn.org" dir))
+           (org-learn-file notes)
+           (roadmap (org-learn-roadmap-rollup-test--roadmap-buffer
+                     "\
 * Roadmap: gate
 ** TODO Alpha
 ** TODO Beta
 * DONE Solo\n")))
-    (unwind-protect
-        (progn
-          (with-current-buffer roadmap
-            (org-learn-plan-from-roadmap)
-            ;; Complete Alpha's review item behind the bridge's back.
-            (with-temp-buffer
-              (insert (with-temp-buffer
-                        (insert-file-contents notes)
-                        (buffer-string)))
+      (unwind-protect
+          (progn
+            (with-current-buffer roadmap
+              (org-learn-plan-from-roadmap)
+              ;; Complete Alpha's review item behind the bridge's back.
+              (with-temp-buffer
+                (insert (with-temp-buffer
+                          (insert-file-contents notes)
+                          (buffer-string)))
+                (goto-char (point-min))
+                (re-search-forward "^\\* TODO Alpha :drill:")
+                (replace-match "* DONE Alpha :drill:" t t)
+                (write-region (point-min) (point-max) notes nil 'quiet))
               (goto-char (point-min))
-              (re-search-forward "^\\* TODO Alpha :drill:")
-              (replace-match "* DONE Alpha :drill:" t t)
-              (write-region (point-min) (point-max) notes nil 'quiet))
-            (goto-char (point-min))
-            (org-learn-progress-report))
-          (let ((report (get-buffer "*org-learn-progress*")))
-            (should (buffer-live-p report))
-            (with-current-buffer report
-              (let ((text (buffer-string)))
-                (should (string-match-p "^rollup: local fallback$" text))
-                ;; The progress command rolls up the subtree at
-                ;; point: the gate root with both leaves still TODO
-                ;; (Solo is outside the subtree).
-                (should (string-match-p
-                         "^Roadmap: 0/1 milestones done (0%)$" text)))))
-          (kill-buffer "*org-learn-progress*"))
-      (kill-buffer roadmap)
-      (delete-directory dir t))))
+              (org-learn-progress-report))
+            (let ((report (get-buffer "*org-learn-progress*")))
+              (should (buffer-live-p report))
+              (with-current-buffer report
+                (let ((text (buffer-string)))
+                  (should (string-match-p "^rollup: local fallback$" text))
+                  ;; The progress command rolls up the subtree at
+                  ;; point: the gate root with both leaves still TODO
+                  ;; (Solo is outside the subtree).
+                  (should (string-match-p
+                           "^Roadmap: 0/1 milestones done (0%)$" text)))))
+            (kill-buffer "*org-learn-progress*"))
+        (kill-buffer roadmap)
+        (delete-directory dir t)))))
 
 (ert-deftest org-learn-roadmap-rollup-progress-prefers-org-roadmap-api ()
   "Spec 011: when `org-roadmap-progress' exists its rollup wins.
-The report records the org-roadmap path and the API's own rollup."
+The report records the org-roadmap path and the API's own rollup.
+The stubbed API carries the REAL 0-arg form: the bridge must call
+it with the roadmap buffer current and no arguments -- any
+argument would fail, exactly as it would against the real
+package."
   (org-learn-roadmap-rollup-test--load-stub)
   (cl-letf (((symbol-function 'org-roadmap-progress)
-             (lambda (&rest _) (list (cons "API milestone" (cons 2 2))))))
+             (lambda () (list (cons "API milestone" (cons 2 2))))))
     (let* ((dir (make-temp-file "org-learn-rollupa-" t))
            (notes (expand-file-name "learn.org" dir))
            (org-learn-file notes)
