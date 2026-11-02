@@ -18,11 +18,14 @@
 
 ;; ERT suite for the spec 004 AI enhancements
 ;; (specs/004-ai-tutor.org): the network core parse, the chat buffer,
-;; flashcard generation and the quiz loop.  `org-learn-ai--complete'
-;; (the single network choke point) and `url-retrieve-synchronously'
-;; are mocked with `cl-letf', so the suite never touches the network.
-;; Loaded by tests/test-org-learn.el so the single CI entry runs
-;; everything.
+;; flashcard generation and the quiz loop.  Spec 007
+;; (specs/007-docneural-tutor-modes.org, as amended 2026-11-02
+;; 01:54Z) adds the backend dispatch tests and the TRACE/FOCUS/CLEAR
+;; tutor mode tests.  `org-learn-ai--complete' (the single network
+;; choke point) and `url-retrieve-synchronously' are mocked with
+;; `cl-letf', so the suite never touches the network and never loads
+;; gptel.  Loaded by tests/test-org-learn.el so the single CI entry
+;; runs everything.
 
 ;;; Code:
 
@@ -64,15 +67,18 @@ buffer layout (status line, headers, blank line, body)."
 ;;; Network core: request shape and reply parse (mocked url.el).
 
 (ert-deftest org-learn-ai-complete-parses-the-openai-reply ()
-  "Spec 004: the reply parses to choices[0].message.content."
-  (cl-letf (((symbol-function 'url-retrieve-synchronously)
-             (lambda (&rest _)
-               (org-learn-ai-test--fake-url-buffer
-                200
-                "{\"choices\":[{\"message\":{\"role\":\"assistant\",\"content\":\"pong\"}}]}"))))
-    (should (equal (org-learn-ai--complete
-                    (list (org-learn-ai--user-message "hi")))
-                   "pong"))))
+  "Spec 004: the reply parses to choices[0].message.content.
+The keyless lane is pinned, so the test stays lane-exact even when
+gptel is installed (spec 007)."
+  (let ((org-learn-ai-backend 'keyless))
+    (cl-letf (((symbol-function 'url-retrieve-synchronously)
+               (lambda (&rest _)
+                 (org-learn-ai-test--fake-url-buffer
+                  200
+                  "{\"choices\":[{\"message\":{\"role\":\"assistant\",\"content\":\"pong\"}}]}"))))
+      (should (equal (org-learn-ai--complete
+                      (list (org-learn-ai--user-message "hi")))
+                     "pong")))))
 
 (ert-deftest org-learn-ai-complete-sends-model-and-bearer-only-with-key ()
   "Spec 004: the request body JSON-encodes correctly and the \
@@ -86,7 +92,8 @@ Authorization header is present iff `org-learn-ai-api-key' is set."
                  (org-learn-ai-test--fake-url-buffer 200
                                                      "{\"choices\":[{\"message\":{\"content\":\"pong\"}}]}"))))
       ;; No key: no Authorization header.
-      (let ((org-learn-ai-api-key nil))
+      (let ((org-learn-ai-api-key nil)
+            (org-learn-ai-backend 'keyless))
         (should (equal (org-learn-ai--complete
                         (list (org-learn-ai--user-message "hi")))
                        "pong"))
@@ -98,7 +105,8 @@ Authorization header is present iff `org-learn-ai-api-key' is set."
         (should (string-match-p "\"messages\"" captured-data))
         (should (string-match-p "\"role\":\"user\"" captured-data)))
       ;; Key set: Bearer header travels, and only then.
-      (let ((org-learn-ai-api-key "sekrit"))
+      (let ((org-learn-ai-api-key "sekrit")
+            (org-learn-ai-backend 'keyless))
         (should (equal (org-learn-ai--complete
                         (list (org-learn-ai--user-message "hi")))
                        "pong"))
@@ -107,33 +115,36 @@ Authorization header is present iff `org-learn-ai-api-key' is set."
 
 (ert-deftest org-learn-ai-complete-http-errors-user-error-with-hint ()
   "Spec 004: an HTTP failure is a user-error naming status + endpoint."
-  (cl-letf (((symbol-function 'url-retrieve-synchronously)
-             (lambda (&rest _) (org-learn-ai-test--fake-url-buffer 500 "boom"))))
-    (let ((err (should-error (org-learn-ai--complete
-                              (list (org-learn-ai--user-message "hi")))
-                             :type 'user-error)))
-      (should (string-match-p "500" (error-message-string err)))
-      (should (string-match-p "org-learn-ai-endpoint"
-                              (error-message-string err))))))
+  (let ((org-learn-ai-backend 'keyless))
+    (cl-letf (((symbol-function 'url-retrieve-synchronously)
+               (lambda (&rest _) (org-learn-ai-test--fake-url-buffer 500 "boom"))))
+      (let ((err (should-error (org-learn-ai--complete
+                                (list (org-learn-ai--user-message "hi")))
+                               :type 'user-error)))
+        (should (string-match-p "500" (error-message-string err)))
+        (should (string-match-p "org-learn-ai-endpoint"
+                                (error-message-string err)))))))
 
 (ert-deftest org-learn-ai-complete-connection-failure-user-error-with-hint ()
   "Spec 004: a connection failure is a user-error with the endpoint hint."
-  (cl-letf (((symbol-function 'url-retrieve-synchronously)
-             (lambda (&rest _) (error "Connection refused"))))
-    (let ((err (should-error (org-learn-ai--complete
-                              (list (org-learn-ai--user-message "hi")))
-                             :type 'user-error)))
-      (should (string-match-p "Connection refused" (error-message-string err)))
-      (should (string-match-p "org-learn-ai-endpoint"
-                              (error-message-string err))))))
+  (let ((org-learn-ai-backend 'keyless))
+    (cl-letf (((symbol-function 'url-retrieve-synchronously)
+               (lambda (&rest _) (error "Connection refused"))))
+      (let ((err (should-error (org-learn-ai--complete
+                                (list (org-learn-ai--user-message "hi")))
+                               :type 'user-error)))
+        (should (string-match-p "Connection refused" (error-message-string err)))
+        (should (string-match-p "org-learn-ai-endpoint"
+                                (error-message-string err)))))))
 
 (ert-deftest org-learn-ai-complete-timeout-user-error-with-hint ()
   "Spec 004: a nil (timed out) response is a user-error too."
-  (cl-letf (((symbol-function 'url-retrieve-synchronously)
-             (lambda (&rest _) nil)))
-    (should-error (org-learn-ai--complete
-                   (list (org-learn-ai--user-message "hi")))
-                  :type 'user-error)))
+  (let ((org-learn-ai-backend 'keyless))
+    (cl-letf (((symbol-function 'url-retrieve-synchronously)
+               (lambda (&rest _) nil)))
+      (should-error (org-learn-ai--complete
+                     (list (org-learn-ai--user-message "hi")))
+                    :type 'user-error))))
 
 ;;; Context cap (spec 004: head-safe truncation, noted cut).
 
@@ -405,6 +416,241 @@ Good luck studying!")))
         (kill-buffer buffer))
       (when (file-exists-p file)
         (delete-file file)))))
+
+;;; Backend dispatch (spec 007, amended 2026-11-02 01:54Z).
+
+(ert-deftest org-learn-ai-dispatch-auto-uses-keyless-lane-without-gptel ()
+  "Spec 007: backend auto picks the keyless lane when gptel is absent."
+  (let ((keyless-called 0) (gptel-called 0) (provider-asked nil))
+    (cl-letf* (((symbol-function 'org-learn-ai--gptel-available-p)
+                (lambda () (setq provider-asked t) nil))
+               ((symbol-function 'org-learn-ai--complete-keyless)
+                (lambda (_messages)
+                  (setq keyless-called (1+ keyless-called)) "keyless"))
+               ((symbol-function 'org-learn-ai--complete-gptel)
+                (lambda (_messages)
+                  (setq gptel-called (1+ gptel-called)) "gptel")))
+      (let ((org-learn-ai-backend 'auto))
+        (should (equal (org-learn-ai--complete
+                        (list (org-learn-ai--user-message "hi")))
+                       "keyless"))
+        (should provider-asked)
+        (should (= keyless-called 1))
+        (should (= gptel-called 0))))))
+
+(ert-deftest org-learn-ai-dispatch-auto-uses-gptel-lane-when-loaded ()
+  "Spec 007: backend auto picks the gptel lane when gptel is loaded."
+  (let ((keyless-called 0) (gptel-called 0))
+    (cl-letf* (((symbol-function 'org-learn-ai--gptel-available-p)
+                (lambda () t))
+               ((symbol-function 'org-learn-ai--complete-keyless)
+                (lambda (_messages)
+                  (setq keyless-called (1+ keyless-called)) "keyless"))
+               ((symbol-function 'org-learn-ai--complete-gptel)
+                (lambda (_messages)
+                  (setq gptel-called (1+ gptel-called)) "gptel")))
+      (let ((org-learn-ai-backend 'auto))
+        (should (equal (org-learn-ai--complete
+                        (list (org-learn-ai--user-message "hi")))
+                       "gptel"))
+        (should (= gptel-called 1))
+        (should (= keyless-called 0))))))
+
+(ert-deftest org-learn-ai-dispatch-keyless-calls-the-keyless-lane ()
+  "Spec 007: backend keyless always serves through the keyless lane."
+  (let ((keyless-called 0) (gptel-called 0) (provider-asked nil))
+    (cl-letf* (((symbol-function 'org-learn-ai--gptel-available-p)
+                (lambda () (setq provider-asked t)))
+               ((symbol-function 'org-learn-ai--complete-keyless)
+                (lambda (_messages)
+                  (setq keyless-called (1+ keyless-called)) "keyless"))
+               ((symbol-function 'org-learn-ai--complete-gptel)
+                (lambda (_messages)
+                  (setq gptel-called (1+ gptel-called)) "gptel")))
+      (let ((org-learn-ai-backend 'keyless))
+        (should (equal (org-learn-ai--complete
+                        (list (org-learn-ai--user-message "hi")))
+                       "keyless"))
+        (should-not provider-asked)
+        (should (= keyless-called 1))
+        (should (= gptel-called 0))))))
+
+(ert-deftest org-learn-ai-dispatch-gptel-without-package-user-errors-with-hint ()
+  "Spec 007: backend gptel without the package user-errors with an \
+install hint."
+  (let ((org-learn-ai-backend 'gptel))
+    (cl-letf (((symbol-function 'require)
+               (lambda (_feature &optional _file _noerror) nil)))
+      (let ((err (should-error (org-learn-ai--complete
+                                (list (org-learn-ai--user-message "hi")))
+                               :type 'user-error)))
+        (should (string-match-p "package-install gptel"
+                                (error-message-string err)))))))
+
+(ert-deftest org-learn-ai-gptel-lane-delegates-with-the-same-messages ()
+  "Spec 007: the gptel lane maps the same messages onto gptel's \
+public request API and keeps the string contract."
+  (let (captured-prompt captured-system)
+    (cl-letf* (((symbol-function 'require)
+                (lambda (feature &optional _file _noerror)
+                  (eq feature 'gptel)))
+               ((symbol-function 'gptel-request)
+                (lambda (prompt &rest args)
+                  (setq captured-prompt prompt
+                        captured-system (plist-get args :system))
+                  (funcall (plist-get args :callback) "pong" '(:status "OK")))))
+      (should (equal (org-learn-ai--complete-gptel
+                      (list (org-learn-ai--system-message "Be brief.")
+                            (org-learn-ai--user-message "hi")
+                            (org-learn-ai--assistant-message "hello")
+                            (org-learn-ai--user-message "more")))
+                     "pong"))
+      (should (equal captured-system "Be brief."))
+      (should (equal captured-prompt '("hi" "hello" "more"))))))
+
+(ert-deftest org-learn-ai-gptel-lane-failure-user-errors ()
+  "Spec 007: a nil gptel reply is a user-error, keeping the contract."
+  (cl-letf* (((symbol-function 'require)
+              (lambda (feature &optional _file _noerror)
+                (eq feature 'gptel)))
+             ((symbol-function 'gptel-request)
+              (lambda (_prompt &rest args)
+                (funcall (plist-get args :callback) nil '(:status "HTTP 503")))))
+    (let ((err (should-error (org-learn-ai--complete-gptel
+                              (list (org-learn-ai--user-message "hi")))
+                             :type 'user-error)))
+      (should (string-match-p "gptel" (error-message-string err)))
+      (should (string-match-p "HTTP 503" (error-message-string err))))))
+
+;;; Tutor modes (spec 007).
+
+(ert-deftest org-learn-ai-trace-sends-trace-prompt-and-renders-turns ()
+  "Spec 007: TRACE sends its system prompt variant, embeds the \
+subtree and keeps the multi-turn history."
+  (let (calls)
+    (unwind-protect
+        (with-temp-buffer
+          (org-mode)
+          (insert "* Neurons\n  Neurons transmit signals.\n")
+          (goto-char (point-min))
+          (cl-letf (((symbol-function 'org-learn-ai--complete)
+                     (lambda (messages)
+                       (setq calls (append calls (list messages)))
+                       "1. Signals travel along axons.\n   Example: a reflex arc.")))
+            (org-learn-ai-trace)
+            (with-current-buffer org-learn-ai--chat-buffer
+              ;; First turn: the trace system prompt and the subtree.
+              (let ((first (car calls)))
+                (should (equal (cdr (assq 'content (car first)))
+                               org-learn-ai--trace-prompt))
+                (should (string-match-p
+                         "Neurons transmit signals"
+                         (cdr (assq 'content (car (last first)))))))
+              (let ((text (buffer-string)))
+                (should (string-match-p
+                         "^> Walk me through this study context step by step\\.$"
+                         text))
+                (should (string-match-p "1\\. Signals travel along axons\\." text))
+                (should (string-suffix-p "> " text)))
+              ;; A follow-up reuses the trace system prompt and history.
+              (goto-char (point-max))
+              (insert "Why axons?")
+              (org-learn-ai--chat-send)
+              (let ((second (car (last calls))))
+                (should (equal (cdr (assq 'content (car second)))
+                               org-learn-ai--trace-prompt))
+                (should (= (length second) 4))) ; system + 2 history + user
+              (should (= (length org-learn-ai--chat-history) 4))
+              (should (string-match-p "^> Why axons\\?$" (buffer-string))))))
+      (org-learn-ai-test--kill-chat))))
+
+(ert-deftest org-learn-ai-focus-maps-grades-to-quality-and-offers-review ()
+  "Spec 007: FOCUS grades map to SM-2 quality 5/3/1 and offer scheduling."
+  (dolist (case '(("correct" 5) ("partly correct" 3) ("wrong" 1)))
+    (let ((grade-text (car case))
+          (expected (cadr case))
+          (calls nil)
+          quality)
+      (unwind-protect
+          (with-temp-buffer
+            (org-mode)
+            (insert "* Memory\n  Consolidation happens in the hippocampus.\n")
+            (goto-char (point-min))
+            (let ((step 0))
+              (cl-letf* (((symbol-function 'org-learn-ai--complete)
+                          (lambda (messages)
+                            (setq calls (append calls (list messages)))
+                            (setq step (1+ step))
+                            (if (= step 1)
+                                "What consolidates memory?"
+                              grade-text)))
+                         ((symbol-function 'read-string)
+                          (lambda (&rest _) "the hippocampus"))
+                         ((symbol-function 'yes-or-no-p)
+                          (lambda (&rest _) t))
+                         ((symbol-function 'org-learn-review--process-entry)
+                          (lambda (q) (setq quality q))))
+                (org-learn-ai-focus)))
+            (should (equal quality expected))
+            ;; Both requests carry the FOCUS system prompt variant.
+            (should (= (length calls) 2))
+            (dolist (call calls)
+              (should (equal (cdr (assq 'content (car call)))
+                             org-learn-ai--focus-prompt)))
+            (with-current-buffer org-learn-ai--chat-buffer
+              (let ((text (buffer-string)))
+                (should (string-match-p "What consolidates memory\\?" text))
+                (should (string-match-p "^> My answer: the hippocampus$" text))
+                (should (string-match-p (regexp-quote grade-text) text)))))
+        (org-learn-ai-test--kill-chat)))))
+
+(ert-deftest org-learn-ai-clear-renders-summary-and-offers-flashcards ()
+  "Spec 007: CLEAR passes the summary through and offers flashcards; \
+accepting the offer calls the generator."
+  (dolist (accept '(t nil))
+    (let ((flashcards-called 0) (calls nil))
+      (unwind-protect
+          (with-temp-buffer
+            (org-mode)
+            (insert "* Synapses\n  Synapses strengthen with use.\n")
+            (goto-char (point-min))
+            (cl-letf* (((symbol-function 'org-learn-ai--complete)
+                        (lambda (messages)
+                          (setq calls (append calls (list messages)))
+                          "- Repetition strengthens synapses.\n- Spacing beats cramming.\n- Sleep consolidates.\n\n[recall||cue] [testing||effect] [spacing||gap]"))
+                       ((symbol-function 'yes-or-no-p)
+                        (lambda (&rest _) accept))
+                       ((symbol-function 'org-learn-ai-generate-flashcards)
+                        (lambda ()
+                          (setq flashcards-called (1+ flashcards-called)))))
+              (org-learn-ai-clear))
+            ;; The CLEAR system prompt variant went out, and the reply
+            ;; passes through into the chat buffer unchanged.
+            (should (= (length calls) 1))
+            (should (equal (cdr (assq 'content (car (car calls))))
+                           org-learn-ai--clear-prompt))
+            (with-current-buffer org-learn-ai--chat-buffer
+              (let ((text (buffer-string)))
+                (should (string-match-p "Repetition strengthens synapses\\."
+                                        text))
+                (should (string-match-p "\\[recall||cue\\]" text))))
+            (should (= flashcards-called (if accept 1 0))))
+        (org-learn-ai-test--kill-chat)))))
+
+(ert-deftest org-learn-ai-tutor-modes-are-commands ()
+  "Spec 007: TRACE, FOCUS and CLEAR are interactive commands."
+  (should (commandp 'org-learn-ai-trace))
+  (should (commandp 'org-learn-ai-focus))
+  (should (commandp 'org-learn-ai-clear)))
+
+(ert-deftest org-learn-ai-tutor-modes-need-a-subtree-under-point ()
+  "Spec 007: TRACE, FOCUS and CLEAR act on the current subtree only."
+  (with-temp-buffer
+    (org-mode)
+    (insert "plain text with no heading\n")
+    (goto-char (point-min))
+    (dolist (mode '(org-learn-ai-trace org-learn-ai-focus org-learn-ai-clear))
+      (should-error (funcall mode) :type 'user-error))))
 
 ;;; Command and boundary law.
 
