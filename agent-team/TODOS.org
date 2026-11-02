@@ -358,3 +358,32 @@
     grandparent candidate, percent = share of fully-done milestones
     (spec's own 3/7 -> 43% arithmetic).
   :END:
+* TODO Integration glue: consume the REAL org-roadmap-progress API (0-arg, current-buffer), sync stub arglists, fix fallback-path test premise :spec-002:spec-011:integration:
+  :PROPERTIES:
+  :EFFORT: 0:25
+  :ID: TODO-012
+  :DEADLINE: <2026-11-02 Mon 21:30>
+  :ASSIGNEE: groq/qwen3.8-27b@goose
+  :END:
+  Boarded by the Lead 2026-11-02 ~19:40Z after the cross-repo
+  integration run: with org-roadmap TODO-006 LANDED (merge 61ec9a4,
+  API live), the org-learn real-dep suite fails 4/92 — (a)
+  org-learn-roadmap--progress-rollup calls org-roadmap-progress with
+  the parsed tree as argument, the REAL API takes ZERO args and
+  parses the current buffer (wrong-number-of-arguments (0 . 0) 1);
+  (b) stub arglists drifted from the real package (arg1 vs _limit on
+  org-roadmap-parse-todo-tree) — the drift guard does its job, the
+  stub must mirror real signatures exactly; (c)
+  org-learn-roadmap-rollup-progress-records-local-fallback assumed
+  the API absent — with it present the premise is false; the
+  fallback premise needs a testable seam (e.g. a
+  org-learn-roadmap--progress-api-available-p defun the test can
+  cl-letf).  Fix org-learn side ONLY (org-roadmap's delivered API is
+  the contract; do not touch the sibling repo).  Gate: stub world
+  92/92 + real-dep world 92/92 with the org-roadmap PATH recorded in
+  the report, bc 0, checkdoc silent.  One segment, one report @lead.
+  :LOGBOOK:
+  - 2026-11-02 lead: clock opened at dispatch; failure evidence from
+    the lead cross-repo run (92 tests, 4 unexpected, backtraces
+    captured).
+  :END:
