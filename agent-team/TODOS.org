@@ -307,7 +307,7 @@
     (durability law).  PHASE 1 (quickstart minimum) is now fully
     landed AND durable.
   :END:
-* PROGRESS Implement spec 011 — roadmap progress rollup + real-dependency ERT, tests first :spec-011:roadmap:progress:phase2:
+* DONE Implement spec 011 — roadmap progress rollup + real-dependency ERT, tests first :spec-011:roadmap:progress:phase2:
   :PROPERTIES:
   :EFFORT: 1:00
   :ID: TODO-011
@@ -338,4 +338,23 @@
     sloth.  Lead resumes the segment on the same branch this tick.
     EXTENSION (Lead-only, appended): new deadline <2026-11-02 Mon
     21:00>.
+  - 2026-11-02 lead: segment RESUMED and DELIVERED at 19:21Z (43min
+    before the extended deadline) on the same branch by the resumed
+    groq/qwen3.8-27b@goose seat: 6be2c98 impl (+201/-14: pure
+    org-learn-roadmap-rollup + rollup-files/rollup-line, dashboard
+    Roadmap line, fboundp-guarded optional org-roadmap-progress with
+    path recording) + ddd8194 test amendments — no assertion weakened;
+    two expectations CORRECTED against the fixture/subtree semantics
+    and one real-parse adapter documented (honesty note in the seat
+    report, ratified by Lead).
+  - 2026-11-02 lead: audit ACCEPTED — gate re-run on the isolated
+    merged tree ad83082 (Emacs 31.1): byte-compile 0 warnings (all 8
+    root .el), stub world ERT 92/92, REAL-dep world ERT 92/92 with
+    all 4 real-dep tests RUNNING against the real org-roadmap
+    (local-fallback path exercised; drift guard green on 4 consumed
+    symbols), checkdoc silent on all 4 touched files.  Merged
+    ad83082, pushed same minute (durability law).  Deviations
+    ratified: fboundp (function API, not value cell), sibling-path
+    grandparent candidate, percent = share of fully-done milestones
+    (spec's own 3/7 -> 43% arithmetic).
   :END:
