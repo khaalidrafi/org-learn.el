@@ -210,5 +210,9 @@ with an ellipsis."
 
 (load (expand-file-name "tests/test-org-learn-mode.el" default-directory))
 
+;;; Quickstart wizard tests (spec 010) -- same single-entry law.
+
+(load (expand-file-name "tests/test-org-learn-quickstart.el" default-directory))
+
 (provide 'test-org-learn)
 ;;; test-org-learn.el ends here
