@@ -1,0 +1,67 @@
+#+TITLE: SPEC-011 — Roadmap progress rollup + real-dependency ERT
+#+FILETAGS: :spec:roadmap:progress:phase2:
+#+DATE: <2026-11-02 Fri>
+
+* Summary
+
+Deepen the org-learn x org-roadmap mandate (Owner 2026-11-02 14:16Z:
+"org-learn MUST use org-roadmap and contain features around that for
+planning, progress etc.  org-roadmap needs to be audited and further
+developed as well!").  Spec 006 landed the bridge (plan from roadmap,
+per-node :LEARN_PROGRESS:, ASCII render).  This spec adds the ROLLUP
+layer and proves the contract against the REAL org-roadmap, not only
+the stub.
+
+* Deliverable
+
+1. =org-learn-roadmap-rollup= (pure function, org-learn-roadmap.el):
+   given the roadmap TODO tree states (list of (state . children-count)
+   or a parsed tree in the spec's fixed shape) return an alist
+   =((milestone . (done . total)) ...)= where a node counts DONE when
+   its TODO keyword is in =org-done-keywords= and leaf-less milestone
+   progress inherits :LEARN_PROGRESS: percent when present.  No buffer
+   mutation — pure compute, dashboard-grade.
+2. Dashboard integration: =org-learn-dashboard= gains a "Roadmap"
+   line rendering the rollup (e.g. "Roadmap: 3/7 milestones done
+   (43%), next review in 1d") when the current buffer has roadmap
+   nodes; silent when none (existing dashboard tests must stay green).
+3. =org-learn-roadmap-progress= switches its rollup computation to
+   =org-roadmap-progress= (org-roadmap side API, org-roadmap board
+   TODO-006) WHEN that function is boundp, keeping a local fallback
+   path; the docstring states which path ran and the report buffer
+   records it ("rollup: org-roadmap 0.2" vs "rollup: local fallback").
+4. REAL-dependency ERT: new file
+   =tests/test-org-learn-roadmap-real.el= — when the real org-roadmap
+   is on the load-path (tests/support/real-deps/ eln-free shim is NOT
+   it; CI mounts the sibling repo or the test ert-skips), prove:
+   plan-from-roadmap on a real org-roadmap parse -> progress write ->
+   rollup round-trip; plus a stub-drift guard asserting the stub's
+   public signatures still match the real package's.  Skipped with a
+   LOUD ert-skip message when org-roadmap is absent (CI default).
+
+* Acceptance criteria (tests land FIRST, red before green)
+
+- rollup math: mixed TODO/DONE trees produce exact (done . total)
+  per milestone (table-driven, >= 6 cases incl. empty tree, all-done,
+  LEARN_PROGRESS-inherited milestone).
+- dashboard roadmap line: present with roadmap nodes, absent without;
+  existing 246 lines of dashboard tests untouched and green.
+- real-dep suite: green against real org-roadmap in this workspace
+  (../org-roadmap), loud skip when absent; stub-drift guard fails if
+  org-roadmap renames a consumed symbol.
+- boundary law: still lazy require inside commands only.
+
+* Laws
+
+Board files never ride feature commits; byte-compile 0 warnings,
+checkdoc 0, suite >= 75 + new all green; one segment, one report
+@lead, RESULT protocol; effort clocked per TIME LAW.
+
+* Gate
+
+#+begin_src sh
+emacs -Q --batch -L . -L tests/support -L ../org-roadmap \
+  -f batch-byte-compile org-learn-roadmap.el
+emacs -Q --batch -L . -L tests/support -l tests/test-org-learn.el \
+  -f ert-run-tests-batch-and-exit
+#+end_src

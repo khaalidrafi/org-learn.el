@@ -1,6 +1,6 @@
 #+TITLE: TODOS.org — team board (single source of truth)
 #+TODO: TODO ONGOING PROGRESS BLOCKED REVIEW | DONE CANCELLED DEFERRED
-# DISPATCH counter: 9
+# DISPATCH counter: 11
 #+COLUMNS: %40ITEM %TODO %EFFORT %CLOCKSUM(Clocked)
 #+PROPERTY: Effort_ALL 0 0:25 0:50 1:00 2:00 4:00
 # TIME LAW (Owner 2026-10-26 10:42 #hq): every TODO the Lead assigns sets
@@ -236,4 +236,48 @@
     ratified by Lead (global- prefix per Elisp canon).  Gate on merged
     tree: byte-compile 0 warnings, ERT 75/75 (was 69), checkdoc 0.
     The whole learning loop is ONE keymap now.
+  :END:
+* TODO Implement spec 010 — quickstart wizard (M-x org-learn-quickstart, FAST start re-land), tests first :spec-010:quickstart:phase1:
+  :PROPERTIES:
+  :EFFORT: 0:50
+  :ID: TODO-010
+  :ASSIGNEE: groq/qwen3.8-27b@opencode
+  :END:
+  Boarded by the Lead 2026-11-02.  Owner two-phase order 07:51Z:
+  "first comolete minimum features to quickstart" — PHASE 1 stays
+  first.  This is the re-land of the quickstart wizard lost in the
+  2026-11-02 sandbox recycle (old spec 013/TODO-015 never pushed);
+  re-authored against the CURRENT merged tree 6f5f6b5 (TODO-001..009
+  DONE, ERT 75/75 — Lead re-proven on Emacs 31.1 this tick).  Spec:
+  specs/010-quickstart.org.  New file org-learn-quickstart.el: 4-step
+  skippable wizard (learning file from template, never clobbers;
+  offer capture; offer review; keymap tour from the live C-c l map),
+  C-c l q bind, README Quickstart honesty.  Tests first, red before
+  green.  One segment, one report @lead with RESULT: DONE | PARTIAL |
+  BLOCKED.
+  :LOGBOOK:
+  - 2026-11-02 lead: clock opened at dispatch (14:1xZ tick); spec
+    authored + board committed by Lead.
+  :END:
+* TODO Implement spec 011 — roadmap progress rollup + real-dependency ERT, tests first :spec-011:roadmap:progress:phase2:
+  :PROPERTIES:
+  :EFFORT: 1:00
+  :ID: TODO-011
+  :ASSIGNEE: groq/qwen3.8-27b@goose
+  :END:
+  Boarded by the Lead 2026-11-02.  Owner order 14:16Z verbatim:
+  "org-learn MUST use org-roadmap and contain features around that
+  for planning, progress etc." — spec 006 landed the bridge; spec 011
+  deepens it: org-learn-roadmap-rollup (pure done/total per
+  milestone), dashboard Roadmap line, org-learn-roadmap-progress
+  prefers the real org-roadmap-progress API (org-roadmap board
+  TODO-006) with an honest local fallback, and a REAL-dependency ERT
+  suite + stub-drift guard (loud skip when org-roadmap absent).
+  Spec: specs/011-roadmap-rollup.org.  Tests first, red before green;
+  boundary law (lazy require) unchanged.  One segment, one report
+  @lead with RESULT: DONE | PARTIAL | BLOCKED.
+  :LOGBOOK:
+  - 2026-11-02 lead: clock opened at dispatch (14:1xZ tick); spec
+    authored + board committed by Lead.  Depends on org-roadmap
+    TODO-006 API only via boundp — may land before it.
   :END:

@@ -1,0 +1,87 @@
+#+TITLE: SPEC-010 — Quickstart wizard: the FAST start
+#+FILETAGS: :spec:quickstart:phase1:
+#+DATE: <2026-11-02 Fri>
+
+* Summary
+
+=M-x org-learn-quickstart= walks a brand-new user from zero to the full
+loop in one command: learning file -> first capture -> first review ->
+keymap tour.  Every step is skippable with =y-or-n-p=; the wizard never
+destroys data and finishes by pointing at =C-c l ?=.
+
+This is the re-land of the Owner's two-phase order (2026-11-02 07:51Z):
+"first complete minimum features to quickstart".  The previous landing
+(spec 013, TODO-015) was lost in the 2026-11-02 sandbox recycle before
+it could be pushed; this spec re-authors it against the CURRENT merged
+tree (6f5f6b5, TODO-001..009 all DONE, ERT 75/75).
+
+* Background
+
+- Owner 2026-11-02 07:51Z, verbatim: "first comolete minimum features
+  to quickstart, then comolete the uktimate org-powered learning tool".
+- The capture (spec 001), review (spec 002) and one-keymap (spec 008)
+  pieces of Phase 1 are already merged; what is missing is the
+  single-command entry point that stitches them for a new user.
+
+* Deliverable
+
+New file =org-learn-quickstart.el= (~120 lines target):
+
+1. =org-learn-quickstart= (interactive, autoloaded from org-learn.el):
+   - Step 1 — learning file: if =org-learn-quickstart-file= (default
+     =(expand-file-name "learn.org" user-emacs-directory)= — override
+     of =org-learn-file= is NOT forced) does not exist, create it from
+     a small template (#+TITLE: My Learning, #+FILETAGS: :learning:,
+     an example * Topic heading with :drill: tag and LEARN_* skeleton)
+     and open it.  If it exists, offer to open it.  NEVER clobber an
+     existing file — the create path must refuse when
+     =file-exists-p=.
+   - Step 2 — first capture: offer =org-learn-capture= (y-or-n-p).
+   - Step 3 — first review: offer =org-learn-review= (y-or-n-p).
+   - Step 4 — keymap tour: =with-help-window= showing the =C-c l=
+     prefix map bindings (capture, review, drill, dashboard,
+     roadmap plan/progress, quickstart, help) taken from the actual
+     keymap at runtime, not a hardcoded list.
+   - Each step announces itself in the echo area; a "no" skips it
+     without aborting the wizard.
+2. Keybinding =C-c l q= inside the org-learn-mode keymap (spec 008
+   map), autoload added to org-learn.el.
+3. README: a real "Quickstart" section — three commands, honest about
+   what requires org-roadmap installed (=M-x org-learn-quickstart=
+   itself never requires it; roadmap steps are only mentioned as
+   next steps with the install hint).
+
+* Acceptance criteria (tests land FIRST, red before green)
+
+- =org-learn-quickstart-creates-file-from-template=: temp HOME, run
+  wizard answering no/no/no after step 1 (cl-letf on y-or-n-p), file
+  exists, contains the template markers, buffer visited.
+- =org-learn-quickstart-never-clobbers=: pre-create the file with
+  sentinel text, run wizard, sentinel text intact, no template merge.
+- =org-learn-quickstart-skips-cleanly=: all-no run creates the file
+  (step 1 yes via cl-letf) but invokes neither capture nor review
+  (flet counters stay 0) and does not error.
+- =org-learn-quickstart-binds-q=: =org-learn-mode-map= maps "q" under
+  the =C-c l= prefix to =org-learn-quickstart=.
+- Template idempotence: running the create path twice does not
+  duplicate template content.
+
+* Laws
+
+- Board files are never part of the feature commit (board commit rides
+  separately from the Lead).
+- byte-compile warning-free under =emacs -Q --batch=, checkdoc 0,
+  full suite green (75 + new tests).
+- No eager =require= of org-roadmap anywhere in the quickstart path.
+- One segment, one report @lead, RESULT: DONE | PARTIAL | BLOCKED;
+  effort clocked per the TIME LAW.
+
+* Gate
+
+#+begin_src sh
+emacs -Q --batch -L . -L tests/support -f batch-byte-compile org-learn-quickstart.el
+emacs -Q --batch -L . -L tests/support -l tests/test-org-learn.el \
+  -f ert-run-tests-batch-and-exit
+#+end_src
+
+Expected: 0 warnings; suite >= 79/79.
