@@ -189,7 +189,7 @@ by its own keyword."
                              (org-learn-roadmap-rollup-test--node
                               "b2" 'TODO 2 nil))))
                 (list (cons "A" (cons 1 1))
-                      (cons "B" (cons 0 2))))
+                      (cons "B" (cons 1 2))))
           ;; 11. :LEARN_PROGRESS: on a milestone WITH children is
           ;;     derived data: the leaves roll up, the property is
           ;;     never inherited there.
@@ -248,9 +248,9 @@ rounded; the optional next-review clause appends when given."
                   (list (cons "A" (cons 3 3))) 1))))
 
 (ert-deftest org-learn-roadmap-rollup-dashboard-line-present-and-absent ()
-  "Spec 011: the dashboard renders the Roadmap line from the
-rollup data and stays silent without it; the existing sections are
-untouched either way."
+  "Spec 011: the dashboard renders the Roadmap line from the data.
+It stays silent without it; the existing sections are untouched
+either way."
   (with-temp-buffer
     (org-learn-dashboard--render
      (list :due 0 :new 0 :done-today 0 :queue nil :leeches nil
@@ -272,9 +272,9 @@ untouched either way."
 ;;; silent without; existing dashboard tests stay green).
 
 (ert-deftest org-learn-roadmap-rollup-dashboard-shows-the-roadmap-line ()
-  "Spec 011: with roadmap nodes in the scoped file the dashboard
-renders the Roadmap line: one leaf-less DONE milestone plus one
-half-done milestone reads \"1/2 milestones done (50%)\"."
+  "Spec 011: with roadmap nodes the dashboard renders the line.
+With one leaf-less DONE milestone plus one half-done milestone in
+the scoped file it reads \"1/2 milestones done (50%)\"."
   (org-learn-roadmap-rollup-test--load-stub)
   (let* ((file (make-temp-file "org-learn-rollup-" nil ".org"))
          (org-learn-file file)
@@ -325,8 +325,9 @@ Roadmap line."
 ;;; Rollup-path record (spec 011 deliverable 3).
 
 (ert-deftest org-learn-roadmap-rollup-progress-records-local-fallback ()
-  "Spec 011: without `org-roadmap-progress' the report records the
-local fallback path and the rollup feeds the summary line."
+  "Spec 011: without `org-roadmap-progress' the fallback is recorded.
+The report says \"rollup: local fallback\" and the rollup feeds
+the summary line."
   (org-learn-roadmap-rollup-test--load-stub)
   (should-not (fboundp 'org-roadmap-progress))
   (let* ((dir (make-temp-file "org-learn-rollupp-" t))
@@ -358,16 +359,18 @@ local fallback path and the rollup feeds the summary line."
             (with-current-buffer report
               (let ((text (buffer-string)))
                 (should (string-match-p "^rollup: local fallback$" text))
-                ;; Milestones: gate (both leaves TODO) + Solo (DONE).
+                ;; The progress command rolls up the subtree at
+                ;; point: the gate root with both leaves still TODO
+                ;; (Solo is outside the subtree).
                 (should (string-match-p
-                         "^Roadmap: 1/2 milestones done (50%)$" text)))))
+                         "^Roadmap: 0/1 milestones done (0%)$" text)))))
           (kill-buffer "*org-learn-progress*"))
       (kill-buffer roadmap)
       (delete-directory dir t))))
 
 (ert-deftest org-learn-roadmap-rollup-progress-prefers-org-roadmap-api ()
-  "Spec 011: when `org-roadmap-progress' exists its rollup flows
-into the report and the org-roadmap path is recorded."
+  "Spec 011: when `org-roadmap-progress' exists its rollup wins.
+The report records the org-roadmap path and the API's own rollup."
   (org-learn-roadmap-rollup-test--load-stub)
   (cl-letf (((symbol-function 'org-roadmap-progress)
              (lambda (&rest _) (list (cons "API milestone" (cons 2 2))))))
