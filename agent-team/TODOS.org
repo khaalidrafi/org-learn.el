@@ -216,7 +216,7 @@
     0.  Owner's Emacs-AI-pkgs law honored: gptel delegate behind
     org-learn-ai-backend, zero new network plumbing.
   :END:
-* TODO Implement spec 008 — org-learn-mode one keymap (FAST start), tests first :spec-008:keymap:
+* DONE Implement spec 008 — org-learn-mode one keymap (FAST start), tests first :spec-008:keymap:
   :PROPERTIES:
   :EFFORT: 1:00
   :ID: TODO-009
@@ -227,4 +227,13 @@
   segment, one report @lead.
   :LOGBOOK:
   - 2026-11-01 lead: clock opened at dispatch (18:3xZ #hq tick).
+  - 2026-11-02 lead: DONE accepted at audit (segment
+    ai/turn-20261102-008, zai seat).  Evidence: tests first (ea657e3, 6
+    new), org-learn-mode.el = buffer-local org-learn-mode +
+    global-org-learn-mode-everywhere (org-mode only, canonical
+    define-globalized-minor-mode), C-c l lazy binds (15 keys), Learn
+    menu, help popup; standalone-load proven.  Naming deviation
+    ratified by Lead (global- prefix per Elisp canon).  Gate on merged
+    tree: byte-compile 0 warnings, ERT 75/75 (was 69), checkdoc 0.
+    The whole learning loop is ONE keymap now.
   :END:

@@ -9,7 +9,7 @@
 #+OBJECTIVE-STATE: OPEN
 #+KILL-SWITCH: OFF
 
-#+TURN: zai/opus-seat@task (spec 006 in progress on ai/turn-20261102-006, tests landed 2cadc5b; module + gate next)
+#+TURN: lead (specs 001-008 DONE; AI-pkgs wave specs 009-012 proposed in IDEAS.org awaiting Owner pick)
 #+STALL-COUNT: 0
 
 #+LAST-VERDICT: none
