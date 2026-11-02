@@ -197,7 +197,7 @@
   - 2026-11-01 lead: audit ACCEPTED (same gate run, ERT 54/54);
     merged 0393986.
   :END:
-* TODO Implement spec 006 — roadmap bridge: org-learn DEPENDS on org-roadmap (plan + progress), tests first :spec-006:roadmap:
+* DONE Implement spec 006 — roadmap bridge: org-learn DEPENDS on org-roadmap (plan + progress), tests first :spec-006:roadmap:
   :PROPERTIES:
   :EFFORT: 1:00
   :ID: TODO-007
@@ -216,6 +216,10 @@
     interactive commands, lazy real dep via org-learn-roadmap--require,
     stub-based suite), gate re-run by Lead on merged tree: byte-compile
     0 warnings, ERT 58/58 (was 54), checkdoc clean.  Merged 70ae388.
+  - 2026-11-02 lead (z.ai tick): state keyword corrected to DONE —
+    the work landed at 70ae388 (code in tree, suite 80/80 incl. the
+    roadmap bridge tests re-proven this tick); the row had been left
+    in TODO state at merge by the 2026-11-02 audit entry.
   :END:
 * DONE Implement spec 007 — docneural tutor modes TRACE/FOCUS/CLEAR in org-learn-ai, tests first :spec-007:tutor:
   :PROPERTIES:
@@ -303,11 +307,12 @@
     (durability law).  PHASE 1 (quickstart minimum) is now fully
     landed AND durable.
   :END:
-* TODO Implement spec 011 — roadmap progress rollup + real-dependency ERT, tests first :spec-011:roadmap:progress:phase2:
+* PROGRESS Implement spec 011 — roadmap progress rollup + real-dependency ERT, tests first :spec-011:roadmap:progress:phase2:
   :PROPERTIES:
   :EFFORT: 1:00
   :ID: TODO-011
   :DEADLINE: <2026-11-02 Mon 18:30>
+  :DEADLINE: <2026-11-02 Mon 21:00>
   :ASSIGNEE: groq/qwen3.8-27b@goose
   :END:
   Boarded by the Lead 2026-11-02.  Owner order 14:16Z verbatim:
@@ -325,4 +330,12 @@
   - 2026-11-02 lead: clock opened at dispatch (14:1xZ tick); spec
     authored + board committed by Lead.  Depends on org-roadmap
     TODO-006 API only via boundp — may land before it.
+  - 2026-11-02 lead: SHOW-CAUSE (TIME DISCIPLINE LAW) — the 18:30
+    deadline passed with the segment mid-flight: the seat's Task
+    channel hit a context deadline AFTER committing the red
+    acceptance suite (b09f958, tests-first honored) and leaving 4
+    files of implementation in the worktree; infra cause, not seat
+    sloth.  Lead resumes the segment on the same branch this tick.
+    EXTENSION (Lead-only, appended): new deadline <2026-11-02 Mon
+    21:00>.
   :END:
