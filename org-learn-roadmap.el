@@ -45,6 +45,13 @@
 ;;   `org-roadmap-import-roadmap-sh' (roadmap.sh -> Org TODO tree)
 ;;   and then offers `org-learn-plan-from-roadmap'.  No roadmap logic
 ;;   is re-implemented here.
+;; - Spec 011 (specs/011-roadmap-rollup.org) adds the ROLLUP layer:
+;;   `org-learn-roadmap-rollup' is the pure milestone-progress alist
+;;   ((milestone . (done . total)) ...), `org-learn-roadmap-progress'
+;;   prefers the boundp `org-roadmap-progress' API (org-roadmap board
+;;   TODO-006) and keeps an honest local fallback (the report records
+;;   which path ran), and `org-learn-roadmap-dashboard-line' feeds the
+;;   dashboard's "Roadmap" line.
 ;;
 ;; org-roadmap is required lazily INSIDE the commands (`require'
 ;; with nil t): the org-learn core keeps loading under CI -Q, and a
@@ -86,6 +93,12 @@
 (declare-function org-roadmap-get-subtree-tree "org-roadmap")
 (declare-function org-roadmap-generate "org-roadmap")
 (declare-function org-roadmap-import-roadmap-sh "org-roadmap")
+;; Spec 011: the org-roadmap side progress API (board TODO-006) is
+;; consumed only when boundp; the declarations keep the byte-compiler
+;; quiet about the guarded calls.
+(declare-function org-roadmap-progress "org-roadmap")
+(declare-function org-roadmap-progress-string "org-roadmap")
+(declare-function lm-version "lisp-mnt")
 
 ;;; org-roadmap plumbing (lazy dependency, spec 006).
 
@@ -296,11 +309,13 @@ re-implemented (spec 006 API law)."
             (unless pre-existing
               (when source (kill-buffer source)))))))))
 
-(defun org-learn-roadmap--render-report (tree stats roadmap-buffer)
+(defun org-learn-roadmap--render-report (tree stats roadmap-buffer rollup)
   "Render the progress report into `org-learn-roadmap-progress-buffer'.
-TREE is the roadmap tree, STATS the review-item alist and
-ROADMAP-BUFFER the buffer the ASCII roadmap is rendered from; the
-buffer lists one summary line per topic and the ASCII roadmap."
+TREE is the roadmap tree, STATS the review-item alist,
+ROADMAP-BUFFER the buffer the ASCII roadmap is rendered from and
+ROLLUP the spec 011 rollup plist (:path PATH :rollup ALIST); the
+buffer records which rollup path ran, one milestone line per
+rollup cell, one summary line per topic and the ASCII roadmap."
   (let ((progress (get-buffer-create org-learn-roadmap-progress-buffer))
         (topics (apply #'append
                        (mapcar (lambda (node)
@@ -313,6 +328,10 @@ buffer lists one summary line per topic and the ASCII roadmap."
         (erase-buffer)
         (org-mode)
         (insert "#+TITLE: org-learn roadmap progress\n\n")
+        (insert (format "rollup: %s\n" (plist-get rollup :path)))
+        (dolist (cell (plist-get rollup :rollup))
+          (insert (org-learn-roadmap--rollup-line (car cell) (cdr cell))))
+        (insert "\n")
         (dolist (topic topics)
           (insert (org-learn-roadmap--topic-line topic stats)))
         (insert "\n")
@@ -345,9 +364,248 @@ read-only `org-learn-roadmap-progress-buffer' (org-mode)."
                                    node org-learn-roadmap-topic-level))
                                 tree))))
     (org-learn-roadmap--write-progress tree stats)
-    (org-learn-roadmap--render-report tree stats roadmap-buffer)
+    ;; Spec 011: the rollup prefers the boundp `org-roadmap-progress'
+    ;; API and falls back to the pure local rollup; it is computed
+    ;; after the write so the :LEARN_PROGRESS: inheritance sees the
+    ;; fresh values, and the report records which path ran.
+    (org-learn-roadmap--render-report
+     tree stats roadmap-buffer (org-learn-roadmap-progress tree))
     (message "org-learn: progress written for %d topic%s"
              (length topics) (if (= (length topics) 1) "" "s"))))
+
+;;; Roadmap rollup (spec 011: pure, dashboard-grade).
+
+(defun org-learn-roadmap--done-keywords ()
+  "Return the done TODO keywords of the current context.
+`org-done-keywords' is only set in Org buffers; outside them the
+Org default (\"DONE\") applies, so the pure rollup stays usable
+in batch and on constructed trees."
+  (or (bound-and-true-p org-done-keywords) '("DONE")))
+
+(defun org-learn-roadmap--done-keyword-p (state)
+  "Return non-nil when the TODO keyword STATE counts as done.
+STATE is a keyword symbol as the org-roadmap parsers produce it
+\(or a string); the name is matched against
+`org-done-keywords'."
+  (and state
+       (member (if (symbolp state) (symbol-name state) state)
+               (org-learn-roadmap--done-keywords))))
+
+(defun org-learn-roadmap--node-progress (node)
+  "Return NODE's numeric :LEARN_PROGRESS: percent (0-100), or nil.
+Sources, in order of preference: an explicit :progress key on the
+node plist (pure compute on constructed trees), a LEARN_PROGRESS
+entry in the node's :properties alist (the real subtree parser
+carries one) and the live :location marker (a read-only property
+lookup -- the rollup never mutates a buffer)."
+  (let ((raw (or (plist-get node :progress)
+                 (cdr (assoc "LEARN_PROGRESS"
+                             (plist-get node :properties)))
+                 (let ((loc (plist-get node :location)))
+                   (and (markerp loc)
+                        (buffer-live-p (marker-buffer loc))
+                        (with-current-buffer (marker-buffer loc)
+                          (org-entry-get loc "LEARN_PROGRESS")))))))
+    (when raw
+      (let ((number (cond ((numberp raw) raw)
+                          ((and (stringp raw)
+                                (string-match-p
+                                 "\\`-?[0-9]+\\(?:\\.[0-9]+\\)?\\'" raw))
+                           (string-to-number raw)))))
+        (when number
+          (round (min 100 (max 0 number))))))))
+
+(defun org-learn-roadmap--inherit-cell (node)
+  "Return the progress cell for a leaf-less NODE.
+A DONE keyword counts the node itself (1 . 1); otherwise a
+reachable :LEARN_PROGRESS: percent is inherited as (percent .
+100); otherwise \(0 . 0) -- the org-roadmap progress semantics
+\(org-roadmap board TODO-006, spec 011)."
+  (let ((percent (org-learn-roadmap--node-progress node)))
+    (cond ((org-learn-roadmap--done-keyword-p (plist-get node :todo-state))
+           '(1 . 1))
+          (percent (cons percent 100))
+          (t '(0 . 0)))))
+
+(defun org-learn-roadmap--rollup-subtree (node)
+  "Return the (DONE . TOTAL) cell for NODE's subtree.
+Leaves count individually: a done keyword is done, any other TODO
+keyword is open (0 . 1) and a keyword-less heading counts nothing
+\(0 . 0); a reachable :LEARN_PROGRESS: percent is inherited as
+\(PERCENT . 100) whenever the leaf itself is not done.  Containers
+roll up their children; a container whose subtree holds no leaves
+inherits its own progress via `org-learn-roadmap--inherit-cell'."
+  (let ((children (plist-get node :children)))
+    (if (not children)
+        (if (org-learn-roadmap--done-keyword-p (plist-get node :todo-state))
+            '(1 . 1)
+          (let ((percent (org-learn-roadmap--node-progress node)))
+            (cond (percent (cons percent 100))
+                  ((plist-get node :todo-state) '(0 . 1))
+                  (t '(0 . 0)))))
+      (let ((done 0)
+            (total 0))
+        (dolist (child children)
+          (let ((cell (org-learn-roadmap--rollup-subtree child)))
+            (setq done (+ done (car cell))
+                  total (+ total (cdr cell)))))
+        (if (zerop total)
+            (org-learn-roadmap--inherit-cell node)
+          (cons done total))))))
+
+(defun org-learn-roadmap-rollup (tree-or-states)
+  "Return the milestone progress alist for TREE-OR-STATES.
+Two input shapes are accepted: an org-roadmap parsed TODO tree
+\(spec 006 node shape :headline :todo-state :level :children,
+plus :properties/:location when the parser provides them), and a
+flat list of (TODO-STATE . LEAF-COUNT) conses where each cons is
+one compact milestone: its LEAF-COUNT leaves all carry
+TODO-STATE, so a done keyword yields (LEAF-COUNT . LEAF-COUNT)
+and any other keyword (0 . LEAF-COUNT), while a zero count means
+the milestone counts itself ((1 . 1) on a done keyword, (0 . 0)
+otherwise).  Tree leaves count individually: a done keyword is
+done, any other TODO keyword is open (0 . 1), a keyword-less
+heading counts nothing and a reachable :LEARN_PROGRESS: percent
+is inherited as (percent . 100).  Containers roll up their
+subtree; a milestone whose subtree holds no leaves inherits
+:LEARN_PROGRESS: (percent . 100) when reachable, counts (1 . 1)
+on a done keyword and (0 . 0) otherwise.  Pure compute: no buffer
+is mutated.  Return ((MILESTONE . (DONE . TOTAL)) ...), nil for
+an empty input."
+  (cond ((null tree-or-states) nil)
+        ((keywordp (caar tree-or-states))
+         (mapcar (lambda (node)
+                   (cons (plist-get node :headline)
+                         (org-learn-roadmap--rollup-subtree node)))
+                 tree-or-states))
+        (t
+         (mapcar (lambda (entry)
+                   (let ((state (car entry))
+                         (count (cdr entry)))
+                     (cons state
+                           (cond ((> count 0)
+                                  (if (org-learn-roadmap--done-keyword-p state)
+                                      (cons count count)
+                                    (cons 0 count)))
+                                 ((org-learn-roadmap--done-keyword-p state)
+                                  '(1 . 1))
+                                 (t '(0 . 0))))))
+                 tree-or-states))))
+
+(defun org-learn-roadmap--format-cell (cell)
+  "Return the \"DONE/TOTAL (PCT%)\" rendering of a (DONE . TOTAL) CELL."
+  (format "%d/%d (%d%%)" (car cell) (cdr cell)
+          (org-learn-roadmap--percent (car cell) (cdr cell))))
+
+(defun org-learn-roadmap--rollup-line (milestone cell)
+  "Return one report line for MILESTONE with its (DONE . TOTAL) CELL.
+The shared org-roadmap formatter `org-roadmap-progress-string'
+\(org-roadmap board TODO-006) is preferred when boundp; otherwise
+the equivalent local rendering applies."
+  (format "- *%s*: %s\n" milestone
+          (if (fboundp 'org-roadmap-progress-string)
+              (org-roadmap-progress-string cell)
+            (org-learn-roadmap--format-cell cell))))
+
+(defun org-learn-roadmap--org-roadmap-version ()
+  "Return the org-roadmap version string from its header, or nil.
+The Version header is read out of the org-roadmap.el source on
+the `load-path' (command time only, never at load time)."
+  (ignore-errors
+    (let ((file (locate-library "org-roadmap.el")))
+      (when file
+        (with-temp-buffer
+          (insert-file-contents file)
+          (require 'lisp-mnt)
+          (lm-version))))))
+
+(defun org-learn-roadmap--api-path-label ()
+  "Return the report label for the org-roadmap API path.
+\"org-roadmap VERSION\" when the version header is readable,
+plain \"org-roadmap\" otherwise (spec 011: \"rollup: org-roadmap
+0.2\")."
+  (let ((version (org-learn-roadmap--org-roadmap-version)))
+    (if version
+        (format "org-roadmap %s" version)
+      "org-roadmap")))
+
+(defun org-learn-roadmap-progress (&optional tree)
+  "Return the milestone rollup plist (:path PATH :rollup ALIST) for TREE.
+When `org-roadmap-progress' (org-roadmap board TODO-006 API) is
+boundp it is called with the current buffer current and its alist
+is returned under :path \"org-roadmap VERSION\" (the version from
+the org-roadmap.el header when readable).  Otherwise the pure
+local fallback `org-learn-roadmap-rollup' computes the same alist
+from TREE -- or, with TREE nil, from the current buffer's TODO
+tree via `org-roadmap-get-todo-tree' when the feature is loaded --
+under the honest :path \"local fallback\".  This docstring states
+both paths; the report buffer records which one ran."
+  (if (fboundp 'org-roadmap-progress)
+      (list :path (org-learn-roadmap--api-path-label)
+            :rollup (org-roadmap-progress))
+    (unless tree
+      (setq tree (and (fboundp 'org-roadmap-get-todo-tree)
+                      (org-roadmap-get-todo-tree))))
+    (list :path "local fallback"
+          :rollup (org-learn-roadmap-rollup tree))))
+
+(defun org-learn-roadmap--buffer-has-roadmap-nodes-p ()
+  "Return non-nil when the current buffer has roadmap nodes.
+Roadmap nodes are headings carrying a TODO keyword -- the TODO
+tree org-roadmap parses (spec 006)."
+  (and (derived-mode-p 'org-mode)
+       (catch 'found
+         (org-map-entries
+          (lambda ()
+            (when (org-get-todo-state)
+              (throw 'found t)))
+          nil nil)
+         nil)))
+
+(defun org-learn-roadmap--next-review-clause (scheduled)
+  "Return the review clause for the earliest SCHEDULED string.
+\"today\" when the review is due now, \"overdue\" when past due
+and \"in Nd\" when it is N days ahead."
+  (let ((days (- (time-to-days (org-time-string-to-time scheduled))
+                 (org-today))))
+    (cond ((zerop days) "today")
+          ((< days 0) "overdue")
+          (t (format "in %dd" days)))))
+
+(defun org-learn-roadmap--format-dashboard-line (rollup next-review)
+  "Return the \"Roadmap: ...\" summary from the milestone ROLLUP alist.
+NEXT-REVIEW is the earliest SCHEDULED string from the dashboard
+data (nil when nothing is scheduled).  A milestone counts done
+when its cell shows every unit done.  Example: \"Roadmap: 3/7
+milestones done (43%), next review in 1d\" (spec 011)."
+  (let* ((total (length rollup))
+         (done (seq-count (lambda (cell)
+                            (let ((c (cdr cell)))
+                              (and (> (cdr c) 0)
+                                   (>= (car c) (cdr c)))))
+                          rollup))
+         (summary (format "%d/%d milestones done (%s%%)"
+                          done total
+                          (org-learn-roadmap--percent done total))))
+    (if next-review
+        (format "Roadmap: %s, next review %s"
+                summary (org-learn-roadmap--next-review-clause next-review))
+      (format "Roadmap: %s" summary))))
+
+(defun org-learn-roadmap-dashboard-line (data)
+  "Return the dashboard \"Roadmap\" line for the current buffer, or nil.
+nil when the buffer is not Org, carries no roadmap nodes
+\(headings with a TODO keyword) or the org-roadmap feature is
+unavailable -- the dashboard keeps working silently without it.
+DATA is the dashboard data plist; its :next-review supplies the
+review clause.  The rollup comes from
+`org-learn-roadmap-progress': the boundp org-roadmap API when
+available, the honest local fallback otherwise (spec 011)."
+  (when (and (org-learn-roadmap--buffer-has-roadmap-nodes-p)
+             (require 'org-roadmap nil t))
+    (org-learn-roadmap--format-dashboard-line
+     (plist-get (org-learn-roadmap-progress) :rollup)
+     (plist-get data :next-review))))
 
 ;;; roadmap.sh import pass-through.
 

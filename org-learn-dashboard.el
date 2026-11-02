@@ -43,9 +43,16 @@
 ;;   it maps a file list to the dashboard data plist, and
 ;;   `org-learn-dashboard-retention' is the pure retention step
 ;;   (nil when nothing was reviewed yet).  Nothing new is stored.
+;; - Spec 011 (specs/011-roadmap-rollup.org): the dashboard gains a
+;;   "Roadmap" line rendering the milestone rollup of the current
+;;   buffer (e.g. "Roadmap: 3/7 milestones done (43%), next review in
+;;   1d").  The line rides on the :roadmap data key -- silent when
+;;   absent -- and pulls the roadmap bridge in lazily inside the
+;;   command only.
 ;;
-;; org-roadmap stays at the boundary: it is never required here
-;; (AGENTS.md).
+;; org-roadmap stays at the boundary: it is never required at load
+;; time here; the spec 011 command hook requires the roadmap bridge
+;; lazily with nil t, which itself keeps org-roadmap lazy (AGENTS.md).
 
 ;;; Code:
 
@@ -56,6 +63,12 @@
 (require 'subr-x)
 (require 'org-learn)
 (require 'org-learn-review)
+
+;; Spec 011: the Roadmap line helper lives behind the lazy require in
+;; `org-learn-dashboard'; the declaration keeps the byte-compiler
+;; quiet about the one guarded call (the bridge is never loaded at
+;; load time).
+(declare-function org-learn-roadmap-dashboard-line "org-learn-roadmap")
 
 (defgroup org-learn-dashboard nil
   "Study sessions and dashboard for org-learn."
@@ -223,9 +236,11 @@ LOGBOOK note date.  Position comparisons stay within one file."
 
 (defun org-learn-dashboard--data (files)
   "Return the dashboard data plist for the Org FILES.
-Keys: :due :new :done-today :queue :leeches :stats.  Pure over the
-file list (no display, no interactive APIs), so it is batch-safe
-and testable."
+Keys: :due :new :done-today :queue :leeches :stats :next-review.
+Pure over the file list (no display, no interactive APIs), so it
+is batch-safe and testable.  :next-review carries the earliest
+SCHEDULED string over all entries (nil when nothing is
+scheduled); the spec 011 Roadmap line renders it."
   (let* ((file-entries (mapcar (lambda (file)
                                  (cons file
                                        (org-learn-dashboard--scan-file file)))
@@ -247,6 +262,18 @@ and testable."
                           (seq-filter (lambda (entry)
                                         (plist-get entry :leech))
                                       entries)))
+         (next-review (seq-reduce
+                       (lambda (earliest entry)
+                         (let ((scheduled (plist-get entry :scheduled)))
+                           (cond
+                            ((not scheduled) earliest)
+                            ((or (not earliest)
+                                 (time-less-p
+                                  (org-time-string-to-time scheduled)
+                                  (org-time-string-to-time earliest)))
+                             scheduled)
+                            (t earliest))))
+                       entries nil))
          (stats (apply #'append
                        (mapcar (lambda (file-entry)
                                  (org-learn-dashboard--topic-stats
@@ -260,6 +287,7 @@ and testable."
           :queue (mapcar #'org-learn-dashboard--queue-item
                          (seq-take due 10))
           :leeches leeches
+          :next-review next-review
           :stats stats)))
 
 ;;; Presentation (read-only, rebuilt from scratch).
@@ -271,7 +299,13 @@ and testable."
   (insert "* Today\n\n")
   (insert (format "- Due now: %d\n" (plist-get data :due)))
   (insert (format "- New: %d\n" (plist-get data :new)))
-  (insert (format "- Done today: %d\n\n" (plist-get data :done-today)))
+  (insert (format "- Done today: %d\n" (plist-get data :done-today)))
+  ;; Spec 011: the Roadmap line rides on the :roadmap data key and
+  ;; stays silent when the buffer has no roadmap data.
+  (let ((roadmap (plist-get data :roadmap)))
+    (when roadmap
+      (insert (format "- %s\n" roadmap))))
+  (insert "\n")
   ;; 2. Review queue
   (insert "* Review queue\n\n")
   (let ((queue (plist-get data :queue)))
@@ -326,13 +360,25 @@ and testable."
 (defun org-learn-dashboard ()
   "Build and show the org-learn dashboard.
 The read-only *org-learn-dashboard* buffer is rebuilt from scratch
-each run: Today (due/new/done per `org-learn-review-scope'), the
-review queue (10 oldest due items as org links), leeches, per-topic
-stats and a commands legend.  Empty states render friendly lines."
+each run: Today (due/new/done per `org-learn-review-scope', plus
+the spec 011 Roadmap line when the current buffer has roadmap
+nodes), the review queue (10 oldest due items as org links),
+leeches, per-topic stats and a commands legend.  Empty states
+render friendly lines."
   (interactive)
   (let* ((files (seq-filter #'file-exists-p
                             (org-learn-review--scoped-files)))
          (data (org-learn-dashboard--data files)))
+    ;; Spec 011: the Roadmap line pulls the roadmap bridge in lazily
+    ;; (boundary law: require inside the command only, silent failure)
+    ;; and stays absent when the bridge, the org-roadmap feature or
+    ;; roadmap nodes in the current buffer are missing.
+    (when (require 'org-learn-roadmap nil t)
+      (let ((line (org-learn-roadmap-dashboard-line data)))
+        (when line
+          ;; Use the returned plist: `plist-put' only promises the
+          ;; modified list, not an in-place mutation for a new key.
+          (setq data (plist-put data :roadmap line)))))
     (with-current-buffer (get-buffer-create org-learn-dashboard--buffer)
       (let ((inhibit-read-only t))
         (erase-buffer)
