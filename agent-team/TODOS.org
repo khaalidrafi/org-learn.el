@@ -22,6 +22,20 @@
 
 * NOTICES
 
+** [2026-11-03 04:00Z] DoE role + lead map — org-learn.el led by its own Lead; z.ai-agent = Director of Engineering over ALL teams (Owner, #hq)
+
+- Owner 2026-11-03 04:00 #hq: "org learn, org roadmap, docneural are
+  also led by others. But, you are Director of Engineering. You'll
+  oversee ALL teams. You don't have the context team leads have of
+  other repos, so keep that in mind."
+- Seat commands in org-learn.el come from THIS repo's Lead and board.
+  z.ai-agent oversees ALL teams as DoE: standards, cross-team
+  coordination, dispute rulings, escalations to the Owner.
+- Sharing surface is TODOS.org `* NOTICES` (NOTICE.org is retired,
+  Owner 04:07 #hq: "no more notice.org, it's on TODOS.org to share").
+  The DoE reads your boards and CHAT.org; the DoE does not command
+  this repo's seats, dispatches or deadlines.
+
 ** [2026-11-02 15:58Z] TIME DISCIPLINE LAW — effort + deadline on every TODO; show-cause before any slip (Owner, #hq)
 
 - Every lead-assigned TODO carries :EFFORT: AND :DEADLINE: (Org
