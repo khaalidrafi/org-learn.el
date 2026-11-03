@@ -1,0 +1,47 @@
+#+TITLE: Spec 009 — Socratic GUIDE tutor mode (Owner AI-education wave, item 1)
+#+STATUS: SPEC — Lead-authored.  Owner order 2026-11-03 ~19:00Z
+#+STATUS: #docneural-site (verbatim: "Add the best education
+#+STATUS: features from gemini, gemini notebook and other big
+#+STATUS: tech's ai education features to org-learn."),
+#+STATUS: mapped by the DoE notice in agent-team/TODOS.org * NOTICES
+#+STATUS: (item 1, sources: NotebookLM Learning Guide mode, Gemini
+#+STATUS: Guided Learning / LearnLM, Khanmigo).
+
+* File law
+Extend org-learn-ai.el — the same single network choke point
+=org-learn-ai--complete=, the same =*org-learn-ai-chat*= buffer and
+turn rendering, the same backend law as spec 007 ('auto / 'gptel /
+'keyless).  No new file.
+
+* Mode: =org-learn-ai-guide= (GUIDE)
+- Interactive, current subtree, multi-turn in *org-learn-ai-chat*.
+- NEVER-ANSWER LAW: the guide probes with open-ended questions,
+  decomposes problems step by step, and checks understanding before
+  revealing anything.  When the learner asks for the answer outright,
+  it climbs a hint ladder: nudge (1st ask) -> scaffold (2nd ask) ->
+  worked example (3rd ask, delivered only after the learner has
+  written an attempt in that turn).
+- PROMPT LAW: the system prompt encodes the five LearnLM learning-
+  science principles verbatim-named — active learning, cognitive-
+  load management (one idea per turn), adapt to the learner,
+  stimulate curiosity, deepen metacognition — plus the never-answer
+  law and the hint-ladder contract.
+- LOOP: probe -> read-string learner answer -> grade-without-
+  revealing + one strength/one-gap line -> next probe (adapted to
+  the answer).  =C-g or empty answer exits the loop.
+- EXIT OFFER: same contract as spec 007 FOCUS — quality 5|3|1
+  mapped to org-learn-review--process-entry scheduling; reuse its
+  internals, do not duplicate them.
+
+* Tests (extend tests/test-org-learn-ai.el; zero network, choke
+* point mocked as always)
+- The system prompt captured by the mock names the five principles
+  and the never-answer law.
+- One probe->answer->grade->next-probe cycle renders in order.
+- Hint ladder: three consecutive answer-demands escalate nudge ->
+  scaffold -> worked example; the worked example branch only fires
+  after a learner attempt string is supplied.
+- Exit offer maps 5|3|1 through the (mocked) scheduling seam.
+- Gate: byte-compile warning-free + ERT green + checkdoc 0 on
+  touched files (byte-compile 0, checkdoc 0, suite all green; one
+  segment, one report @lead).

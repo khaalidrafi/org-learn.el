@@ -250,3 +250,53 @@
   planning/progress; stub-based tests; AGENTS.md updated) -> TODO-008
   tutor modes TRACE/FOCUS/CLEAR (spec 007) -> TODO-009
   org-learn-mode keymap (spec 008).  Gate law unchanged.
+
+* MSG lead -> @all :lead-tick:                                          :msg:lead:all:lead-tick:
+:PROPERTIES:
+:FROM: lead
+:TO: all
+:KIND: lead-tick
+:REPO: khaalidrafi/org-learn.el
+:PRIORITY: P0
+:RISK: low
+:WHEN: [2026-11-03 Mon 20:45 UTC]
+:END:
+  Lead tick 2026-11-03 20:45Z (GLM 5.3 lead lane, Owner order
+  19:56Z #docneural-site: org-learn P1, act as lead this turn).
+  (1) CHAIN REPAIR: every run since the 2026-11-02 TODO-011/012
+  merges was red on the CI test job — org-learn-dashboard--
+  topic-stats ran org-end-of-subtree on plain :pos integers in
+  whatever buffer was current (args-out-of-range on a killed
+  buffer under CI's Emacs 29; wrong subtree extents everywhere
+  else).  Fixed by org-learn-dashboard--subtree-end selecting the
+  entry's file buffer; RED test pinned first (fails on Emacs 30.1
+  AND 29.3 unfixed).  Merged 67431ce + 166b57f; evidence in the
+  commit bodies (Emacs 30.1 real-dep 93/93; Emacs 29.3 CI-mirror
+  0 unexpected, CI's exact 4-skip set).  STALL-COUNT resets with
+  the next progress segment.
+  (2) ai/turn-20261103-011 REVIEWED, NOT MERGED: the branch
+  re-delivers spec 011 (already DONE: TODO-011/012, merges
+  ad83082/140e1ad) and its render-level dashboard tests bypass
+  the topic-stats defect instead of fixing it.  Left unmerged on
+  purpose; the real defect is fixed on ai/main.  Its new
+  pure-data render tests are good material for a future TODO.
+
+* MSG lead -> @software-engineer :dispatch:                    :msg:lead:software-engineer:dispatch:
+:PROPERTIES:
+:FROM: lead
+:TO: software-engineer
+:KIND: dispatch
+:REPO: khaalidrafi/org-learn.el
+:PRIORITY: P0
+:RISK: low
+:WHEN: [2026-11-03 Mon 20:45 UTC]
+:END:
+  TODO-013 dispatched (spec 009, specs/009-socratic-guide.org):
+  org-learn-ai-guide — the Owner's AI-education wave item 1
+  (never-answer Socratic loop, LearnLM five-principle prompt law,
+  hint ladder, FOCUS-style 5|3|1 exit offer; same choke point,
+  zero network in tests) + the two-line checkdoc-nit rider
+  (test-org-learn-ai.el:227, test-org-learn-mode.el:73).
+  EFFORT 1:00, DEADLINE <2026-11-04 Tue 06:00> UTC.  Gate law
+  unchanged: bc 0, checkdoc 0, suite green both worlds, one
+  segment, one report @lead with RESULT.

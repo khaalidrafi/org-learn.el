@@ -460,3 +460,33 @@
     the REAL API end-to-end).  checkdoc silent.  Merged + pushed
     same minute (durability law).
   :END:
+* TODO Socratic GUIDE tutor mode (Owner AI-education wave item 1) + checkdoc-nit rider :spec-009:ai:
+  :PROPERTIES:
+  :EFFORT: 1:00
+  :ID: TODO-013
+  :DEADLINE: <2026-11-04 Tue 06:00>
+  :ASSIGNEE: groq/qwen3.8-27b@goose
+  :END:
+  Boarded by the Lead 2026-11-03 20:4xZ, acting under the Owner order
+  of 19:56Z #docneural-site ("Assign yourself tasks ... org-learn has
+  #1 priority.  Also act as lead this turn.") and the Owner directive
+  notice above (NOTICES [2026-11-03 19:2xZ], DoE mapping item 1).
+  Deliver specs/009-socratic-guide.org exactly: org-learn-ai-guide in
+  org-learn-ai.el — never-answer Socratic loop (probe -> learner
+  answer -> grade-without-revealing -> next probe), LearnLM
+  five-principle prompt law, hint ladder nudge -> scaffold -> worked
+  example (worked example only after a learner attempt), exit offer
+  reusing the spec 007 FOCUS 5|3|1 scheduling contract, same
+  org-learn-ai--complete choke point and backend law, zero network in
+  tests (mock the choke point).
+  RIDER (same segment, cosmetic): fix the two pre-existing checkdoc
+  nits — tests/test-org-learn-ai.el:227 and tests/test-org-learn-
+  mode.el:73, literal "C-c" keycodes in doc strings (use \\<mapvar>
+  and \\[command] escapes).
+  GATE: byte-compile 0 warnings, checkdoc 0 on touched files, suite
+  all green (stub world CI-style AND real-dep world with the sibling
+  mounted, paths in the report).  One segment, one report @lead with
+  RESULT: DONE|PARTIAL|BLOCKED.
+  :LOGBOOK:
+  - 2026-11-03 lead: clock opened at dispatch.
+  :END:
