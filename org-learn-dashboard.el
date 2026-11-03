@@ -188,6 +188,21 @@ data for `org-learn-dashboard--data'; no display happens here."
         :line (plist-get entry :line)
         :scheduled (plist-get entry :scheduled)))
 
+(defun org-learn-dashboard--subtree-end (entry)
+  "Return the end position of ENTRY's subtree in its own file.
+`org-end-of-subtree' must run with the entry's buffer selected:
+the scan records plain positions, so selecting the file's buffer
+here keeps the computation independent of whatever buffer is
+current when the stats are requested.  A hand-rolled ENTRY without
+:file falls back to the current buffer (legacy behavior)."
+  (let ((file (plist-get entry :file)))
+    (if (null file)
+        (org-with-point-at (plist-get entry :pos)
+          (org-end-of-subtree))
+      (with-current-buffer (find-file-noselect file)
+        (org-with-point-at (plist-get entry :pos)
+          (org-end-of-subtree))))))
+
 (defun org-learn-dashboard--topic-stats (entries)
   "Return per-topic stat plists for the level-1 ENTRIES of one file.
 Items are the in-system descendants of each topic (SCHEDULED or
@@ -200,7 +215,7 @@ LOGBOOK note date.  Position comparisons stay within one file."
     (mapcar
      (lambda (topic)
        (let* ((pos (plist-get topic :pos))
-              (end (org-with-point-at pos (org-end-of-subtree)))
+              (end (org-learn-dashboard--subtree-end topic))
               (items (seq-filter
                       (lambda (entry)
                         (and (> (plist-get entry :level) 1)
