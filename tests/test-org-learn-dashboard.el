@@ -178,6 +178,57 @@ SCHEDULED: <2022-02-02 Wed>
       (when (file-exists-p file)
         (delete-file file)))))
 
+;;; Buffer independence (regression, 2026-11-03 CI red).
+
+(ert-deftest org-learn-dashboard-topic-stats-reads-the-entry-buffer ()
+  "Spec 005 regression: topic subtree extents are read in the \
+entry's own file buffer, never in whatever buffer is current.
+The scan captures plain positions, so `org-end-of-subtree' must
+run with the file's buffer selected; running it in the current
+buffer counts the wrong items and crashed two CI suites on
+Emacs 29 (args-out-of-range on a killed buffer).  Seed two
+topics, kill the file buffer, select a tiny unrelated Org
+buffer, and demand the exact per-topic counts."
+  (let* ((file (make-temp-file "org-learn-dashbufdep-" nil ".org"))
+         (org-learn-file file)
+         (org-learn-review-scope 'file))
+    (unwind-protect
+        (progn
+          (write-region "\
+* Alpha
+** TODO Child one :drill:
+SCHEDULED: <2020-01-01 Wed>
+:PROPERTIES:
+:LEARN_REPS: 4
+:LEARN_LAPSES: 1
+:LEARN_EASE: 2.3
+:END:
+** TODO Child two :drill:
+SCHEDULED: <2020-01-02 Thu>
+* Beta
+** TODO Only child :drill:
+SCHEDULED: <2020-01-03 Fri>
+" nil file nil 'quiet)
+          ;; Kill the file buffer and select a tiny unrelated Org
+          ;; buffer: the stats must still read the FILE, not this one.
+          (org-learn-dashboard-test--kill-file-buffer file)
+          (with-temp-buffer
+            (org-mode)
+            (insert "* U\n")
+            (let* ((data (org-learn-dashboard--data (list file)))
+                   (stats (plist-get data :stats))
+                   (alpha (nth 0 stats))
+                   (beta (nth 1 stats)))
+              (should (equal "Alpha" (plist-get alpha :topic)))
+              (should (= 2 (plist-get alpha :items)))
+              (should (= 2 (plist-get alpha :due)))
+              (should (equal "Beta" (plist-get beta :topic)))
+              (should (= 1 (plist-get beta :items))))))
+      (org-learn-dashboard-test--kill-file-buffer file)
+      (org-learn-dashboard-test--kill-dashboard)
+      (when (file-exists-p file)
+        (delete-file file)))))
+
 ;;; Presentation (spec 005: read-only buffer, headers, legend).
 
 (ert-deftest org-learn-dashboard-builds-a-read-only-buffer ()
