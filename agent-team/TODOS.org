@@ -22,6 +22,52 @@
 
 * NOTICES
 
+** [2026-11-03 19:2xZ] DoE — OWNER DIRECTIVE: best-of-breed AI education features (Owner 2026-11-03 ~19:00Z #docneural-site, verbatim: "Add the best education features from gemini, gemini notebook and other big tech's ai education features to org-learn.")
+
+- DoE researched the current best-of-breed (2026-11-03): NotebookLM study
+  tools (flashcards + quizzes with topic/difficulty control and
+  explain-the-miss with citations back to source; upgraded Reports —
+  study guides, briefing docs, glossaries; Learning Guide chat mode —
+  probing open-ended questions, step-by-step, no direct answers;
+  Audio Overviews in Brief/Critique/Debate formats; Mind Maps),
+  Gemini Guided Learning + LearnLM (the five learning-science
+  principles: active learning, cognitive-load management, adapts to
+  the learner, stimulates curiosity, deepens metacognition; RCT
+  evidence: Guided Learning moved math students 50th->64th
+  percentile), and Khanmigo (strictly Socratic tutoring — never
+  hands over the answer). Sources: blog.google NotebookLM student
+  features; blog.google guided-learning; cloud.google.com/solutions/
+  learnlm; khanacademy.org.
+- FIT TO ORG-LEARN (DoE mapping onto the delivered modules — the
+  network choke point org-learn-ai--complete is the single door; all
+  specs stay mock-network, tests-first, bc 0, checkdoc 0, ERT green):
+  1. SOCRATIC GUIDE tutor mode (extends the org-learn-ai
+     TRACE/FOCUS/CLEAR family): probes with open-ended questions,
+     decomposes problems step-by-step, checks understanding before
+     revealing; encodes the LearnLM five principles in the prompt
+     law. Suggested :EFFORT: 1:00.
+  2. STUDY-KIT GENERATOR (extends org-learn-ai flashcards/quiz):
+     from an org subtree generate a study guide + glossary + briefing
+     doc as org buffers; quiz misses get an "explain" that cites the
+     source heading (org-id link back); topic/difficulty controls.
+     Suggested :EFFORT: 2:00.
+  3. MASTERY TRACKER / growth areas (extends org-learn-dashboard):
+     per-topic mastery rollup from SM-2 lapses + drill leeches +
+     quiz misses; dashboard "growth areas" line + agenda jump.
+     Suggested :EFFORT: 1:00.
+  4. LEARNING-PLAN GENERATOR (via the org-roadmap bridge): from a
+     goal + notes generate an org plan with milestones that flow
+     into the real org-roadmap-progress API. Suggested :EFFORT: 1:00.
+  5. AUDIO-OVERVIEW SCRIPT (extends org-learn-ai): Brief /
+     Deep-dive / two-host Debate script from a subtree; TTS playback
+     optional and out of scope for the first segment.
+     Suggested :EFFORT: 0:50.
+- PROTOCOL: per the lead map, dispatches/deadlines/assignees are
+  THIS repo's Lead's call — the DoE commands no seats here. Board
+  them as the Lead sees fit (numbering: next IDs after TODO-012;
+  note the #+DISPATCH counter reads 11 while TODO-012 exists —
+  worth a control-commit true-up).
+
 ** [2026-11-03 04:00Z] DoE role + lead map — org-learn.el led by its own Lead; z.ai-agent = Director of Engineering over ALL teams (Owner, #hq)
 
 - Owner 2026-11-03 04:00 #hq: "org learn, org roadmap, docneural are
