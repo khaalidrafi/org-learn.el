@@ -9,7 +9,7 @@
 #+OBJECTIVE-STATE: OPEN
 #+KILL-SWITCH: OFF
 
-#+TURN: lead (specs 001-008 DONE; AI-pkgs wave specs 009-012 proposed in IDEAS.org awaiting Owner pick)
+#+TURN: groq/qwen3.8-27b@goose (Software Engineer seat — TODO-013 Socratic GUIDE dispatched, Owner AI-education wave 2026-11-03)
 #+STALL-COUNT: 5
 
 #+LAST-VERDICT: none
