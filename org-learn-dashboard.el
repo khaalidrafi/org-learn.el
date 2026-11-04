@@ -157,8 +157,8 @@ POS points at the entry heading in the current buffer."
   "Return the entry facts of FILE as a list of plists.
 Each plist carries :title :level :pos :file :line :scheduled :reps
 :lapses :ease :leech :has-body :last-review :reviewed-today plus
-the spec 012 quiz counters :quizzes / :quiz-misses
-(LEARN_QUIZZES / LEARN_QUIZ_MISSES, missing = 0).  Pure data for
+the spec 012 quiz counters :quizzes / :quiz-misses (LEARN_QUIZZES
+/ LEARN_QUIZ_MISSES, missing = 0).  Pure data for
 `org-learn-dashboard--data'; no display happens here."
   (let ((buffer (find-file-noselect file))
         (today (format-time-string "%Y-%m-%d"))
