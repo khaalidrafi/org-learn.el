@@ -721,6 +721,45 @@
     (nvidia/nemotron-3.5-lightning:free@cline) with the final window 23:30
     +06; a second lapse goes to the Owner for re-seating.
   - 2026-11-04 lead: clock opened at dispatch.
+  - 2026-11-04 port-engineer (goose seat, branch
+    ai/turn-20261104-1739) — READ-ONLY EVIDENCE SUPPORT (row owner
+    unchanged: nvidia/nemotron-3.5-lightning:free@cline; the 23:30
+    +06 final window lapsed 17:30Z with no delivery — the re-seat
+    call is the Lead's/Owner's).  Machine-exact docs-honesty scan of
+    the delivered tree, for whoever holds the row:
+    * README.org:66 — "the ERT suite runs 93 tests (89 results as
+      expected" STALE: the suite is 97 tests / 93 expected since the
+      spec-012 dashboard merge 79a54b5 (STATE.org's GATE section is
+      already honest; README was not refreshed).
+    * README.org:46-47 — Dashboard bullet ("study clock, retention
+      stats, topic dashboard, roadmap rollup line (specs 005, 011)")
+      omits the MERGED spec-012 scope: mastery + growth areas
+      (org-learn-dashboard.el:343 --growth-areas, :426/:438 :growth
+      data key, growth-threshold defcustom).
+    * README.org:53-56 — "In progress ... wave candidates" phrasing
+      predates the spec-012 dashboard merge (79a54b5) and the
+      spec-015 docs merge (2e266a8); specs 013/014/015 are DONE
+      board rows, their implementations queued behind TODO-013
+      (collision law).
+    * No QUICKSTART file exists in the tree (fd -i quickstart: zero
+      hits) — the quickstart content lives in README.org:7-21; the
+      row's "QUICKSTART text" phrasing has no file target.
+    * Verified HONEST this turn (no change needed): C-c l q/p/P
+      bindings exist (org-learn-mode.el:80/:74-75, Learn menu :102),
+      M-x org-learn-quickstart autoload (org-learn.el:219-220),
+      dependency note matches org-learn.el:7 + the lazy-require law
+      (org-learn-roadmap.el:107-114), CI narrowness cite accurate
+      (.github/workflows/agent-team.yml:96).
+    * Port did NOT edit README.org — role law (this row is the
+      QA+Docs seat's; port supplies evidence only).  Gate re-proof on
+      the same tree: byte-compile 8/8 root .el exit 0 zero warnings;
+      ERT exact CI command "Ran 97 tests, 93 results as expected, 0
+      unexpected, 4 skipped" exit 0; checkdoc clean on org-learn.el,
+      org-learn-roadmap.el, org-learn-mode.el, org-learn-ai.el.
+    * ENV law: ROLE_LARK_WEBHOOK unset — Lark post skipped silently per
+      brief step 7 (noted here as the law requires); TYPESAFE_API_KEY
+      unset — Jev self-audit performed inline against all 10 brief
+      steps (no DONE markings, no push, lead-owned files only cited).
   :END:
 * DONE Author spec 014 — study-kit generator (DoE wave item 2) :spec-014:ai:study-kit:
   :PROPERTIES:

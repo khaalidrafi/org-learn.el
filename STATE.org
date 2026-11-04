@@ -22,9 +22,9 @@
     trip against the real 0-arg =org-roadmap-progress= API when it is
     (gate: =-L= the sibling repo; TODO-011/012 audits).
 
-* GATE — re-proven 2026-11-04 13:2xZ (port-engineer, Emacs 30.1, org
-  9.7.11; tree b36d63e = ai/main incl. spec-012 dashboard merge
-  79a54b5)
+* GATE — re-proven 2026-11-04 17:4xZ (port-engineer, Emacs 30.1, org
+  9.7.11; tree 5fed76c = ai/main incl. spec-015 docs merge 2b41266;
+  zero .el movement since b36d63e — spec 015 landed docs-only)
   - byte-compile, all eight root .el files, warning-free (exit 0 each):
     #+begin_src sh
       for f in org-learn.el org-learn-ai.el org-learn-dashboard.el \
@@ -54,7 +54,10 @@
     files compile warning-free locally (proof above) but CI does not
     prove them.  (TODO-015 repair stalled — deadline 08:00Z passed,
     Lead escalated to @owner 11:3xZ; the local 8-file proof above is
-    the mitigation.)
+    the mitigation.)  Re-read 17:4xZ: the workflow loop is still
+    =for f in org-learn.el= (.github/workflows/agent-team.yml:96) —
+    TODO-015 unfixed; the 16:5xZ release turn landed spec 015 (docs)
+    instead of repairing CI.
   - History: gate first proven 2026-11-01 (TODO-001: byte-compile +
     ERT 4/4); suite grew with every spec segment since.
 
@@ -86,10 +89,12 @@
     TODO-013 (SW seat — deadline 06:00Z passed with no delivery,
     Lead escalated to @owner 11:3xZ); specs 013/014 board-ready
     (TODO-017/TODO-019 DONE, audited); spec 015 (learning-plan
-    generator, DoE item 4) authored board-ready as
-    specs/015-learning-plan-generator.org by port-engineer 2026-11-04
-    (TODO-020 coordination law pinned in the spec; awaits Lead
-    boarding).
+    generator, DoE item 4) MERGED as docs 2e266a8 (merge 2b41266,
+    17:13Z) and port-verified board-ready 17:4xZ (all pinned cites
+    machine-exact; one imprecise parenthetical on the stub import
+    shape, non-load-bearing) but still UNBOARDED — no TODO row,
+    #+DISPATCH counter still 20; boarding requested to @lead
+    (CHAT.org 17:4xZ report).
   - DoE notice (TODOS.org * NOTICES, 2026-11-03): five best-of-breed
     AI-education candidates — item 1 is spec 009 / TODO-013; item 3
     (mastery tracker / growth areas) drafted board-ready as
@@ -105,11 +110,23 @@
     the spec Summary: implements after specs 009/012/013 merge; org-id
     cite law with the unsaved-buffer degradation branch pinned);
     item 4 (learning-plan
-    generator) awaits boarding — TODO-020's research digest lane.
+    generator) spec 015 MERGED board-ready (2e266a8), port-verified
+    17:4xZ, implementation UNBOARDED — Lead boarding request posted
+    (CHAT.org 17:4xZ); TODO-020 digest still not landed (devin
+    provisional lane).
   - Docs honesty (port-engineer segment 2026-11-04): README.org and
     this file refreshed to the delivered tree (dependency law, gate
     counts, CI cites); the stale STATUS commentary line in
-    org-learn.el:31 updated.
+    org-learn.el:31 updated.  17:4xZ scan (port, read-only — TODO-018
+    lapsed 17:30Z, evidence appended to its LOGBOOK, README NOT
+    edited per role law): README.org:66 stale '93 tests (89 results'
+    -> 97/93 since 79a54b5; README.org:46-47 Dashboard bullet omits
+    the merged spec-012 growth-areas scope (org-learn-dashboard.el
+    :343); README.org:53-56 wave phrasing predates the spec-012 merge
+    and the spec-015 landing; no QUICKSTART file exists (quickstart
+    content = README.org:7-21); verified honest: C-c l q/p/P
+    (org-learn-mode.el:80/:74-75), quickstart autoload
+    (org-learn.el:219-220), dependency note (org-learn.el:7).
   - Cite to the Lead (lead-owned files, not edited): the DoE notice
     flagged the TODOS.org dispatch counter (reads 11 while TODO-012
     exists) — worth a control-commit true-up; the CI byte-compile
