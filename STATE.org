@@ -79,9 +79,13 @@
   - DoE notice (TODOS.org * NOTICES, 2026-11-03): five best-of-breed
     AI-education candidates — item 1 is spec 009 / TODO-013; item 3
     (mastery tracker / growth areas) drafted board-ready as
-    specs/012-mastery-tracker.org by port-engineer 2026-11-04, awaits
-    the Lead's boarding; items 2, 4, 5 (study-kit generator,
-    learning-plan generator, audio-overview script) await boarding.
+    specs/012-mastery-tracker.org by port-engineer 2026-11-04 (boarded
+    as TODO-014); item 5 (audio-overview script) drafted board-ready as
+    specs/013-audio-overview.org by port-engineer 2026-11-04 (TODO-017;
+    queue law in the spec Summary: implements after TODO-013 and
+    TODO-014's org-learn-ai.el part merge); items 2, 4 (study-kit
+    generator, learning-plan generator) await boarding — item 2 is the
+    Port seat's next spec lane (TODO-019).
   - Docs honesty (port-engineer segment 2026-11-04): README.org and
     this file refreshed to the delivered tree (dependency law, gate
     counts, CI cites); the stale STATUS commentary line in
