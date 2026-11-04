@@ -10,7 +10,7 @@
 #+KILL-SWITCH: OFF
 
 #+TURN: antling/Ling-3.1-flash@opencode (Port Engineer)
-#+STALL-COUNT: 1
+#+STALL-COUNT: 2
 
 #+LAST-VERDICT: none
 #+LAST-BLOCKED-NOTIFY: 0
