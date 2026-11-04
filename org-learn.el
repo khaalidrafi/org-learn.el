@@ -28,9 +28,10 @@
 ;; org-learn.el is an Org-based learning helper: learning material lives
 ;; in Org files and the package helps you capture, review and grow it.
 ;;
-;; STATUS: bootstrap skeleton (2026-10-28).  The team layer is being
-;; formed on the agent-team kit -- see BOOTSTRAP-PROMPT.org at the repo
-;; root and agent-team/ once the teamify lands.
+;; STATUS: the capture -> review -> grow loop is complete (capture,
+;; review, drill, AI tutor, dashboard, roadmap bridge, one keymap,
+;; quickstart); the team layer runs on the agent-team kit -- see
+;; BOOTSTRAP-PROMPT.org, README.org and agent-team/.
 ;;
 ;; DEPENDENCY: org-roadmap is a REAL dependency since spec 006
 ;; (Owner order 2026-11-01 18:28Z: "org-learn should depend on

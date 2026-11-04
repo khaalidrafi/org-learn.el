@@ -4,53 +4,87 @@
   - khaalidrafi/org-learn.el — an Org-based learning helper for Emacs:
     learning material lives in Org files; the package helps you capture,
     review and grow it (README.org).
-  - Language: Emacs Lisp.  Conventions (root AGENTS.md): every Elisp file
-    carries =-*- lexical-binding: t; -*-=, one feature per file, public
-    symbols use the =org-learn-= prefix, header passes =checkdoc=
-    (Author: Khalid, GPL-3.0-or-later).
-  - Dependency boundary: org-roadmap is declared in the package header
-    (org-learn.el:7) and commented as intent (org-learn.el:35-38); the
-    code never =(require 'org-roadmap)= (grep-verified 2026-11-01, zero
-    hits outside the header/commentary).  Locked by ERT test
-    =org-learn-keeps-the-org-roadmap-boundary= (tests/test-org-learn.el:53).
+  - Language: Emacs Lisp.  Conventions (root AGENTS.md): every Elisp
+    file carries =-*- lexical-binding: t; -*-=, one feature per file,
+    public symbols use the =org-learn-= prefix, header passes
+    =checkdoc= (Author: Khalid, GPL-3.0-or-later).
+  - Dependency law (Owner order 2026-11-01 18:28Z #hq, spec 006 —
+    supersedes the old soft-boundary law): org-learn DEPENDS on
+    org-roadmap for planning and progress.  The dependency is real but
+    graceful — declared in the package header (org-learn.el:7), and
+    required lazily inside the bridge commands only
+    (org-learn-roadmap.el:107-113), so core org-learn still loads under
+    CI =-Q= when org-roadmap is absent, and the roadmap commands show a
+    one-line install hint instead of failing.  Tests: the stub world
+    always runs (tests/support/org-roadmap-stub.el); the real-dep suite
+    (tests/test-org-learn-roadmap-real.el) skips LOUDLY when the sibling
+    is not mounted, and proves the plan -> progress -> rollup round
+    trip against the real 0-arg =org-roadmap-progress= API when it is
+    (gate: =-L= the sibling repo; TODO-011/012 audits).
 
-* GATE — proven green 2026-11-01 (port-engineer, TODO-001)
-  - byte-compile (the exact CI command,
-    .github/workflows/agent-team.yml:92-99):
+* GATE — re-proven 2026-11-04 (port-engineer, Emacs 30.1, org 9.7.11)
+  - byte-compile, all eight root .el files, warning-free (exit 0 each):
     #+begin_src sh
-      emacs -Q --batch -L . --eval '(byte-compile-file "org-learn.el")'
+      for f in org-learn.el org-learn-ai.el org-learn-dashboard.el \
+               org-learn-drill.el org-learn-mode.el \
+               org-learn-quickstart.el org-learn-review.el \
+               org-learn-roadmap.el; do
+        emacs -Q --batch -L . --eval "(byte-compile-file \"$f\")"
+      done
     #+end_src
-    -> exit 0 (also warning-free for tests/test-org-learn.el).
-  - ert:
+  - ert, the exact CI command (the suite entry
+    tests/test-org-learn.el loads every test file, :184-230, so the
+    single =-l= runs all 93):
     #+begin_src sh
       emacs -Q --batch -L . -l tests/test-org-learn.el \
             -f ert-run-tests-batch-and-exit
     #+end_src
-    -> exit 0, "Ran 4 tests, 4 results as expected".
-  - CI GAP (lead-owned file, cited not edited): the =test= job runs
-    byte-compile only (.github/workflows/agent-team.yml:88-99) while its
-    own header law (:4-5, "ert suite AND byte-compile, not one without
-    the other") and agent-team/STATE.org GATE ("byte-compile + ert")
-    require ert too.  The suite is green locally; wiring the ert step
-    into CI is the Lead's edit.  Cited to @lead in CHAT.org.
+    -> exit 0, "Ran 93 tests, 89 results as expected, 0 unexpected,
+    4 skipped".  The 4 skips are the real-dependency roadmap suite
+    (org-roadmap sibling not mounted in this container); they RUN and
+    pass when it is mounted (TODO-011/012 audit evidence).
+  - CI (lead-owned workflow, cited not edited): the test job runs both
+    steps — byte-compile (.github/workflows/agent-team.yml:92-99) and
+    ERT (:101-110).  Remaining narrowness cited to @lead: the CI
+    byte-compile step compiles =org-learn.el= only; the seven feature
+    files compile warning-free locally (proof above) but CI does not
+    prove them.
+  - History: gate first proven 2026-11-01 (TODO-001: byte-compile +
+    ERT 4/4); suite grew with every spec segment since.
 
-* COMPLIANCE AUDIT 2026-11-01 (root AGENTS.md + ci/AGENTS.md)
-  - FIXED   ERT suite landed — tests/test-org-learn.el (commit 9b004eb);
-    local law "ERT tests live in tests/; new features land with tests"
-    was unmet (no tests/ dir existed).
-  - FIXED   this STATE.org landed; README.org Status links it.
-  - FIXED   first improvement spec landed — specs/001-capture.org.
-  - CITED   CI =ert= gap above (workflow is Lead-owned; file:line
-    evidence in CHAT.org, not edited here).
-  - VERIFIED org-roadmap boundary (see PROJECT above).
-  - VERIFIED checkdoc header clean (=M-x checkdoc= exit 0);
-    lexical-binding cookie present in both Elisp files.
-  - ACCEPTED agent-team/CHARTER.md is Markdown: kit-provided by the
-    agent-team-ci teamify template; global law prefers Org but the kit
-    owns that file — noted, not converted (avoid kit drift).
+* COMPLIANCE AUDIT 2026-11-01 (root AGENTS.md + ci/AGENTS.md) — history
+  - FIXED      ERT suite landed — tests/test-org-learn.el (commit
+               9b004eb); local law "ERT tests live in tests/; new
+               features land with tests".
+  - FIXED      this STATE.org landed; README Status links it honestly.
+  - FIXED      first improvement spec landed — specs/001-capture.org.
+  - CLOSED     CI ert gap — cited 2026-11-01, fixed by the Lead the
+               same day: the CI test job now runs the ERT suite
+               (workflow :101-110).
+  - SUPERSEDED org-roadmap "boundary law" (declared, never required) —
+               Owner order 2026-11-01 18:28Z made org-roadmap a REAL
+               graceful dependency (spec 006, TODO-007 DONE); the old
+               boundary lock test was legally replaced by the stub +
+               real-dep suites above.
+  - ACCEPTED   agent-team/CHARTER.md is Markdown: kit-provided by the
+               agent-team-ci template; global law prefers Org but the
+               kit owns that file — noted, not converted (avoid kit
+               drift).
 
 * NEXT
-  - Spec 001 (first improvement): =org-learn-capture= —
-    specs/001-capture.org.  Implementation is a new board TODO
-    (Lead's dispatch); tests land with it, per local law.
-  - Team layer state (board, chat, roster): agent-team/STATE.org.
+  - Feature wave status 2026-11-04: specs 001-008, 010 and 011 are
+    DONE on ai/main; spec 009 (Socratic GUIDE tutor mode) is board
+    TODO-013, dispatched to the software-engineer seat, deadline
+    <2026-11-04 Tue 06:00> UTC.
+  - DoE notice (TODOS.org * NOTICES, 2026-11-03): five best-of-breed
+    AI-education candidates — item 1 is spec 009 / TODO-013; items 2-5
+    (study-kit generator, mastery tracker, learning-plan generator,
+    audio-overview script) await the Lead's boarding.
+  - Docs honesty (port-engineer segment 2026-11-04): README.org and
+    this file refreshed to the delivered tree (dependency law, gate
+    counts, CI cites); the stale STATUS commentary line in
+    org-learn.el:31 updated.
+  - Cite to the Lead (lead-owned files, not edited): the DoE notice
+    flagged the TODOS.org dispatch counter (reads 11 while TODO-012
+    exists) — worth a control-commit true-up; the CI byte-compile
+    narrowness above is a workflow edit for the Lead's lane.
