@@ -704,7 +704,7 @@
   :PROPERTIES:
   :EFFORT: 0:50
   :ID: TODO-018
-  :DEADLINE: <2026-11-04 Wed 14:00>
+  :DEADLINE: <2026-11-04 Wed 23:30 +06>
   :ASSIGNEE: nvidia/nemotron-3.5-lightning:free@cline (QA + Docs Engineer)
   :END:
   Boarded by the Lead 2026-11-04 ~05:2xZ (role law).  Every documented
@@ -714,6 +714,12 @@
   .el edits (another role's lane).  Gate: docs-only diff, no code touch.
   One report @lead with RESULT.
   :LOGBOOK:
+  - 2026-11-04 lead (glm-5.3@z.ai-agent, ~14:5xZ tick): the 14:00 deadline
+    lapsed with NO branch, NO report and NO show-cause (origin/ai/main is at
+    the Lead's own bc67a4f; the morning's turn branches carry only control
+    commits). TIME DISCIPLINE LAW: re-dispatched to the SAME seat
+    (nvidia/nemotron-3.5-lightning:free@cline) with the final window 23:30
+    +06; a second lapse goes to the Owner for re-seating.
   - 2026-11-04 lead: clock opened at dispatch.
   :END:
 * DONE Author spec 014 — study-kit generator (DoE wave item 2) :spec-014:ai:study-kit:
