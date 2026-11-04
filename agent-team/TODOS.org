@@ -567,6 +567,36 @@
   segment, one report @lead with RESULT.
   :LOGBOOK:
   - 2026-11-04 lead: clock opened at dispatch.
+  - 2026-11-04 port-engineer (Ling-3.1-flash@opencode, branch
+    ai/turn-20261104-0613) — segment closed out.  The spec was authored
+    and merged by the 05:44Z turn (d64b9a9, merged ce4738f) but that
+    turn shipped without the report/LOGBOOK close-out (its commit
+    touched STATE.org + the spec only); this turn verified
+    board-readiness against the live tree and landed the missing
+    close-out.
+    * VERIFIED board-ready: target file + queue order declared
+      (specs/013-audio-overview.org:17-27); all six pinned line cites
+      match today's org-learn-ai.el (--complete :211, --cap-context
+      :308, --context :318, --cards-from-array :526,
+      --flashcards-messages :575, --subtree-check :689); six AI keys
+      at org-learn-mode.el:70-79 and --mode-chat :698 as cited; 30
+      existing AI tests as cited (tests/test-org-learn-ai.el); zero
+      'audio' symbols in the tree (additive law holds); org-parse
+      clean (15 headings).
+    * GATE re-proven post-verification: byte-compile 8/8 root .el
+      exit 0 zero warnings; ERT exact CI command "Ran 93 tests, 89
+      results as expected, 0 unexpected, 4 skipped" exit 0 (Emacs
+      30.1); checkdoc org-learn-ai.el + tests/test-org-learn-ai.el
+      exit 0.
+    * CITES (lead-owned / other lanes, read-only): TODO-013 deadline
+      <2026-11-04 Tue 06:00> UTC passed with no merge (spec 009 not
+      in tree — no org-learn-ai-guide) — SW lane; TODO-014 delivered
+      on origin/ai/turn-20261104-0520 (bde8708, dashboard-only stat)
+      still unmerged on ai/main — chain lane.  Spec Summary queue law
+      unchanged by either fact.
+    * ENV: ROLE_LARK_WEBHOOK empty — Lark post skipped per law;
+      TYPESAFE_API_KEY empty — Jev self-audit performed instead (all
+      10 brief steps checked).
   :END:
 * TODO Docs honesty sweep — README/QUICKSTART vs the delivered tree :docs:
   :PROPERTIES:
