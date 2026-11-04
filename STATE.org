@@ -86,7 +86,10 @@
     TODO-013 (SW seat — deadline 06:00Z passed with no delivery,
     Lead escalated to @owner 11:3xZ); specs 013/014 board-ready
     (TODO-017/TODO-019 DONE, audited); spec 015 (learning-plan
-    generator, DoE item 4) awaits the TODO-020 digest + Lead boarding.
+    generator, DoE item 4) authored board-ready as
+    specs/015-learning-plan-generator.org by port-engineer 2026-11-04
+    (TODO-020 coordination law pinned in the spec; awaits Lead
+    boarding).
   - DoE notice (TODOS.org * NOTICES, 2026-11-03): five best-of-breed
     AI-education candidates — item 1 is spec 009 / TODO-013; item 3
     (mastery tracker / growth areas) drafted board-ready as

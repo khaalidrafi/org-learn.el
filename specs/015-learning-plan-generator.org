@@ -1,0 +1,485 @@
+#+TITLE: Spec 015 — Learning-plan generator (Owner AI-education wave, DoE item 4)
+#+FILETAGS: :spec:plan:roadmap:
+#+DATE: <2026-11-04 Wed>
+#+STATUS: SPEC — authored by port-engineer on the fallback lane (segment
+#+STATUS: brief step-2: no open board row matches the Port seat, no
+#+STATUS: unanswered @port-engineer ping in CHAT.org — smallest verifiable
+#+STATUS: improvement toward the objective; proposed for boarding as the
+#+STATUS: next Port row in CHAT.org 2026-11-04 16:5xZ, citing the 08:41Z
+#+STATUS: proposal at agent-team/CHAT.org:564).  Source: DoE notice item 4
+#+STATUS: in agent-team/TODOS.org * NOTICES [2026-11-03 19:2xZ], verbatim
+#+STATUS: (TODOS.org:58-60): "LEARNING-PLAN GENERATOR (via the org-roadmap
+#+STATUS: bridge): from a goal + notes generate an org plan with milestones
+#+STATUS: that flow into the real org-roadmap-progress API.  Suggested
+#+STATUS: :EFFORT: 1:00."  Upstream feature: Gemini Guided Learning plan
+#+STATUS: generation (DoE notice research digest, TODOS.org:33-34 — the
+#+STATUS: LearnLM five principles; this spec's milestone-size and
+#+STATUS: max-topics knobs are its cognitive-load-management principle made
+#+STATUS: concrete).  Coordination with the TODO-020 digest is pinned in
+#+STATUS: the Laws section below (spec 014's precedent).
+
+* Summary — target file and queue order (the collision law)
+
+- TARGET FILES: NEW FILE =org-learn-plan.el= (feature =org-learn-plan=,
+  one feature per file — root AGENTS.md convention), NEW test file
+  =tests/test-org-learn-plan.el=, ONE additive autoload block in
+  =org-learn.el= (after the spec 010 quickstart autoload :219-220,
+  before =(provide 'org-learn)= :222 — the spec 006 autoload law,
+  org-learn.el:186-196), ONE additive load line in
+  =tests/test-org-learn.el= (after :230, before =(provide 'test-org-learn)=
+  :232).  Nothing else is touched.
+- COLLISION STATUS: ZERO.  =org-learn-ai.el= is owned by TODO-013 (spec
+  009, SW seat, escalated to @owner 11:3xZ) with specs 013/014
+  implementations queued behind it — this spec edits no AI file; the AI
+  rider below only CALLS the stable choke point.  =org-learn-roadmap.el=
+  is only CALLED (its two public commands compose, below).  The
+  =org-learn-mode.el= keymap needs NO edit: =p= (plan-from-roadmap) and
+  =P= (progress-report) are already bound (org-learn-mode.el:74-75), so
+  the generated plan composes with the existing Learn keys the moment it
+  exists.  =org-learn-dashboard.el= (spec 012, merged 79a54b5) untouched.
+- QUEUE ORDER (declared here, implemented later): the CORE segment
+  (deterministic generator + interop) may implement immediately — it is
+  a new file with no dependency on any hot lane.  The AI decomposition
+  RIDER runs strictly AFTER specs 009/012/013's =org-learn-ai.el=
+  segments merge (the same queue rationale spec 014 pinned in its
+  Summary), re-based on the then-current =org-learn-ai.el=; it edits
+  only =org-learn-plan.el= itself.
+- Every change is ADDITIVE: no existing function's name, signature or
+  behavior changes anywhere in the tree.  The implementing segment
+  lands tests FIRST (red before green) per this spec's acceptance table
+  — the same law specs 011/012/013/014 pinned.
+
+* Goal
+
+Gemini's Guided Learning turns a goal plus the learner's material into
+an ordered PLAN: foundations first, a few milestones, each decomposing
+into tasks, adapting to what the learner already has.  org-learn's
+version, per the DoE notice's own mapping: from a GOAL + NOTES generate
+an Org plan — a roadmap-shaped TODO tree (root, milestones, tasks) —
+that FLOWS INTO THE EXISTING org-roadmap machinery with zero new
+rendering: =org-roadmap-get-todo-tree= / the 0-arg
+=org-roadmap-progress= API parse it (spec 011's real-dependency law),
+=org-learn-plan-from-roadmap= (org-learn-roadmap.el:287) turns its
+milestones into :drill: review items, and =org-learn-progress-report=
+(org-learn-roadmap.el:477) writes :LEARN_PROGRESS: onto its nodes.  The
+core generator is DETERMINISTIC (no network, pure grouping of the
+learner's own note headings — the honest scaffold); an optional AI
+decomposition rider (queued, below) re-titles and re-orders the
+milestones through the single choke point.  Text-to-speech, mind maps
+and the study kit are other DoE items — deliberately OUT of scope here
+(specs 013/014 own those lanes).
+
+* File law
+
+New =org-learn-plan.el=; the header carries the repo conventions
+(lexical-binding cookie, Author Khalid, GPL-3.0-or-later, checkdoc-clean
+docstrings, =(defgroup org-learn-plan ...)=).  Reuse, do not duplicate:
+
+- =org-learn-plan-from-roadmap= (org-learn-roadmap.el:287-320) — the
+  drill flow.  It reads topics at =org-learn-roadmap-topic-level=
+  (defcustom :76, default 2) under each top-level node, matches existing
+  titles idempotently (--existing-titles :262), and appends review items
+  shaped by =org-learn-roadmap--review-entry= (:272-285: =* TODO title
+  :drill:= with :LEARN_SOURCE: roadmap and reset LEARN_EASE/INTERVAL/
+  REPS/LAPSES) via =org-learn--append-entry=.  The plan generator never
+  re-implements any of that; its drill offer CALLS the command.
+- =org-learn-progress-report= (org-learn-roadmap.el:477) and its
+  rollup seam =org-learn-roadmap--progress-api-available-p= (:235-242,
+  the spec 011 seam law: tests bind the seam, never the function cell)
+  with =org-learn-roadmap--progress-rollup= (:243-259) — the progress
+  flow.  The report's no-stats fallback line "no review items yet
+  (plan first)" (:411) is the designed bridge from planning to review;
+  this spec closes that loop.
+- =org-learn-file= (org-learn.el:56) — the notes corpus the fallback
+  topic source reads (never visited; read via =insert-file-contents= in
+  a temp buffer, the --existing-titles :262-270 pattern).
+- The autoload law: =org-learn.el= carries the new command's autoload
+  (spec 006 precedent, org-learn.el:186-196); the feature itself is
+  never top-level-required by core org-learn.
+- org-roadmap stays at the boundary exactly like the bridge does: the
+  package is declared (org-learn.el:7, Package-Requires) and consumed
+  ONLY lazily through the bridge commands this spec calls.  The plan
+  file adds NO top-level =(require 'org-roadmap)=; its one direct
+  probe is the seam below.
+
+* Plan format law (pinned Org shape)
+
+The generated plan is a roadmap-shaped TODO tree — the same shape the
+roadmap.sh import produces (tests/support/org-roadmap-stub.el:122-133)
+so every org-roadmap parser consumes it:
+
+#+begin_src org
+* TODO Plan: Learn Org mode
+  :PROPERTIES:
+  :GOAL: Learn Org mode
+  :SOURCE: subtree
+  :END:
+** TODO Milestone 1: Org syntax
+*** TODO Org syntax
+*** TODO Headings and stars
+*** TODO Capture
+** TODO Milestone 2: Review scheduling
+*** TODO Review scheduling
+*** TODO Drill sessions
+# Generated by org-learn plan (spec 015) from subtree.
+#+end_src
+
+- Root: =* TODO Plan: <GOAL>= with a =:PROPERTIES:= drawer carrying
+  =:GOAL: <goal>= and =:SOURCE: <label>=; the SOURCE vocabulary is
+  CLOSED — =subtree= or =org-learn-file= (which topic branch won).
+- Milestones: =** TODO Milestone N: <first topic of the cluster>=
+  (level 2 = the org-roadmap milestone/topic level the bridge's
+  topic-level law consumes).
+- Tasks: =*** TODO <topic>= (level 3, the topic title verbatim).
+- Footer: exactly one blank line, then the Org comment
+  =# Generated by org-learn plan (spec 015) from <label>.= (honesty:
+  the buffer states its origin, the spec 013/014 footer law).
+- No dates, no SCHEDULED/DEADLINED (scope cut, below).  No :ID: (the
+  study-kit's org-id law is spec 014's; a plan is a draft until saved).
+
+* Topic source law (deterministic, ordered)
+
+The core selects topics WITHOUT any network, in this pinned order:
+
+1. SUBTREE branch — when the current buffer is Org and point is on a
+   heading: the titles of every heading STRICTLY inside the subtree
+   (level greater than point's heading level; the root itself
+   excluded), in document order, trimmed, deduplicated (first
+   occurrence wins).  Non-empty -> source label =subtree=.
+2. NOTES-FILE branch — otherwise: the TODO-state heading titles of
+   =org-learn-file= (org-learn.el:56; missing file -> nil), document
+   order, trimmed, deduplicated.  Non-empty -> source label
+   =org-learn-file=.  This reads the learner's existing capture corpus
+   — the same titles =org-learn-plan-from-roadmap= later matches for
+   idempotence, so a plan generated from notes drills exactly what the
+   learner already captured.
+3. Both empty -> =user-error= "org-learn: no notes to plan from (no
+   subtree topics and no org-learn-file)".
+
+The CAP law (cognitive-load management, LearnLM principle — DoE notice
+TODOS.org:33-34): after selection, when the topic count exceeds
+=org-learn-plan-max-topics= (defcustom, default 40), the list is
+truncated to the cap and the command messages
+="org-learn: plan capped at %d topics"= — a 500-heading subtree must
+never become a 167-milestone plan.
+
+* Milestone grouping law (pure)
+
+=org-learn-plan--milestones (topics)= — pure, table-driven:
+partition TOPICS into consecutive chunks of
+=org-learn-plan-milestone-size= (defcustom, default 3, integer >= 1;
+the pure function guards =(< 0 size)= else =user-error= "org-learn-
+plan-milestone-size must be >= 1").  Milestone i's title is
+=(format "Milestone %d: %s" (1+ i) (first-topic-of-chunk-i))=; its
+tasks are the chunk's topics verbatim.  The last chunk may be smaller.
+Empty topics -> nil (the source law already guards upstream).  Seven
+topics at size 3 -> milestones (3, 3, 1) — the pinned test case.
+
+* Render law (pure)
+
+=org-learn-plan--render (goal source milestones)= returns the complete
+buffer text, byte-exact per the format law above:
+
+- root line =(format "* TODO Plan: %s" goal)=; drawer lines
+  ="  :PROPERTIES:"=, =(format "  :GOAL: %s" goal)=,
+  =(format "  :SOURCE: %s" source)=, ="  :END:"=;
+- per milestone =(format "** TODO Milestone %d: %s" (1+ i) title)=
+  then per task ="*** TODO %s"=;
+- footer: one blank line then
+  =(format "# Generated by org-learn plan (spec 015) from %s." source)=.
+
+The renderer takes the milestone ALREADY-TITLED structure (the grouping
+law's output) so AI-decomposed milestones (rider, below) render through
+the same pure function — the rider changes the grouping, never the
+format.
+
+* Core law
+
+=org-learn-plan--generate (goal)= — the only stateful piece besides the
+command:
+
+1. Guard: blank goal (trimmed) -> =user-error= "org-learn: no goal for
+   the plan".  No buffer is touched before this passes (no-litter law).
+2. Topics via the source selection law above; label recorded.
+3. Cap law applied (truncate + message).
+4. =milestones = (org-learn-plan--milestones topics)=.
+5. =text = (org-learn-plan--render goal label milestones)=.
+6. Buffer: =(get-buffer-create org-learn-plan-buffer-name)=,
+   =erase-buffer= (reset law — every generation replaces the previous
+   plan, the spec 013/014 buffer law), insert, =org-mode=,
+   =(goto-char (point-min))=.  Return the buffer.  NO window operations
+   in the core (batch-safe; ERT drives it directly — the spec 013
+   testability law).
+
+* Command law
+
+=org-learn-plan-generate= (autoload, interactive, no args in the core
+segment):
+
+1. =read-string "Learning goal: "= with default =(org-get-heading t t
+   t t)= when the buffer is Org and point is on a heading, else no
+   default.  Trim; blank -> =user-error= "org-learn: no goal for the
+   plan".
+2. Call the core; =pop-to-buffer= the plan buffer (core left point at
+   min).
+3. =message= one line: ="org-learn: plan ready (%d milestones, %d
+   tasks)"= with the counts.
+4. DRILL OFFER (pinned order — drill first, it mutates
+   =org-learn-file= while the plan is fresh): the seam
+   =org-learn-plan--roadmap-available-p () = (and (require 'org-roadmap
+   nil t) t)= (the spec 011 seam law: tests =cl-letf= THIS predicate,
+   never the =require= — the =org-learn-roadmap--progress-api-
+   available-p= precedent, org-learn-roadmap.el:235-242).  When the
+   seam is true and =yes-or-no-p "Create :drill: review items from the
+   plan milestones? "= accepts: =(with-current-buffer <plan-buffer>
+   (goto-char (point-min)) (org-learn-plan-from-roadmap))= — the
+   bridge command's own guards, lazy org-roadmap require and install
+   hint (org-learn-roadmap.el:107-114, :87) stand as-is.
+5. SAVE OFFER: =yes-or-no-p "Save the plan to an Org file? "= ->
+   =read-file-name "Save plan to: "=; =write-region= the plan buffer to
+   the file; =message= ="org-learn: plan saved to %s"=.  Declined ->
+   the buffer stays as a draft (the user edits and C-x C-s later).
+
+* Interop laws — the DoE "flow" sentence, made testable
+
+The DoE notice pins "milestones that flow into the real
+org-roadmap-progress API".  Three flows, all reusing DELIVERED code:
+
+- DRILL FLOW: =org-learn-plan-from-roadmap= (org-learn-roadmap.el:287)
+  over the generated plan creates ONE :drill: review item per
+  MILESTONE (level-2 = the topic-level law, defcustom :76), titled
+  with the milestone text (=Milestone N: <topic>=), carrying
+  :LEARN_SOURCE: roadmap and reset LEARN_* properties (:272-285),
+  idempotent on re-run (:262).  Level-3 tasks are NOT drilled — the
+  topic-level law reads level 2; the milestone is the drillable
+  commitment, its tasks are the steps (a future amendment may tag
+  tasks; declared here so it is a conscious cut, not an oversight).
+- PROGRESS FLOW: =org-learn-progress-report= (org-learn-roadmap.el:477)
+  with the plan buffer current and point on the root writes
+  :LEARN_PROGRESS: onto every plan node (--write-progress :395) and
+  renders the read-only report; the rollup runs through the REAL
+  =org-roadmap-progress= whenever that API is bound (the seam :235-242,
+  --progress-rollup :243-259 records =rollup: org-roadmap= vs =local
+  fallback=).  With no review stats yet the report shows the designed
+  fallback line "no review items yet (plan first)" (:411) — planning
+  and reviewing are one loop.
+- REAL-API FLOW: the 0-arg =org-roadmap-progress= (spec 011's law;
+  stub mirror tests/support/org-roadmap-stub.el:153) parses the CURRENT
+  buffer — the generated plan buffer — and returns the milestone
+  progress alist.  A fresh plan yields the root cell =(0 .
+  <task-count>)=; marking tasks DONE and re-running increments the
+  done half.  This is the literal "flow into the real
+  org-roadmap-progress API".
+
+* AI decomposition rider (QUEUED — the coordination law)
+
+The best-of-breed planner (Gemini Guided Learning) decomposes a goal
+pedagogically, not by document order.  The rider adds that as an
+OPTIONAL path on the SAME new file — zero collision with the AI lane:
+
+- Symbols (all first-use, declared here): defconst
+  =org-learn-plan--ai-prompt=; =org-learn-plan--ai-messages (goal
+  topics)=; =org-learn-plan--ai-parse (reply)=; the seam
+  =org-learn-plan--ai-available-p () = (and (require 'org-learn-ai nil
+  t) t)=; rider core =org-learn-plan--generate-ai (goal)=.
+- ONE choke call: =(org-learn-ai--complete (org-learn-plan--ai-messages
+  goal topics))= — the stable single network door (org-learn-ai.el:211,
+  pinned by specs 007/013/014).  The backend law (auto/gptel/keyless,
+  spec 007) and the SECRET LAW are inherited via the choke point; zero
+  new network plumbing.
+- Prompt (pinned verbatim): "You decompose a learning goal into an
+  ordered milestone plan.  Reply with only a JSON array of 2-5 objects
+  with keys \"milestone\" (short title) and \"tasks\" (an array of 2-4
+  short task strings).  Order the milestones pedagogically, foundations
+  first.  No prose, no markdown fences."
+- Messages: the defconst system prompt, then ONE user message
+  ="Learning goal: %s\n\nSource topics (%s): %s\n\nGenerate the
+  milestone plan now."= with the source label and topics joined
+  =", "=.
+- Parse: the spec 014 tolerant-scan shape
+  (=org-learn-ai--extract-json-array=, specs/014-study-kit.org parse
+  laws) with a NEW validator — a vector of alists with a non-blank
+  string =milestone= and a non-empty list of non-blank string =tasks=;
+  unusable items DROPPED (the --cards-from-array drop law); nothing
+  usable -> =user-error=.
+- Render: the AI milestones feed the SAME =org-learn-plan--render= —
+  the rider changes the grouping, never the format (additive law).
+- Graceful degradation: the seam false (org-learn-ai absent) ->
+  =message= "org-learn: AI plan unavailable — deterministic milestones
+  used" and the deterministic core runs.  Garbage reply on the AI path
+  -> =user-error= (no silent mid-AI fallback — the parse law).
+- Command evolution (same-file, no other lane touched): the rider
+  amends the command to =(org-learn-plan-generate &optional ai)= with
+  =(interactive "P")=; a prefix arg selects the AI path, no prefix the
+  deterministic path.
+- QUEUE LAW (pinned): the rider segment implements strictly AFTER
+  specs 009/012/013's =org-learn-ai.el= segments merge (TODO-013 plus
+  the spec 013/014 implementations), re-based on the then-current
+  =org-learn-ai.el= — the same collision rationale spec 014's Summary
+  pins.  It edits ONLY =org-learn-plan.el= and its test file; it never
+  edits =org-learn-ai.el= (it calls the choke point, nothing more).
+
+* Scope cuts (pinned, with reasons)
+
+- Keymap and Learn-menu binding: OUT.  =org-learn-mode.el= is hot
+  (TODO-013's rider edits it; specs 013/014 cut their bindings for the
+  same reason) — and the cut costs nothing here: the plan composes
+  through the EXISTING =p= and =P= bindings (org-learn-mode.el:74-75)
+  the moment it exists.  M-x entry only; a binding is a future
+  docs/keymap segment.
+- Dates, deadlines, SCHEDULED: OUT.  Timing is the review scheduler's
+  domain (org-learn-review.el, spec 002); a future rider may schedule
+  milestones from the scheduler's next-due law.  The plan is an ORDER,
+  not a calendar.
+- No insertion into =org-learn-file= (unlike plan-from-roadmap's drill
+  writes, which are the user's explicit offer): the plan is a buffer
+  draft; the save offer is the only write path.
+- No AI in the core segment (above) — the deterministic scaffold is
+  the honest MVP and the rider is queued, not dropped.
+- No dashboard line (spec 012's growth-areas lane just merged; a
+  "active plan" line is a future dashboard segment), no export
+  (agenda/export are Org's own), no per-task :drill: tagging (topic-
+  level law, pinned in the drill flow), no per-milestone difficulty
+  (spec 014's difficulty vocabulary stays in the study-kit lane).
+
+* Acceptance criteria (tests land FIRST, red before green)
+
+New =tests/test-org-learn-plan.el= (loaded by =tests/test-org-learn.el=
+after :230); the stub goes on the load-path ONLY inside the interop
+rows, exactly the spec 006/011 pattern (tests/test-org-learn-roadmap.el:
+40-52).  Zero network anywhere — the core is deterministic; the rider
+rows (marked QUEUED) mock the choke point with =cl-letf= as always:
+
+1. Grouping law (pure): 7 topics at size 3 -> exactly 3 milestones,
+   task counts (3 3 1), titles =("Milestone 1: t1" "Milestone 2: t4"
+   "Milestone 3: t7")=; size 1 -> one milestone per topic; a single
+   topic -> one milestone; empty topics -> nil; size 0 or negative ->
+   user-error.
+2. Render law (pure): the pinned 5-topic example renders byte-exact —
+   root line, drawer (:GOAL: :SOURCE:), milestone/task indentation,
+   blank line, footer comment (assert the full string, not fragments).
+3. Subtree topics: Org buffer, point on a heading with subheadings ->
+   the exact title list, document order, root excluded, trimmed,
+   deduplicated (a repeated heading title appears once); a heading
+   with NO subheadings falls through to the notes-file branch.
+4. Notes-file topics: =org-learn-file= let-bound to a temp Org file
+   with TODO headings -> exactly those titles in order; a non-TODO
+   heading is excluded; a missing file -> nil.
+5. Guards, no litter: blank goal -> user-error with NO plan buffer in
+   existence; no topics anywhere -> user-error with no plan buffer;
+   both assert =(get-buffer org-learn-plan-buffer-name)= is nil.
+6. Core end-to-end (deterministic): =(org-learn-plan--generate
+   "Learn Org mode")= in a temp Org buffer at a heading returns the
+   plan buffer; it is in =org-mode=; its text contains the root line,
+   the :GOAL:/:SOURCE: properties, the milestone and task lines, the
+   footer; =message= log carries the pinned ready line with the right
+   counts.
+7. Reset law: two consecutive generations leave ONLY the latest text
+   in =*org-learn-plan*= (erase-buffer law).
+8. Command law: =org-learn-plan-generate= is a command (=commandp=);
+   with =read-string= mocked (the FOCUS-test mocking precedent) the
+   goal default is the subtree heading when point is on one, and the
+   trimmed goal reaches the render.
+9. Drill offer, seam-true (stub world): =cl-letf= the
+   =org-learn-plan--roadmap-available-p= seam true, =yes-or-no-p=
+   mocked per-question -> =org-learn-plan-from-roadmap= ran on the plan
+   buffer (point on the root): =org-learn-file= (temp, let-bound)
+   gained EXACTLY one :drill: item per milestone, titled with the
+   milestone text, carrying :LEARN_SOURCE: roadmap and the reset
+   LEARN_* properties; a second run adds ZERO (idempotence, :262).
+10. Drill offer, seam-false: seam =cl-letf=ed nil -> the offer is
+    never asked (=yes-or-no-p= call count zero), no error, the plan
+    buffer still returned (graceful degradation law).
+11. Save offer: =yes-or-no-p= t + =read-file-name= mocked to a temp
+    path -> the file's content equals the plan buffer text byte-for-
+    byte; declined -> no file written.
+12. Progress flow (stub world): with the plan buffer current and point
+    on the root, =org-learn-progress-report= writes :LEARN_PROGRESS:
+    onto the plan's milestone headings and the report buffer is
+    read-only org-mode containing ="rollup: org-roadmap"= (the stub
+    provides the 0-arg API, so the seam :235 is true) and the milestone
+    summary lines.
+13. Real-API flow (stub world): in the plan buffer, =(org-roadmap-
+    progress)= returns exactly =((root-title . (0 . <task-count>)))
+    = for a fresh plan, and =(0 . <task-count>)= -> =(<done> .
+    <task-count>)= after marking one task TODO->DONE and re-running —
+    the literal DoE sentence against the stub mirror.
+14. REAL-dep world (spec 011 law): with the org-roadmap sibling
+    mounted, rows 9/12/13 re-run against the REAL package — the plan
+    tree parses through the real =org-roadmap-get-todo-tree=, the real
+    0-arg =org-roadmap-progress= returns the milestone alist, the real
+    bridge commands drill and report it; the suite LOUD-skips
+    (=ert-skip= with the install hint) when the sibling is absent (CI
+    default).  A stub-drift guard row asserts the stub's consumed
+    signatures still match the real package's (the spec 011 law).
+15. Boundary law: =org-learn-plan.el= loads under =emacs -Q --batch=
+    with org-roadmap ABSENT (source scan: zero top-level
+    =(require 'org-roadmap)=; the only probe is the seam's =(require
+    'org-roadmap nil t)=); the lazy require + install hint are
+    inherited from the bridge (org-learn-roadmap.el:107-114), already
+    tested by the spec 006 suite — no re-test here, cite only.
+16. QUEUED rider rows (land WITH the rider, after the AI lane merges):
+    mocked choke records EXACTLY ONE call whose system message is the
+    pinned defconst and whose user message embeds goal, source label
+    and topics; valid JSON renders AI-titled milestones through the
+    same render law; the garbage matrix (no array, empty array,
+    non-string milestone, empty tasks, blank strings) raises
+    user-error or drops per the parse law; seam-false -> the pinned
+    unavailable message + deterministic output; prefix-arg law (C-u
+    selects the AI path); rider additivity — the core rows 1-15 stay
+    green untouched.
+17. Gate: byte-compile 0 warnings (=org-learn-plan.el= AND
+    =org-learn.el=), checkdoc 0 on all touched files, the suite all
+    green in both worlds (stub world always; real-dep world loud-skips
+    when the sibling is unmounted), one segment, one report @lead with
+    RESULT: DONE | PARTIAL | BLOCKED.
+
+* Laws
+
+- Additive-only law: no existing symbol is renamed, re-signatured or
+  re-behaved; the existing 97-test suite must stay green with only the
+  loader line added.  New public symbols all carry the =org-learn-plan-=
+  prefix (root AGENTS.md convention); the full first-use list is pinned
+  in the Summary and the rider section.
+- Pure-path law: grouping, rendering and both topic scans are pure (or
+  temp-buffer-local); the core and the command are the only stateful
+  pieces (buffer reset, the two offers).
+- No-litter law: every guard raises BEFORE any plan buffer is created
+  or any file written (row 5).
+- Seam law: tests bind =org-learn-plan--roadmap-available-p= and
+  =org-learn-plan--ai-available-p=, never =require='s function cell and
+  never =org-roadmap-progress='s (the org-learn-roadmap.el:235-242
+  precedent, cited).
+- Choke law (rider only): exactly ONE =org-learn-ai--complete= call
+  per AI generation; the backend law (spec 007) and SECRET LAW
+  inherited unchanged.
+- org-roadmap boundary law: declared (org-learn.el:7), consumed lazily
+  through the bridge commands and the one seam probe; never
+  top-level-required; core org-learn still loads under CI =-Q=.
+- Coordination law (TODO-020): the Lead's board law says to coordinate
+  acceptance criteria via the TODO-020 research digest.  At authoring
+  time (chat tail scanned 2026-11-04 16:5xZ) the digest v2 has NOT
+  landed (the devin seat is provisional; TODO-020 clock-open only).
+  This spec therefore pins acceptance from the DoE notice's own
+  mapping NOW — goal + notes -> milestones -> the real progress API —
+  so the implementing segment is never blocked on a provisional seat.
+  When the digest lands, the Lead may board deltas as spec amendments
+  (the spec 007 amendment precedent; spec 014's identical law,
+  specs/014-study-kit.org:504); the implementing segment re-reads the
+  digest before coding.
+- TIME LAW: effort + deadline are the Lead's at boarding (DoE suggests
+  1:00); the clock opens at dispatch.
+- Board files never ride feature commits (the standing law).
+
+* Gate
+
+#+begin_src sh
+emacs -Q --batch -L . --eval "(byte-compile-file \"org-learn-plan.el\")"
+emacs -Q --batch -L . --eval "(byte-compile-file \"org-learn.el\")"
+emacs -Q --batch -L . -l tests/test-org-learn.el \
+      -f ert-run-tests-batch-and-exit
+#+end_src
+
+(checkdoc on =org-learn-plan.el= and =org-learn.el= is part of
+acceptance row 17; the real-dep world adds =-L <org-roadmap sibling>=
+per the spec 011 gate law.)
