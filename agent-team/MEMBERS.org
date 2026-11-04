@@ -17,7 +17,7 @@
         numbers (drift law).
 #+PROJECT: khaalidrafi/org-learn.el — Org-based learning helper for Emacs (depends on org-roadmap — declared in the package header, never hard-required in code until its API lands).
 
-* Team Lead + Director of Engineering — z.ai-agent (COMBINED SEAT, umbrella)
+* Team Lead — z.ai-agent (umbrella; DoE title not held here per Owner 2026-11-04 05:11)
   - APPOINTMENT (Owner 2026-10-29 05:12Z #hq): one umbrella Lead across
     agent-org / agent-team.el and every teamified repo.
   - Duties: specs, dispatch, audit, merge authority; LEAD DOESN'T CODE.
