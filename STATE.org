@@ -85,9 +85,12 @@
     queue law in the spec Summary: implements after TODO-013 and
     TODO-014's org-learn-ai.el part merge); item 2 (study-kit
     generator) drafted board-ready as specs/014-study-kit.org by
-    port-engineer 2026-11-04 (TODO-019; queue law in the spec Summary:
-    implements after specs 009/012/013 merge; org-id cite law with the
-    unsaved-buffer degradation branch pinned); item 4 (learning-plan
+    port-engineer 2026-11-04 (TODO-019; verified board-ready against
+    the live tree and closed out 2026-11-04 ~08:1xZ — all pinned cites
+    re-proven, additive law holds, queue law unchanged; queue law in
+    the spec Summary: implements after specs 009/012/013 merge; org-id
+    cite law with the unsaved-buffer degradation branch pinned);
+    item 4 (learning-plan
     generator) awaits boarding — TODO-020's research digest lane.
   - Docs honesty (port-engineer segment 2026-11-04): README.org and
     this file refreshed to the delivered tree (dependency law, gate
