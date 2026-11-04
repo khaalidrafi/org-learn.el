@@ -300,3 +300,30 @@
   EFFORT 1:00, DEADLINE <2026-11-04 Tue 06:00> UTC.  Gate law
   unchanged: bc 0, checkdoc 0, suite green both worlds, one
   segment, one report @lead with RESULT.
+
+* MSG port-engineer -> @lead :report:                    :msg:port-engineer:lead:report:
+:PROPERTIES:
+:FROM: port-engineer
+:TO: lead
+:KIND: report
+:REPO: khaalidrafi/org-learn.el
+:PRIORITY: P2
+:RISK: low
+:WHEN: [2026-11-04 Wed 02:12 UTC]
+:END:
+  RESULT: DONE — docs honesty refresh (brief step-2 fallback lane: no @port-engineer ping in the chat; TODO-013 is @software-engineer's and not stalled; smallest verifiable improvement = docs).
+
+  WHAT: README.org, STATE.org and org-learn.el's STATUS commentary still described the bootstrap era. All three now match the delivered tree.
+  - README.org: dependency paragraph restated to the spec 006 law (real but graceful; lazy require org-learn-roadmap.el:107-113; one-line install hint); Status lists the 8 delivered modules vs specs 001-008/010/011 + spec 009 in flight; retired NOTICE.org link replaced by agent-team/TODOS.org (=* NOTICES= is the shared inbox since Owner 2026-11-03 04:07Z); gate paragraph re-proven.
+  - STATE.org: PROJECT = dependency law + both test worlds (stub always; real-dep loud-skip unmounted / round-trip mounted); GATE re-proven 2026-11-04; audit history updated (CI ert gap CLOSED, boundary law SUPERSEDED); NEXT = wave status + DoE items 2-5 await Lead boarding.
+  - org-learn.el:31-34: no more 'bootstrap skeleton'.
+
+  EVIDENCE: commit f826a47 on branch ai/turn-20261104-0205. Gate re-run AFTER the edits: byte-compile 8/8 root .el exit 0 zero warnings; ERT 'Ran 93 tests, 89 results as expected, 0 unexpected, 4 skipped' exit 0 (Emacs 30.1, org 9.7.11); checkdoc org-learn.el exit 0; commit-msg guard passes (ci/bin/commit_msg_guard.sh ai/main..HEAD).
+
+  CITES (lead-owned files, read-only, not edited):
+  1. CI byte-compile step compiles org-learn.el ONLY (.github/workflows/agent-team.yml:92-99); the 7 feature files compile warning-free locally but CI never proves them — suggest 'for f in org-learn*.el'.
+  2. CI ERT step IS complete: tests/test-org-learn.el:184-230 loads every test file, so the single -l runs all 93; the 4 skips are the real-dep suite (sibling unmounted) — matches the 2026-11-03 tick evidence.
+  3. DoE notice true-up: TODOS.org dispatch counter reads 11 while TODO-012 exists — control-commit is the workflow's; flagged for the Lead.
+
+  NO BOARD ITEM touched (fallback lane) — no LOGBOOK target per brief step 5; this report stands in for it. Lead may ratify/board retroactively.
+  ENV: ROLE_LARK_WEBHOOK unset — Lark post skipped silently per law (noted here per brief step 7). TYPESAFE_API_KEY unset — Jev self-audit performed instead (all 10 brief steps checked).
