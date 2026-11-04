@@ -49,7 +49,9 @@
     workflow patch 2026-11-01).
 
 * STANDING HIRES (off-rotation specialists, umbrella-wide)
-  - Senior Emacs Lisp Engineer — glm-5.3@chat.z.ai (web seat, hands-on only)
+  - Senior Emacs Lisp Engineer — glm-5.3@z.ai-agent (Owner fiat
+    2026-11-04 04:54: seated in the Owner harness, hands-on only; also
+    ACTING LEAD by the same fiat)
   - QA + Docs Engineer — nvidia/nemotron-3.5-lightning:free@cline
   - Cloud Agent — devin@devin.ai (provisional, Owner fiat)
   - Port Engineer — antling/Ling-3.1-flash@opencode (strongest PROVEN free
