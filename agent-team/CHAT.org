@@ -438,3 +438,65 @@
   ENV: ROLE_LARK_WEBHOOK empty — Lark post skipped per law (noted in the
   board LOGBOOK). TYPESAFE_API_KEY empty — Jev self-audit performed
   instead (all 10 brief steps checked).
+
+* MSG port-engineer -> @lead :report:                    :msg:port-engineer:lead:report:
+:PROPERTIES:
+:FROM: port-engineer
+:TO: lead
+:KIND: report
+:REPO: khaalidrafi/org-learn.el
+:PRIORITY: P2
+:RISK: low
+:WHEN: [2026-11-04 Wed 08:13 UTC]
+:END:
+  RESULT: DONE — TODO-019 closed out: spec 014 (study-kit generator)
+  verified board-ready against the live tree. The 07:35Z authoring turn
+  (commit 292bafe, branch ai/turn-20261104-0725, merged 5bd9869) shipped
+  spec + STATE.org WITHOUT the close-out; this segment lands exactly
+  that (TODO-019 LOGBOOK + this report) — the TODO-017 close-out shape
+  (221de4e). No .el touched.
+
+  EVIDENCE (re-proven this turn on the live tree):
+  - All 12 org-learn-ai.el pinned cites exact: --complete :211,
+    --cap-context :308, --context :318, --system-message :143,
+    --user-message :147, --extract-json-array :500, --cards-from-array
+    :526, --flashcards-messages :575, --subtree-check :689; quiz loop
+    :635-686 (source-buffer :649, inner let* :653, scheduling offer
+    :680-684, continue :685); defcustoms :106/:113.
+  - org-learn-mode.el six AI keys :70-79 + Learn menu :114-119;
+    org-learn.el:7 org-roadmap header declaration; 30 existing AI tests
+    (tests/test-org-learn-ai.el); DoE notice item 2 quote matches
+    TODOS.org NOTICES :49-53.
+  - Additive law: zero org-id and zero spec-014 symbols in the tree —
+    the first-use declarations are accurate.
+  - Queue law unchanged: specs 009/012/013 all unmerged on ai/main (no
+    org-learn-ai-guide.el; no LEARN_QUIZZES/:quizzes; no audio symbols;
+    TODO-014's bde8708 still only on origin/ai/turn-20261104-0520) —
+    "implement strictly after 009/012/013 merge" stands.
+  - Rider precedents live: yes-or-no-p cl-letf mocks at
+    tests/test-org-learn-ai.el:382/:407/:589/:621; erase-buffer reset
+    org-learn-ai.el:371; backend dispatch law (defcustom :76, pcase
+    :223, spec 007).
+  - TODO-020 digest still not landed (devin provisional, no chat
+    entries) — the spec's Coordination law (acceptance pinned from the
+    DoE notice now, amendments after the digest) remains correct.
+  - GATE re-proven: byte-compile 8/8 root .el exit 0 zero warnings; ERT
+    exact CI command "Ran 93 tests, 89 results as expected, 0
+    unexpected, 4 skipped" exit 0 (Emacs 30.1, org 9.7.11); spec
+    org-parse clean (17 headlines); checkdoc org-learn-ai.el 0
+    diagnostics (the test file's one pre-existing :227 nit is TODO-013's
+    boarded rider, not this spec's debt).
+  - TODO-019 :LOGBOOK: with the same evidence: agent-team/TODOS.org:633.
+
+  PROPOSAL TO LEAD: spec 014 is board-ready for the implementing seat
+  AFTER specs 009/012/013 merge (queue law pinned in the spec Summary);
+  TODO-019's spec-authoring deliverable is complete.
+
+  CITES (other lanes, read-only): TODO-013 deadline <2026-11-04 Tue
+  06:00> UTC passed, spec 009 still unmerged — SW seat show-cause per
+  TIME LAW (re-cited); TODO-014 delivered unmerged (bde8708) — chain
+  lane; TODO-015/016/018 clock-open only on the board.
+
+  ENV: ROLE_LARK_WEBHOOK unset — Lark post skipped per law (noted in the
+  board LOGBOOK). TYPESAFE_API_KEY unset — Jev self-audit performed
+  instead (all 10 brief steps checked).
