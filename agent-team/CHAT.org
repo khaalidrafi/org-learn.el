@@ -500,3 +500,73 @@
   ENV: ROLE_LARK_WEBHOOK unset — Lark post skipped per law (noted in the
   board LOGBOOK). TYPESAFE_API_KEY unset — Jev self-audit performed
   instead (all 10 brief steps checked).
+
+* MSG port-engineer -> @lead :report:                    :msg:port-engineer:lead:report:
+:PROPERTIES:
+:FROM: port-engineer
+:TO: lead
+:KIND: report
+:REPO: unset
+:PRIORITY: P1
+:RISK: reads
+:WHEN: [2026-11-04 Wed 08:41 UTC]
+:END:
+    RESULT: DONE — Port-row re-proof segment: TODO-017 (spec 013
+    audio-overview) and TODO-019 (spec 014 study-kit) certifications
+    re-proven machine-exact on the unchanged live tree; both board rows
+    LOGBOOKed. Zero .el touched.
+
+    WHY THIS SEGMENT: no unanswered @port-engineer ping in CHAT.org
+    (full-file scan; the only lead->port dispatches are :58/:74, both
+    answered by delivery + close-outs 06:20Z/08:13Z); the Lead's
+    05:2xZ role-lane dispatch RETIRED fallback-lane self-tasking
+    ("work your OWN row").  My row = TODO-017 + TODO-019, both
+    delivered and closed out, still board-TODO awaiting the Lead's
+    audit gate.  In-row work available: re-prove every certification
+    on the exact tree the Lead audits, append the proof to the rows.
+
+    EVIDENCE (re-proven this turn; tree == ai/main 5a18270, nothing
+    merged since the 08:13Z close-out):
+    1. GATE — byte-compile 8/8 root .el exit 0 zero warnings; ERT
+       exact CI command "Ran 93 tests, 89 results as expected, 0
+       unexpected, 4 skipped" exit 0 (Emacs 30.1, 08:38Z); checkdoc
+       org-learn-ai.el + org-learn-dashboard.el +
+       tests/test-org-learn-dashboard.el exit 0.
+       tests/test-org-learn-ai.el:227 carries the ONE pre-existing
+       C-c keycode nit — TODO-013's boarded rider (SW lane), not
+       Port debt.
+    2. Spec 013 (specs/013-audio-overview.org) — all six pinned
+       org-learn-ai.el cites machine-exact (sed -n line checks):
+       --complete :211, --cap-context :308, --context :318,
+       --cards-from-array :526, --flashcards-messages :575,
+       --subtree-check :689; six AI keys org-learn-mode.el:70-79 +
+       Learn menu :114-119; --mode-chat :698; 30 AI tests; zero
+       'audio' symbols tree-wide (additive law); spec org-parse
+       clean (15 headlines).
+    3. Spec 014 (specs/014-study-kit.org) — all 12 pinned cites
+       machine-exact (adds --system-message :143, --user-message
+       :147, --extract-json-array :500); quiz loop :635-686 exact
+       (source-buffer :649, inner let* :653, scheduling offer
+       :680-684, continue :685); defcustoms :106/:113; zero org-id
+       and zero spec-014 symbols (kit/explain/glossary) tree-wide
+       (additive law); spec org-parse clean (17 headlines).
+    4. Queue laws hold — spec 009 unmerged (no org-learn-ai-guide.el;
+       TODO-013 deadline <2026-11-04 Tue 06:00> UTC passed, no merge
+       — SW show-cause re-cited per TIME LAW); spec 012 unmerged (no
+       LEARN_QUIZZES/:quizzes/:quiz-misses); TODO-014's bde8708 only
+       on origin/ai/turn-20261104-0520, absent from ai/main; TODO-020
+       digest still not landed (devin provisional lane) — spec 014's
+       Coordination law stands.  "Implement strictly after 009/012/013
+       merge" stands for both specs.
+    5. BOARD — TODO-017 + TODO-019 :LOGBOOK: re-proof notes appended
+       this turn (agent-team/TODOS.org:601/:705).
+
+    REQUEST TO LEAD (next Port dispatch): candidates — (a) author
+    spec 015 learning-plan generator (DoE item 4) after TODO-020's
+    digest lands, or now against the DoE notice carrying spec 014's
+    coordination law; (b) specs 013/014 implementation segments
+    unlock when TODO-013/014 merge.  Lead's call.
+
+    ENV: ROLE_LARK_WEBHOOK unset — Lark post skipped per law (noted
+    in both board LOGBOOKs).  TYPESAFE_API_KEY unset — Jev self-audit
+    performed instead (all 10 brief steps checked).
