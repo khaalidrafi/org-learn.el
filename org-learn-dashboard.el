@@ -54,6 +54,18 @@
 ;; org-roadmap stays at the boundary: it is never required here
 ;; (AGENTS.md); the spec 011 Roadmap line only ever runs through
 ;; `featurep' guards into the already-loaded roadmap bridge.
+;;
+;; Spec 012 (specs/012-mastery-tracker.org): mastery tracker + growth
+;; areas.  The scan gains additive quiz counters (LEARN_QUIZZES /
+;; LEARN_QUIZ_MISSES), topic-stats gains :leeches / :quizzes /
+;; :quiz-misses plus the topic's own :file / :line, and two pure
+;; functions roll them up: `org-learn-dashboard--mastery' (weighted
+;; mean over the present components, renormalized) and
+;; `org-learn-dashboard--growth-areas' (strictly below
+;; `org-learn-dashboard-growth-threshold', worst-first).  The Today
+;; section renders one Growth areas bullet (org links file:LINE with
+;; mastery percents), silent when empty — the Roadmap line's silence
+;; law.  Pure compute path, nothing new stored.
 
 ;;; Code:
 
@@ -81,6 +93,13 @@
   "Pomodoro length in minutes for `org-learn-study', or nil for no timer.
 When the timer fires it clocks out the running study clock."
   :type '(choice (const :tag "No timer" nil) (natnum :tag "Minutes"))
+  :group 'org-learn-dashboard)
+
+(defcustom org-learn-dashboard-growth-threshold 50
+  "Mastery below which a topic counts as a growth area.
+An integer percent; a topic whose mastery EQUALS the threshold is
+not a growth area (the comparison is strict)."
+  :type '(natnum :tag "Mastery percent strictly below which topics grow")
   :group 'org-learn-dashboard)
 
 (defconst org-learn-dashboard--buffer "*org-learn-dashboard*"
@@ -137,8 +156,10 @@ POS points at the entry heading in the current buffer."
 (defun org-learn-dashboard--scan-file (file)
   "Return the entry facts of FILE as a list of plists.
 Each plist carries :title :level :pos :file :line :scheduled :reps
-:lapses :ease :leech :has-body :last-review :reviewed-today.  Pure
-data for `org-learn-dashboard--data'; no display happens here."
+:lapses :ease :leech :has-body :last-review :reviewed-today plus
+the spec 012 quiz counters :quizzes / :quiz-misses (LEARN_QUIZZES
+/ LEARN_QUIZ_MISSES, missing = 0).  Pure data for
+`org-learn-dashboard--data'; no display happens here."
   (let ((buffer (find-file-noselect file))
         (today (format-time-string "%Y-%m-%d"))
         entries)
@@ -152,6 +173,13 @@ data for `org-learn-dashboard--data'; no display happens here."
                   (lapses (string-to-number
                            (or (org-entry-get (point) "LEARN_LAPSES") "0")))
                   (ease-string (org-entry-get (point) "LEARN_EASE"))
+                  (quizzes (string-to-number
+                            (or (org-entry-get (point) "LEARN_QUIZZES")
+                                "0")))
+                  (quiz-misses (string-to-number
+                                (or (org-entry-get (point)
+                                                   "LEARN_QUIZ_MISSES")
+                                    "0")))
                   (last (org-learn-dashboard--last-review-time (point))))
              (push (list :title (org-get-heading t t t t)
                          :level (org-current-level)
@@ -164,6 +192,8 @@ data for `org-learn-dashboard--data'; no display happens here."
                          :ease (and ease-string
                                     (string-to-number ease-string))
                          :leech (member "leech" (org-get-tags (point) t))
+                         :quizzes quizzes
+                         :quiz-misses quiz-misses
                          :has-body (org-learn-review--has-body-p)
                          :last-review last
                          :reviewed-today
@@ -208,7 +238,10 @@ current when the stats are requested.  A hand-rolled ENTRY without
 Items are the in-system descendants of each topic (SCHEDULED or
 LEARN_REPS present); ease averages the LEARN_EASE values, retention
 aggregates lapses over reps and the last review is the newest
-LOGBOOK note date.  Position comparisons stay within one file."
+LOGBOOK note date.  Spec 012 adds :leeches (count of leech items),
+:quizzes / :quiz-misses (sums over the topic's items) and the
+topic's own :file / :line (the growth-area link coordinates).
+Position comparisons stay within one file."
   (let ((topics (seq-filter (lambda (entry)
                               (= (plist-get entry :level) 1))
                             entries)))
@@ -248,8 +281,91 @@ LOGBOOK note date.  Position comparisons stay within one file."
                :ease (and eases
                           (/ (apply #'+ eases) (float (length eases))))
                :retention (org-learn-dashboard-retention lapses reps)
-               :last (and last (format-time-string "%Y-%m-%d" last)))))
+               :last (and last (format-time-string "%Y-%m-%d" last))
+               :file (plist-get topic :file)
+               :line (plist-get topic :line)
+               :leeches (seq-count (lambda (entry)
+                                     (plist-get entry :leech))
+                                   items)
+               :quizzes (seq-reduce (lambda (sum entry)
+                                      (+ sum (plist-get entry :quizzes)))
+                                    items 0)
+               :quiz-misses (seq-reduce (lambda (sum entry)
+                                          (+ sum
+                                             (plist-get entry :quiz-misses)))
+                                        items 0))))
      topics)))
+
+(defun org-learn-dashboard--mastery (stat)
+  "Return the mastery percent of the topic STAT, or nil.
+Each component is nil without its evidence: the retention
+component is STAT's :retention (nil at zero reps), the leech
+component is round (100 * (1 - :leeches / :items)) with nonzero
+:items, and the quiz component is round (100 * (1 -
+:quiz-misses / :quizzes)) with nonzero :quizzes.  Mastery is the
+rounded weighted mean of the PRESENT components — weights 0.5
+retention, 0.25 leech, 0.25 quiz, renormalized over the present
+components, so a single present component IS the mastery.  nil
+when no component is present: a zero-evidence topic is
+unstarted, never a growth area.  Pure."
+  (let* ((components
+          (seq-filter (lambda (pair) (cdr pair))
+                      (list (cons 0.5 (plist-get stat :retention))
+                            (cons 0.25
+                                  (when (> (or (plist-get stat :items) 0) 0)
+                                    (round
+                                     (* 100
+                                        (- 1
+                                           (/ (float
+                                               (or (plist-get stat
+                                                              :leeches)
+                                                   0))
+                                              (plist-get stat :items)))))))
+                            (cons 0.25
+                                  (when (> (or (plist-get stat :quizzes) 0)
+                                           0)
+                                    (round
+                                     (* 100
+                                        (- 1
+                                           (/ (float
+                                               (or (plist-get stat
+                                                              :quiz-misses)
+                                                   0))
+                                              (plist-get stat
+                                                         :quizzes))))))))))
+         (weight (apply #'+ (mapcar #'car components))))
+    (when components
+      (round (/ (apply #'+ (mapcar (lambda (pair)
+                                     (* (car pair) (cdr pair)))
+                                   components))
+                (float weight))))))
+
+(defun org-learn-dashboard--growth-areas (stats)
+  "Return the growth areas of the topic STATS, worst-first.
+A topic grows when its mastery (see `org-learn-dashboard--mastery')
+is strictly below `org-learn-dashboard-growth-threshold'.  Rows
+are the stat plists with :mastery filled in, carrying :topic
+:mastery :file :line, ordered by ascending mastery with ties
+broken by topic title (`string<'); there is no cap (the Stats
+table's completeness law).  nil when nothing grows.  Pure."
+  (let ((rows (seq-filter
+               (lambda (stat)
+                 (let ((mastery (plist-get stat :mastery)))
+                   (and mastery
+                        (< mastery
+                           org-learn-dashboard-growth-threshold))))
+               (mapcar (lambda (stat)
+                         (plist-put (copy-sequence stat)
+                                    :mastery
+                                    (org-learn-dashboard--mastery stat)))
+                       stats))))
+    (sort rows
+          (lambda (a b)
+            (let ((ma (plist-get a :mastery))
+                  (mb (plist-get b :mastery)))
+              (if (= ma mb)
+                  (string< (plist-get a :topic) (plist-get b :topic))
+                (< ma mb)))))))
 
 (defun org-learn-dashboard--next-review-days (entries)
   "Return the days until the next future-scheduled ENTRY, or nil.
@@ -270,12 +386,14 @@ after today, in days (the spec 011 `next review in Nd' clause)."
 (defun org-learn-dashboard--data (files)
   "Return the dashboard data plist for the Org FILES.
 Keys: :due :new :done-today :queue :leeches :stats :next-review
-:roadmap.  Pure over the file list (no display, no interactive
-APIs), so it is batch-safe and testable.  :roadmap carries the
-spec 011 rollup of the files' TODO trees, computed through the
-roadmap bridge ONLY when it and org-roadmap are already loaded
-\(`featurep' guards, no require -- boundary law); nil otherwise,
-which keeps the Roadmap line silent."
+:roadmap :growth.  Pure over the file list (no display, no
+interactive APIs), so it is batch-safe and testable.  :roadmap
+carries the spec 011 rollup of the files' TODO trees, computed
+through the roadmap bridge ONLY when it and org-roadmap are
+already loaded \(`featurep' guards, no require -- boundary law);
+nil otherwise, which keeps the Roadmap line silent.  :growth
+carries the spec 012 growth areas (worst-first plists), nil when
+no topic is below the growth threshold."
   (let* ((file-entries (mapcar (lambda (file)
                                  (cons file
                                        (org-learn-dashboard--scan-file file)))
@@ -304,7 +422,8 @@ which keeps the Roadmap line silent."
                                file-entries)))
          (next-review (org-learn-dashboard--next-review-days entries))
          (roadmap (when (featurep 'org-learn-roadmap)
-                    (org-learn-roadmap-rollup-files files))))
+                    (org-learn-roadmap-rollup-files files)))
+         (growth (org-learn-dashboard--growth-areas stats)))
     (list :due (length due)
           :new (length new)
           :done-today (seq-count (lambda (entry)
@@ -315,7 +434,8 @@ which keeps the Roadmap line silent."
           :leeches leeches
           :stats stats
           :next-review next-review
-          :roadmap roadmap)))
+          :roadmap roadmap
+          :growth growth)))
 
 ;;; Presentation (read-only, rebuilt from scratch).
 
@@ -332,6 +452,20 @@ which keeps the Roadmap line silent."
     (when rollup
       (insert "- " (org-learn-roadmap-rollup-line
                     rollup (plist-get data :next-review))
+              "\n")))
+  ;; Growth areas (spec 012): one bullet, silent when nothing grows.
+  (let ((growth (plist-get data :growth)))
+    (when growth
+      (insert "- Growth areas: "
+              (mapconcat
+               (lambda (row)
+                 (concat (org-link-make-string
+                          (format "file:%s::%d"
+                                  (plist-get row :file)
+                                  (plist-get row :line))
+                          (plist-get row :topic))
+                         (format " %d%%" (plist-get row :mastery))))
+               growth ", ")
               "\n")))
   (insert "\n")
   ;; 2. Review queue
