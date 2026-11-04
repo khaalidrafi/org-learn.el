@@ -1,0 +1,316 @@
+#+TITLE: Spec 013 — Audio overview script (Owner AI-education wave, DoE item 5)
+#+FILETAGS: :spec:ai:audio:
+#+DATE: <2026-11-04 Wed>
+#+STATUS: SPEC — authored by port-engineer under TODO-017 (Lead role-lane
+#+STATUS: dispatch 2026-11-04 05:2xZ; spec-authoring is the Port lane per
+#+STATUS: spec 001/012 precedent).  Source: DoE notice item 5 in
+#+STATUS: agent-team/TODOS.org * NOTICES [2026-11-03 19:2xZ], verbatim:
+#+STATUS: "AUDIO-OVERVIEW SCRIPT (extends org-learn-ai): Brief / Deep-dive /
+#+STATUS: two-host Debate script from a subtree; TTS playback optional and
+#+STATUS: out of scope for the first segment."  Upstream feature: NotebookLM
+#+STATUS: Audio Overviews.  Vocabulary note: the DoE's researched digest
+#+STATUS: paragraph names "Brief/Critique/Debate" formats, but the boarded
+#+STATUS: item 5 pins Brief / Deep-dive / Debate — this spec pins the boarded
+#+STATUS: three (the Lead's boarding is the law).  EFFORT 0:50 per the DoE
+#+STATUS: notice; DEADLINE <2026-11-04 Wed 12:00> UTC set by the Lead on
+#+STATUS: TODO-017 (TIME LAW).
+
+* Summary — target file and queue order (the collision law)
+
+- TARGET FILE: =org-learn-ai.el= ONLY, plus =tests/test-org-learn-ai.el=.
+  One new public command, one new defcustom, one new buffer-name const,
+  three new prompt defconsts, new double-dash internals.  No new file;
+  no keymap/menu edit; no dashboard edit (scope cuts below).
+- QUEUE ORDER (declared here, implemented later): TODO-013 (spec 009
+  Socratic GUIDE, @software-engineer, in flight) owns =org-learn-ai.el=
+  right now; TODO-014 (spec 012) queues its =org-learn-ai.el= quiz-
+  persistence part behind TODO-013.  Spec 013's implementation segment
+  runs strictly AFTER both have merged, re-based on the then-current
+  =org-learn-ai.el=.  Spec 014 (study-kit generator, TODO-019, the Port
+  seat's next spec lane) authors now but implements after spec 013.
+- Every change is ADDITIVE: no existing function's name, signature or
+  behavior changes (the flashcard, quiz, chat and TRACE/FOCUS/CLEAR
+  laws stand untouched), so the three queued =org-learn-ai.el= segments
+  compose without rework.  The implementing segment lands tests FIRST
+  (red before green) per this spec's acceptance table — the same law
+  spec 012 pinned.
+
+* Goal
+
+NotebookLM's Audio Overview turns a source into a spoken podcast
+script.  org-learn's version: from the current subtree, generate a
+SPOKEN-WORD SCRIPT in one of three formats — =brief=, =deep-dive=, or
+=debate= (two hosts) — through the existing single network choke point
+=org-learn-ai--complete=.  The script lands in its own Org buffer,
+ready to read, edit, copy or save.  Text-to-speech playback and audio
+synthesis are deliberately OUT of scope for this segment (the DoE
+notice cuts them too); the script is plain spoken text, which is the
+seam a future TTS segment (the org-ai/whisper research lane in
+agent-team/IDEAS.org) can read.
+
+* File law
+
+Extend =org-learn-ai.el= — the same file as specs 004/007/009.  Reuse,
+do not duplicate:
+
+- =org-learn-ai--complete= (:211) — the single network choke point;
+  exactly ONE call per generation; the =org-learn-ai-backend= dispatch
+  law (auto/gptel/keyless) is untouched, so audio rides every backend
+  lane like the rest of the AI family.
+- =org-learn-ai--context= (:318) with =org-learn-ai--cap-context=
+  (:308) — subtree context, capped head-safe, same as flashcards.
+- =org-learn-ai--subtree-check= (:689) — the guard law (Org buffer,
+  point on a heading), called FIRST, before any network.
+- The message builders =org-learn-ai--system-message= /
+  =org-learn-ai--user-message= and the SECRET LAW (API key travels only
+  as a customization, never logged) — all inherited via the choke
+  point; zero new network plumbing, zero new package dependencies.
+- org-roadmap stays at the boundary: never required, never loaded.
+
+* Vocabulary and configuration
+
+- Formats, as symbols: =brief=, =deep-dive=, =debate=.  The vocabulary
+  is CLOSED — these three only (DoE notice item 5).  Any other symbol
+  reaching the prompt dispatch is a =user-error= (pinned: a typo must
+  never silently send a blank persona to the model).
+- Debate speakers: the literal labels =HOST A= and =HOST B=; the model
+  writes them, the parser validates them, the renderer preserves them.
+- New defcustom =org-learn-ai-audio-default-format= (symbol, one of
+  =brief= =deep-dive= =debate=, default =brief=, group =org-learn-ai=):
+  the format the command preselects in its prompt.
+- No other new knobs: context cap and timeout reuse
+  =org-learn-ai-context-max-chars= and =org-learn-ai-timeout-seconds=.
+
+* System prompts (three defconsts, pinned verbatim contract)
+
+The prompt text IS the output-format contract; the parse law below
+enforces it.  Pin these three defconsts:
+
+- =org-learn-ai--audio-brief-prompt=: "You write the script for a SHORT
+  audio overview of the study context, about one minute spoken, for a
+  listener who has never read it.  Cover the core idea, the key facts
+  and one takeaway.  Spoken sentences only: plain text, no markdown,
+  no headings, no speaker labels."
+- =org-learn-ai--audio-deep-dive-prompt=: "You write the script for a
+  DEEP-DIVE audio overview of the study context, about five minutes
+  spoken.  Structure it as a spoken introduction, a walk-through of the
+  key ideas in order with a short example each, and a spoken summary
+  that names open questions.  Spoken sentences only: plain text, no
+  markdown, no headings, no speaker labels."
+- =org-learn-ai--audio-debate-prompt=: "You write the script for a
+  TWO-HOST audio overview debate about the study context.  HOST A
+  advocates the study context's main claim; HOST B challenges it; the
+  final turns converge on the strongest synthesis both hosts accept.
+  Every turn is one line starting with the speaker label 'HOST A:' or
+  'HOST B:', strictly alternating, HOST A first.  Spoken sentences
+  after the label only: no markdown, no headings."
+
+* Messages law
+
+=org-learn-ai--audio-messages (format context)= returns exactly two
+messages: the format's system prompt, then ONE user message with the
+uniform shape (the flashcards law, =org-learn-ai--flashcards-messages=
+:575): ="Study context:\n%s\n\nWrite the audio overview script now."=
+with the ="(no subtree at point)"= fallback for an empty context.  The
+format identity travels ONLY in the system prompt; the user turn is
+format-independent (pinned: tests assert the user sentence is byte-
+identical across all three formats).
+
+* Parse law (validation; garbage -> user-error, no litter)
+
+=org-learn-ai--audio-parse (format reply)=:
+
+- =brief= / =deep-dive=: =string-trim= the reply; blank result is
+  garbage — =user-error= naming the format (the flashcards garbage law,
+  =org-learn-ai--cards-from-array= :526).  Otherwise the trimmed
+  string IS the script body; no markdown sanitization (the prompt law
+  asks for plain text; honesty beats rewriting the model).
+- =debate=: split the reply into lines and drop blank lines.  A line
+  starting with the literal =HOST A: = or =HOST B: = (case-sensitive,
+  anchored at line start) opens a NEW turn; any other non-blank line is
+  a CONTINUATION of the previous turn (appended with one space) —
+  models wrap long turns at ~80 columns and the script must survive
+  that.  A continuation line before any labeled line is garbage.
+  Turn laws: at least 2 turns; turn 1 is HOST A; strict alternation
+  (no two adjacent turns share a speaker).  Any violation is garbage:
+  =user-error= "no usable audio script in the model reply" style.
+  Result: a list of =(LABEL . TEXT)= conses, LABEL the string =HOST A=
+  or =HOST B=, TEXT the trimmed joined turn.
+
+* Render law (pure)
+
+=org-learn-ai--audio-render (format heading source-line script)=
+returns the complete buffer text, exactly this shape:
+
+#+begin_src org
+#+TITLE: Audio overview (brief) — Memory
+Source: [[file:/path/to/notes.org::12][Memory]]
+
+<script body — debate: one "HOST A: ..."/"HOST B: ..." line per turn,
+in parsed order, labels rebuilt from the conses>
+
+-----
+Generated by org-learn-ai audio overview (spec 013) from the source
+subtree; text-to-speech playback is out of scope for this segment.
+#+end_src
+
+- Title line: =(format "#+TITLE: Audio overview (%s) — %s" format heading)=.
+- =source-line= is passed in whole (the command side builds it; next
+  section) so the renderer stays pure and testable.
+- Debate body: one turn per line, =(format "%s: %s" label text)=,
+  joined with newlines.  Brief/deep-dive body: the trimmed reply as-is.
+- Footer: the two pinned lines above (honesty: the script states its
+  origin and the TTS scope cut).
+
+* Source line law
+
+=org-learn-ai--audio-source-line (heading)=, run in the INVOKING
+buffer before any switch: when =(buffer-file-name)= is set, return
+=Source: = plus the org link built with the dashboard growth-areas link
+law (spec 012): =(org-link-make-string (format "file:%s::%d" file line) heading)=
+where =file= is the buffer's file and =line= is
+=(line-number-at-pos)= at the heading start (after
+=org-back-to-heading=).  When the buffer is unsaved, return the plain
+fallback =(format "Source: %s (unsaved buffer)" heading)= — honest
+degradation, never a bogus =file:nil= link.
+
+* Buffer law
+
+- Buffer name const =org-learn-ai--audio-buffer= = ="*org-learn-ai-audio*"=.
+  ONE buffer for all formats; every generation RESETS it
+  (=erase-buffer=, the chat welcome-reset pattern) — the title line
+  carries the format, so history is not needed.
+- Major mode: =org-mode= (the script is Org text; the user can C-x C-s
+  it to a file or copy turns elsewhere).  NOT read-only: a script is a
+  draft to tweak before speaking (the dashboard read-only law does not
+  apply here).
+- The interactive command =pop-to-buffer=s after rendering.  The CORE
+  does NO window operations — batch-safe, so ERT drives it directly
+  (the =org-learn-ai--mode-chat= pop-inside pattern is deliberately
+  NOT followed; pinned for testability).
+
+* Core and command law
+
+=org-learn-ai--audio-overview (format)= — format a symbol from the
+closed vocabulary; the only stateful piece:
+
+1. =(org-learn-ai--subtree-check "org-learn-ai-audio-overview")= —
+   guard FIRST; no subtree, no network.
+2. =context = (org-learn-ai--context)=; one choke call:
+   =reply = (org-learn-ai--complete (org-learn-ai--audio-messages format context))=.
+3. =script = (org-learn-ai--audio-parse format reply)= — garbage raises
+   =user-error= BEFORE any buffer is created or touched (no-litter law,
+   the flashcards precedent).
+4. Capture the source facts in the invoking buffer: heading text, and
+   =source-line = (org-learn-ai--audio-source-line heading)=.
+5. =text = (org-learn-ai--audio-render format heading source-line script)=;
+   reset =*org-learn-ai-audio*=, insert, =org-mode=.
+6. Return the audio buffer.
+
+The command =org-learn-ai-audio-overview= (autoload, interactive)
+wraps the core: =completing-read= over the three format NAMES
+(=org-learn-ai--audio-formats=, a pinned defconst list) with
+=org-learn-ai-audio-default-format= as the preselected default, =intern=
+the answer, call the core, =pop-to-buffer=, point at end, and
+=message= one line: ="org-learn-ai: audio overview (%s) ready"= with
+the format name.
+
+* Scope cuts (pinned, with reasons)
+
+- TTS playback / audio synthesis: OUT (DoE notice item 5 cuts it; the
+  script is plain spoken text — the seam a future TTS segment reads).
+- Keymap and Learn-menu binding: OUT of this segment.  The =C-c l= map
+  already carries six AI keys (=org-learn-mode.el=:70-79); TODO-013's
+  rider edits =tests/test-org-learn-mode.el= and the GUIDE binding
+  lands in that same lane, so this spec touches neither
+  =org-learn-mode.el= nor its test file.  M-x entry only; a binding is
+  a future docs/keymap segment.
+- No insertion into the source Org file (unlike flashcards): the
+  script is a buffer artifact; saving it is the user's C-x C-s.
+- No streaming, no voice/language selection, no agenda or dashboard
+  integration, no audio file export.
+
+* Acceptance criteria (tests land FIRST, red before green)
+
+Extend =tests/test-org-learn-ai.el=; the choke point is mocked with
+=cl-letf= as always (zero network, gptel never loaded); the existing
+30 tests stay green — everything below is ADDITIVE, no assertion
+weakened:
+
+1. Vocabulary guard: =org-learn-ai--audio-prompt= maps =brief=,
+   =deep-dive= and =debate= to their defconsts; any other symbol (e.g.
+   ='lecture=) raises =user-error=.
+2. Messages shape: for each format, the system message IS that format's
+   defconst; the user message embeds the study context and the uniform
+   request sentence; the user sentence is byte-identical across the
+   three formats (format identity lives in the system prompt only);
+   empty context uses the ="(no subtree at point)"= fallback.
+3. Debate parse, valid: a labeled reply parses to the exact
+   =(LABEL . TEXT)= cons list, in order.
+4. Debate parse, garbage matrix — each raises =user-error=: a
+   continuation line before any labeled line; fewer than 2 turns; a
+   non-alternating repeat (HOST A twice in a row); a first turn that is
+   not HOST A; an unknown label (=HOST C:=); lowercase =host a:=
+   (case-sensitivity pinned).
+5. Debate continuation joining: a wrapped line (no label) joins the
+   previous turn with one space.
+6. Brief/deep-dive parse: whitespace-only reply raises =user-error=
+   naming the format; prose passes back trimmed.
+7. Core end-to-end, brief (mocked choke): in an Org buffer with a
+   subtree, =(org-learn-ai--audio-overview 'brief)= records EXACTLY ONE
+   choke call whose system message is the brief prompt and whose user
+   message embeds the subtree text; returns a buffer named
+   =*org-learn-ai-audio*= in =org-mode= whose text contains the
+   =#+TITLE= line with the format and heading, the Source line (the
+   unsaved-buffer fallback in a temp buffer), the script body and the
+   no-TTS footer.
+8. Source link, saved file: with the subtree in a visited temp file,
+   the Source line is the =file:...::LINE= org link with the heading's
+   real line number (spec 012 link law).
+9. Core end-to-end, debate: an alternating HOST A/HOST B reply renders
+   one labeled line per turn, in parsed order.
+10. No-litter law: a garbage reply (blank brief; unlabeled debate)
+    raises =user-error= AND =*org-learn-ai-audio*= does not exist
+    afterwards.
+11. Guard order: point in an Org buffer with no heading, and in a
+    non-Org buffer, each raises =user-error= with ZERO recorded choke
+    calls (guard before network).
+12. Reset law: two consecutive generations (brief then debate) leave
+    ONLY the debate script in the buffer.
+13. Command law: =org-learn-ai-audio-overview= is a command
+    (=commandp=); with =completing-read= mocked to return ="debate"=
+    (the =read-string= mocking precedent from the FOCUS tests) and the
+    choke mocked, the command sends the debate system prompt and pops
+    the audio buffer; the =completing-read= default argument is the
+    defcustom's format name, and the defcustom's value is a symbol in
+    the closed vocabulary (default =brief=).
+14. Gate: byte-compile 0 warnings (=org-learn-ai.el=), checkdoc 0 on
+    the touched files, the suite all green in both worlds (stub world
+    always; real-dep world loud-skips when the org-roadmap sibling is
+    unmounted), one segment, one report @lead with RESULT: DONE |
+    PARTIAL | BLOCKED.
+
+* Laws
+
+- One choke call per generation; the backend law (spec 007) and the
+  SECRET LAW (key never logged) are inherited unchanged.
+- Pure-path law: prompt dispatch, messages, parse, render and the
+  source line are pure (or buffer-local-only) functions; the core is
+  the only stateful piece (buffer reset).
+- Additive-only law: no existing symbol is renamed, re-signatured or
+  re-behaved; the AI family's existing tests must not change.
+- org-roadmap boundary untouched (declared, never required).
+- Board files never ride feature commits; TIME LAW effort + deadline
+  are the Lead's at boarding (already set on TODO-017: EFFORT 0:50,
+  DEADLINE <2026-11-04 Wed 12:00> UTC).
+
+* Gate
+
+#+begin_src sh
+emacs -Q --batch -L . --eval "(byte-compile-file \"org-learn-ai.el\")"
+emacs -Q --batch -L . -l tests/test-org-learn.el \
+      -f ert-run-tests-batch-and-exit
+#+end_src
+
+(checkdoc on =org-learn-ai.el= and =tests/test-org-learn-ai.el= is part
+of acceptance row 14.)
