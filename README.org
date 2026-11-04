@@ -2,10 +2,13 @@
 
 org-learn.el is an Org-based learning helper: learning material lives in
 Org files and the package helps you capture, review and grow it.  It is
-built on Org mode and depends on org-roadmap — a package under the
-khaalidrafi profile that is not completed or published yet.  The
-dependency is declared in the package header; the code does not require
-it yet, and nothing here blocks on it.
+built on Org mode and depends on org-roadmap for planning and progress
+— a real but graceful dependency (spec 006).  The package loads and the
+whole capture -> review -> grow loop works without org-roadmap
+installed; only the roadmap commands need it, and they show a one-line
+install hint when it is missing.  org-roadmap is a sibling package under
+the khaalidrafi profile, still under development — nothing here blocks
+on it.
 
 * Quickstart
 
@@ -31,20 +34,40 @@ without it installed, those keys report a friendly install hint.
 
 * Status
 
-Bootstrap (2026-10-28).  The package is a skeleton and a team is being
-formed on the agent-team kit (https://github.com/khaalidrafi/agent-team-ci)
-to build it:
+Built by a teamified agent chain on the agent-team kit
+(https://github.com/khaalidrafi/agent-team-ci).  The learning loop is
+complete end to end — delivered modules (one spec each, specs/):
+
+- Capture — =org-learn-capture= and =org-learn-capture-from-region= (spec 001)
+- Review — SM-2 scheduler, review sessions, agenda view (spec 002)
+- Drill — cloze, two-sided, cram and leech sessions (spec 003)
+- AI — tutor chat, flashcard and quiz generation, TRACE/FOCUS/CLEAR
+  tutor modes, pluggable backend with a keyless default (specs 004, 007)
+- Dashboard — study clock, retention stats, topic dashboard, roadmap
+  rollup line (specs 005, 011)
+- Roadmap — plan-from-roadmap, progress report and rollup over the
+  real org-roadmap API (specs 006, 011)
+- Fast start — =org-learn-mode= with one =C-c l= keymap, plus the
+  quickstart wizard (specs 008, 010)
+
+In progress on the team board (agent-team/TODOS.org): the Socratic
+GUIDE tutor mode (spec 009) and the best-of-breed AI-education wave
+candidates from the Director of Engineering notice (study-kit
+generator, mastery tracker, learning-plan generator, audio overview).
 
 - [[file:BOOTSTRAP-PROMPT.org][BOOTSTRAP-PROMPT.org]] — the teamify dispatch the Owner points the agent to
-- [[file:agent-team/NOTICE.org][agent-team/NOTICE.org]] — standing inbox from the Director of Engineering
+- [[file:agent-team/TODOS.org][agent-team/TODOS.org]] — the team board (single source of truth); its
+  =* NOTICES= tree is the shared inbox, including the Director of
+  Engineering's directives
 - [[file:AGENTS.md][AGENTS.md]] — local law (project specifics on top of the global agent law)
 - [[file:STATE.org][STATE.org]] — project state: gate proof, compliance audit, next step
 
-Gate (proven 2026-11-01, TODO-001): byte-compile and the ERT suite in
-[[file:tests/test-org-learn.el][tests/test-org-learn.el]] both run green under =emacs -Q --batch= —
-commands and the one CI gap (the =test= job lacks the ert step; that
-workflow is Lead-owned) are recorded in [[file:STATE.org][STATE.org]].  First
-improvement spec: [[file:specs/001-capture.org][specs/001-capture.org]].
+Gate (re-proven 2026-11-04): byte-compile of all eight Elisp files is
+warning-free and the ERT suite runs 93 tests (89 results as expected,
+0 unexpected, 4 loud skips when the org-roadmap sibling is not mounted)
+under =emacs -Q --batch=.  CI's test job runs byte-compile + ERT too
+([[file:.github/workflows/agent-team.yml][agent-team.yml]]; its byte-compile scope is narrower — cited in
+STATE.org).  Commands and evidence: STATE.org.
 
 * License
 
