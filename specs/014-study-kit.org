@@ -1,0 +1,527 @@
+#+TITLE: Spec 014 — Study-kit generator (Owner AI-education wave, DoE item 2)
+#+FILETAGS: :spec:ai:study-kit:
+#+DATE: <2026-11-04 Wed>
+#+STATUS: SPEC — authored by port-engineer under TODO-019 (Lead role-lane
+#+STATUS: dispatch 2026-11-04 05:2xZ; spec-authoring is the Port lane per
+#+STATUS: spec 001/012/013 precedent).  Source: DoE notice item 2 in
+#+STATUS: agent-team/TODOS.org * NOTICES [2026-11-03 19:2xZ], verbatim:
+#+STATUS: "STUDY-KIT GENERATOR (extends org-learn-ai flashcards/quiz):
+#+STATUS: from an org subtree generate a study guide + glossary + briefing
+#+STATUS: doc as org buffers; quiz misses get an 'explain' that cites the
+#+STATUS: source heading (org-id link back); topic/difficulty controls."
+#+STATUS: Upstream feature: NotebookLM study kit (study guide, glossary,
+#+STATUS: briefing doc; explain-the-miss with citations; topic/difficulty
+#+STATUS: control) per the DoE notice's research digest.  Suggested EFFORT
+#+STATUS: 2:00 per the DoE notice; DEADLINE <2026-11-05 Thu 06:00> UTC set
+#+STATUS: by the Lead on TODO-019 (TIME LAW).  Coordination with the
+#+STATUS: TODO-020 digest is pinned in the Laws section below.
+
+* Summary — target file and queue order (the collision law)
+
+- TARGET FILES: =org-learn-ai.el= ONLY, plus =tests/test-org-learn-ai.el=.
+  Two new public commands, one new defcustom, one difficulty-vocabulary
+  defconst, four buffer-name consts, four prompt defconsts, new
+  double-dash internals.  One new top-level require (=org-id=, bundled
+  with Org — first use in the tree, declared below).  No new file; no
+  keymap/menu edit; no dashboard edit; no other file touched.
+- QUEUE ORDER (declared here, implemented later): TODO-013 (spec 009
+  Socratic GUIDE, @software-engineer, in flight) owns =org-learn-ai.el=
+  right now; TODO-014 (spec 012) queues its quiz-persistence part behind
+  TODO-013; spec 013 (audio overview) queues behind both.  Spec 014's
+  implementation segment runs strictly AFTER spec 013 merges, re-based on
+  the then-current =org-learn-ai.el=.  By then spec 012's quiz-persistence
+  rider has also merged, so the quiz rider below composes with it (the
+  composition law is pinned in the Quiz rider section).
+- Every change is ADDITIVE: no existing function's name, signature or
+  behavior changes (the flashcard, quiz, chat and TRACE/FOCUS/CLEAR laws
+  stand untouched; the quiz rider only INSERTS an offer between the
+  scheduling offer and the continue prompt), so the four queued
+  =org-learn-ai.el= segments compose without rework.  The implementing
+  segment lands tests FIRST (red before green) per this spec's acceptance
+  table — the same law specs 012/013 pinned.
+
+* Goal
+
+NotebookLM's study kit turns a source into three study artifacts at once:
+a STUDY GUIDE (how the material fits together, a study path, self-check
+questions), a GLOSSARY (the terms, defined), and a BRIEFING DOCUMENT (a
+concise shareable summary for a reader who must act).  org-learn's
+version: from the current subtree, generate all three as Org buffers,
+through the existing single network choke point =org-learn-ai--complete=.
+Two controls shape every artifact: a TOPIC focus (a string, default the
+subtree heading) and a DIFFICULTY (closed vocabulary: =introductory=,
+=intermediate=, =advanced=).  Separately, the quiz loop's misses get an
+EXPLAIN: one more choke call whose answer cites the source heading back
+through an org-id link, so a wrong answer routes the learner to the exact
+entry that teaches it.  Text-to-speech, mind maps and guided-learning
+plans are other DoE items (5, and item 4) — deliberately OUT of scope
+here.
+
+* File law
+
+Extend =org-learn-ai.el= — the same file as specs 004/007/009/013.  Reuse,
+do not duplicate:
+
+- =org-learn-ai--complete= (:211) — the single network choke point; the
+  kit makes exactly THREE calls (guide, glossary, briefing, pinned order),
+  the explain exactly ONE; the =org-learn-ai-backend= dispatch law
+  (auto/gptel/keyless) is untouched, so the study kit rides every backend
+  lane like the rest of the AI family.
+- =org-learn-ai--context= (:318) with =org-learn-ai--cap-context= (:308) —
+  subtree context, capped head-safe, same as flashcards and audio.
+- =org-learn-ai--subtree-check= (:689) — the guard law (Org buffer, point
+  on a heading), called FIRST in both cores, before any network.
+- The message builders =org-learn-ai--system-message= (:143) /
+  =org-learn-ai--user-message= (:147) and the SECRET LAW (API key travels
+  only as a customization, never logged) — inherited via the choke point;
+  zero new network plumbing, zero new package dependencies.
+- =org-learn-ai--extract-json-array= (:500) and
+  =org-learn-ai--cards-from-array= (:526) — the tolerant-scan + drop +
+  garbage-=user-error= shape the glossary parser mirrors (its key names
+  differ — =term= =definition= vs =q= =a= — so a NEW parser is pinned
+  below; the flashcard law stays byte-identical).
+- The quiz loop's =source-buffer= capture pattern (=org-learn-ai-quiz=
+  :635-686) for the explain command's save-offer law.
+- org-roadmap stays at the boundary: never required, never loaded.
+
+* New dependency declaration: org-id
+
+The explain cite law needs org-id (below).  =org-id= is bundled with Org
+(no new package dependency; the header's =(org "9.0")= requirement
+covers it).  The implementing segment adds one top-level line:
+
+#+begin_src elisp
+(require 'org-id)
+#+end_src
+
+Verified on the gate machine (Emacs 30.1, org 9.7.11):
+=(require 'org-id)= loads under =emacs -Q --batch=; =org-id-get-create=
+inserts the =:ID:= property in a file-visiting Org buffer and returns the
+UUID; it SIGNALS in a non-file buffer ("`org-id-get' expects a
+file-visiting buffer") — which is why the unsaved-buffer branch below
+uses =org-id-new= + =org-set-property= instead.  =org-link-make-string=
+builds the =[[id:UUID][heading]]= string.  This is the tree's first org-id
+use (zero =org-id= symbols in the tree today — the additive law holds).
+
+* Vocabulary and configuration
+
+- Artifacts, as symbols: =guide=, =glossary=, =briefing=.  The vocabulary
+  is CLOSED — these three only.  Any other symbol reaching the prompt
+  dispatch or the parse dispatch is a =user-error= (spec 013's vocabulary
+  law: a typo must never silently send a blank persona to the model).
+- Difficulty, as symbols: =introductory=, =intermediate=, =advanced=
+  (defconst =org-learn-ai--study-kit-difficulties=, pinned list).  Same
+  closed-vocabulary guard law.
+- New defcustom =org-learn-ai-study-kit-difficulty= (symbol, one of the
+  three, default =intermediate=, group =org-learn-ai=): the difficulty
+  the command preselects in its prompt.
+- Topic control: a STRING, not a symbol — free-form focus hint.  The
+  command prompts with the subtree heading as the default; an empty
+  answer takes the default.  The topic is a focus hint, never a filter:
+  the prompts say "center the artifact on the topic when the study
+  context covers it".
+- No other new knobs: context cap and timeout reuse
+  =org-learn-ai-context-max-chars= (:106) and
+  =org-learn-ai-timeout-seconds= (:113).
+
+* System prompts (four defconsts, pinned verbatim contract)
+
+The prompt text IS the output-format contract; the parse law below
+enforces it.  Pin these four defconsts:
+
+- =org-learn-ai--study-guide-prompt=: "You write the STUDY GUIDE section
+  of a study kit about the study context.  Cover the core idea, the key
+  concepts and how they connect, then a short study path of 3-5 steps and
+  three self-check questions.  Plain Org text: short sections separated
+  by blank lines, no markdown fences, no title line."
+- =org-learn-ai--glossary-prompt=: "You build the GLOSSARY section of a
+  study kit.  Reply with only a JSON array of 5-10 objects with keys
+  \"term\" and \"definition\"; no prose, no markdown fences."
+- =org-learn-ai--briefing-prompt=: "You write the BRIEFING DOCUMENT of a
+  study kit about the study context: a concise, shareable summary for a
+  reader who must act on it.  Cover what the subject is, why it matters
+  and the three things to remember.  Plain Org text: short paragraphs, no
+  markdown fences, no title line."
+- =org-learn-ai--explain-prompt=: "You are a study tutor explaining a
+  missed quiz answer.  Explain why the correct answer is correct and the
+  learner's answer fails, in at most three short paragraphs, citing
+  facts from the study context.  Plain text, no markdown fences."
+
+* Messages law
+
+- =org-learn-ai--kit-messages (artifact context topic difficulty)=
+  returns exactly two messages: the artifact's system prompt (via the
+  pinned dispatch =org-learn-ai--kit-prompt (artifact)=, unknown symbol
+  =user-error=), then ONE user message with the uniform shape (the
+  flashcards law, =org-learn-ai--flashcards-messages= :575):
+  ="Study context:\n%s\n\nTopic: %s\nDifficulty: %s\n\nGenerate the
+  study-kit artifact now."= with the ="(no subtree at point)"= fallback
+  for an empty context.  The artifact identity travels ONLY in the
+  system prompt; the user turn is artifact-independent (pinned: tests
+  assert the user turn is byte-identical across the three kit calls).
+- =org-learn-ai--explain-messages (context question answer)= returns
+  exactly two messages: the explain defconst, then ONE user message:
+  ="Study context:\n%s\n\nMissed question: %s\nMy answer: %s\n\nExplain
+  this miss now."= with the same empty-context fallback.
+
+* Parse laws (validation; garbage -> user-error, no litter)
+
+- =org-learn-ai--kit-parse (artifact reply)= dispatches:
+  - =guide= / =briefing=: =string-trim= the reply; blank result is
+    garbage — =user-error= naming the artifact (the flashcards garbage
+    law, :526).  Otherwise the trimmed string IS the body; no markdown
+    sanitization (the prompt law asks for plain Org text; honesty beats
+    rewriting the model — spec 013's law).
+  - =glossary=: =org-learn-ai--glossary-from-reply (reply)=.
+- =org-learn-ai--glossary-from-reply (reply)=: the =org-learn-ai--extract-
+  json-array= (:500) scan shape — each ="["= position tried as the array
+  start until one parses — with a NEW validator: a non-empty vector of
+  alists where every item has a string =term= and a string =definition=,
+  both non-blank after trim.  Usable items become =(TERM . DEFINITION)=
+  conses in order; unusable items are DROPPED (the =--cards-from-array=
+  drop law); when nothing usable remains, =user-error= "No usable
+  {term, definition} entries in the model reply".  The flashcards
+  validator and =--extract-json-array= stay byte-identical (additive
+  law); the duplication is conscious — the key sets differ — and a
+  future refactor segment may share the scanner.
+- =org-learn-ai--explain-parse (reply)=: =string-trim=; blank is garbage
+  — =user-error= "no usable explanation in the model reply" style.
+
+* Render laws (pure)
+
+=org-learn-ai--kit-render (artifact heading source-line topic difficulty
+body)= returns the complete buffer text.  Artifact display names (pinned
+const table): =guide= -> "study guide", =glossary= -> "glossary",
+=briefing= -> "briefing doc".  Exact shape:
+
+#+begin_src org
+#+TITLE: Study kit (study guide) — Memory
+Source: [[file:/path/to/notes.org::12][Memory]]
+Topic: Memory
+Difficulty: intermediate
+
+<body — glossary: one "TERM :: DEFINITION" Org definition-list line per
+entry, in parsed order; guide/briefing: the trimmed reply as-is>
+
+-----
+Generated by org-learn-ai study kit (spec 014) from the source subtree.
+#+end_src
+
+- Title line: =(format "#+TITLE: Study kit (%s) — %s" display heading)=.
+- =source-line= is passed in whole (the command side builds it; next
+  section) so the renderer stays pure and testable (spec 013 law).
+- Glossary body: =(format "%s :: %s" term definition)= per cons, joined
+  with newlines — Org definition-list syntax, native and readable.
+- Footer: the two pinned lines above (honesty: the buffer states its
+  origin).
+
+=org-learn-ai--explain-render (heading cite question answer body)=
+returns:
+
+#+begin_src org
+#+TITLE: Study-kit explain — Memory
+Source: [[id:2c0bb0c0-15c7-4964-b85a-53ac39e544de][Memory]]
+Missed question: What is the SM-2 ease law?
+My answer: It lowers ease on lapses.
+
+<body — trimmed explain reply>
+
+-----
+Generated by org-learn-ai study kit (spec 014): quiz-miss explain with
+an org-id citation back to the source heading.
+#+end_src
+
+- =cite= is passed in whole (built by the source-cite law below).
+- =question= / =answer= are inserted verbatim on their pinned lines.
+
+* Source line and source cite laws
+
+- =org-learn-ai--kit-source-line (heading)= — kit buffers, run in the
+  INVOKING buffer before any switch: the spec 012 dashboard growth-areas
+  link law (same as spec 013's audio source line): when
+  =(buffer-file-name)= is set, return ="Source: "= plus
+  =(org-link-make-string (format "file:%s::%d" file line) heading)=
+  with =line= =(line-number-at-pos)= at the heading start (after
+  =org-back-to-heading=); unsaved buffer -> the plain fallback
+  =(format "Source: %s (unsaved buffer)" heading)=.  Kit-local builder
+  (spec 013's audio builder is a separate segment's symbol; both are
+  small and pure — a shared-helper refactor is a future segment's, not
+  this spec's).
+- =org-learn-ai--explain-source-cite (heading)= — the DoE-pinned org-id
+  cite, run in the INVOKING buffer before any switch:
+  - File-visiting buffer: =id = (org-id-get-create)= — Org inserts or
+    updates the =:ID:= property at the heading and returns the UUID.
+  - Unsaved buffer: =org-id-get-create= signals (verified above), so
+    the honest-degradation branch: =id = (org-id-new)= then
+    =(org-set-property "ID" id)= — the property lands in the buffer
+    only; the =id:= link still renders and resolves once the file is
+    saved and Org indexes the ID.  Never a =user-error= here (a quiz
+    miss in an unsaved buffer still gets its explain).
+  - Both branches return =(org-link-make-string (format "id:%s" id)
+    heading)=.
+
+* Buffer laws
+
+- Buffer name consts (pinned): =org-learn-ai--kit-guide-buffer= =
+  ="*org-learn-ai-study-guide*"=, =org-learn-ai--kit-glossary-buffer= =
+  ="*org-learn-ai-glossary*"=, =org-learn-ai--kit-briefing-buffer= =
+  ="*org-learn-ai-briefing*"=, =org-learn-ai--explain-buffer= =
+  ="*org-learn-ai-explain*"=.
+- ONE buffer per artifact; every generation RESETS its buffer
+  (=erase-buffer=, the chat welcome-reset pattern).
+- Major mode: =org-mode= for all four (the artifacts are Org text; the
+  user can C-x C-s any of them to a file).  NOT read-only: a study kit
+  is a draft to tweak (the dashboard read-only law does not apply).
+- The interactive commands =pop-to-buffer= after rendering (the kit
+  command pops the GUIDE buffer; the explain command pops the explain
+  buffer).  The CORES do NO window operations — batch-safe, so ERT
+  drives them directly (spec 013's testability law).
+
+* Core and command laws
+
+=org-learn-ai--kit (topic difficulty)= — topic a string, difficulty a
+symbol from the closed vocabulary; the only stateful piece:
+
+1. =(org-learn-ai--subtree-check "org-learn-ai-study-kit")= — guard
+   FIRST; no subtree, no network.
+2. =context = (org-learn-ai--context)=; capture heading text and
+   =source-line = (org-learn-ai--kit-source-line heading)= in the
+   invoking buffer.
+3. THREE choke calls in PINNED order — guide, glossary, briefing:
+   =reply = (org-learn-ai--complete (org-learn-ai--kit-messages
+   artifact context topic difficulty))= for each artifact.
+4. Parse ALL THREE (=org-learn-ai--kit-parse=) BEFORE any buffer is
+   created or touched — any garbage raises =user-error= with ZERO kit
+   buffers in existence (the parse-all-then-render no-litter law;
+   stronger than spec 013's single-artifact law, pinned because the kit
+   is three artifacts).
+5. Render each artifact (=org-learn-ai--kit-render=), reset its buffer,
+   insert, =org-mode=.
+6. Return the guide buffer.
+
+The command =org-learn-ai-study-kit= (autoload, interactive) wraps the
+core: =read-string= for the topic (prompt ="Topic focus (default: %s): "=
+with the heading text as default; empty answer takes the default),
+=completing-read= over the difficulty NAMES (=mapcar 'symbol-name
+org-learn-ai--study-kit-difficulties=) with
+=org-learn-ai-study-kit-difficulty='s name as the preselected default,
+=intern= the answer, =memq=-guard it (unknown symbol = user-error — the
+closed-vocabulary law), call the core, =pop-to-buffer= the guide buffer,
+point at end, and =message= one line: ="org-learn-ai: study kit ready
+(study guide, glossary, briefing doc)"=.
+
+=org-learn-ai--explain-miss (question answer)= — both strings; the only
+stateful piece:
+
+1. =(org-learn-ai--subtree-check "org-learn-ai-explain-miss")= — guard
+   FIRST.
+2. =context = (org-learn-ai--context)=; capture heading; ONE choke call:
+   =reply = (org-learn-ai--complete (org-learn-ai--explain-messages
+   context question answer))=.
+3. =body = (org-learn-ai--explain-parse reply)= — garbage raises
+   =user-error= BEFORE any buffer is touched (no-litter law).
+4. =cite = (org-learn-ai--explain-source-cite heading)= — the org-id
+   side effect (property insertion) happens HERE, in the invoking
+   buffer, after the network succeeded.
+5. =text = (org-learn-ai--explain-render heading cite question answer
+   body)=; reset =*org-learn-ai-explain*=, insert, =org-mode=.
+6. Return the explain buffer.
+
+The command =org-learn-ai-explain-miss= (autoload, interactive) wraps
+the core: =source-buffer = (current-buffer)= captured FIRST (the quiz
+loop's pattern, :649); =read-string= the missed question (empty ->
+=user-error= "no question to explain") and the learner's answer; call
+the core; =pop-to-buffer= the explain buffer, point at end; then the
+save-offer law — when =source-buffer= is file-visiting,
+=yes-or-no-p "Save the source buffer so the new :ID: property
+persists? "= and on yes =(with-current-buffer source-buffer
+(save-buffer))=; =message= one line: ="org-learn-ai: explain ready"=.
+
+* Quiz rider law (org-learn-ai.el, org-learn-ai-quiz — QUEUED)
+
+The DoE notice pins "quiz misses get an 'explain'".  The rider lands in
+=org-learn-ai-quiz= (:635) between the scheduling offer (:680-684) and
+the continue prompt (:685), with exactly this shape:
+
+#+begin_src elisp
+(when (and (< quality 5)
+           (yes-or-no-p "Explain this answer with a source citation? "))
+  (org-learn-ai--explain-miss question answer)
+  (pop-to-buffer org-learn-ai--explain-buffer))
+#+end_src
+
+- Offer condition: =quality < 5= — wrong (1) AND partly (3).  NotebookLM
+  explains any non-perfect answer; spec 012's miss-counter vocabulary is
+  untouched (a miss for the COUNTERS is quality 1 only; this is an
+  OFFER, not a counter).
+- =question= and =answer= are the loop's existing inner =let*= bindings
+  (:653-661); the rider adds no new state.
+- The explain core re-runs =org-learn-ai--subtree-check= — point is
+  still on the entry in the source buffer (the quiz loop never leaves
+  it), so the guard passes; the context inside the explain is re-captured
+  fresh.
+- RIDER COMPOSITION LAW (the collision risk, pinned): spec 012's merged
+  quiz tests mock =yes-or-no-p=; a GLOBAL =t= mock would now also answer
+  the explain offer, firing an extra choke call and an org-id write.  The
+  implementing segment MUST re-check the merged spec 012 quiz tests: a
+  global =nil= mock keeps the rider inert; a global =t= mock must be
+  tightened to answer per-question (or the explain choke reply +
+  =org-id-get-create= mocked too).  No existing assertion may be
+  weakened; the rider is additive.
+- Queue order restated: this rider implements in the SAME segment as the
+  kit (after specs 009/012/013 have merged), re-based on the
+  then-current quiz loop.
+
+* Scope cuts (pinned, with reasons)
+
+- Keymap and Learn-menu binding: OUT of this segment.  The =C-c l= map
+  already carries six AI keys (=org-learn-mode.el=:70-79) and the menu
+  (:114-119); TODO-013's rider edits =tests/test-org-learn-mode.el= and
+  the GUIDE binding lands in that same lane, so this spec touches
+  neither =org-learn-mode.el= nor its test file (spec 013 precedent).
+  M-x entry only; a binding is a future docs/keymap segment.
+- No insertion into the source Org file (unlike flashcards): the four
+  artifacts are buffer drafts; saving them is the user's C-x C-s.  The
+  ONLY source-buffer write is the explain's =:ID:= property (DoE-pinned
+  org-id cite), offered a save, never forced.
+- Mind maps, TTS/audio, guided-learning plans (DoE items 5 and 4 and
+  the NotebookLM mind-map feature): OUT — other wave items with their
+  own specs (spec 013 owns audio; item 4 is the learning-plan spec,
+  TODO-020's digest lane).
+- No flashcard/quiz GENERATION inside the kit (specs 004/012 own those
+  lanes); the kit's self-check questions live inside the guide text.
+- No streaming, no per-artifact difficulty override (one difficulty
+  shapes all three artifacts), no agenda or dashboard integration.
+
+* Acceptance criteria (tests land FIRST, red before green)
+
+Extend =tests/test-org-learn-ai.el= (30 existing tests stay green —
+everything below is ADDITIVE, no assertion weakened); the choke point is
+mocked with =cl-letf= as always (zero network, gptel never loaded):
+
+1. Vocabulary guards: =org-learn-ai--kit-prompt= maps =guide=,
+   =glossary= and =briefing= to their defconsts; any other symbol
+   (e.g. ='summary=) raises =user-error=.  The difficulty intern+guard
+   law: interning a name outside =org-learn-ai--study-kit-difficulties=
+   raises =user-error= (the command path; the defcustom's value is a
+   symbol in the closed vocabulary, default =intermediate=).
+2. Kit messages shape: for each artifact, the system message IS that
+   artifact's defconst; the user turn embeds the study context, the
+   ="Topic: "= line and the ="Difficulty: "= line and the uniform
+   request sentence; the user turn is byte-identical across the three
+   artifacts (artifact identity lives in the system prompts only);
+   empty context uses the ="(no subtree at point)"= fallback.
+3. Guide/briefing parse: whitespace-only reply raises =user-error=
+   naming the artifact; prose passes back trimmed.
+4. Glossary parse, valid: a JSON array of ={term, definition}= objects
+   parses to the exact =(TERM . DEFINITION)= cons list, in order.
+5. Glossary parse, garbage matrix — each raises =user-error=: no JSON
+   array at all; an empty array; items missing =term= or =definition=;
+   blank term; blank definition.  A prose-wrapped array still parses
+   (the :500 tolerance precedent).
+6. Explain parse: blank reply raises =user-error=; prose passes back
+   trimmed.
+7. Kit core end-to-end (mocked choke with a 3-reply queue and a call
+   counter): in an Org buffer with a subtree,
+   =(org-learn-ai--kit "Memory" 'intermediate)= records EXACTLY THREE
+   choke calls whose system messages are the guide, glossary and
+   briefing defconsts IN THAT ORDER and whose user turns embed the
+   subtree text, the topic and the difficulty; returns the guide buffer;
+   all three buffers (=*org-learn-ai-study-guide*=,
+   =*org-learn-ai-glossary*=, =*org-learn-ai-briefing*=) exist in
+   =org-mode=; the guide buffer contains the =#+TITLE= line with the
+   heading, the Source file link (saved temp file) with the heading's
+   real line number, the Topic and Difficulty lines, the body and the
+   footer; the glossary buffer renders one ="TERM :: DEFINITION"= line
+   per entry.
+8. Kit no-litter law: a garbage glossary reply (valid guide reply,
+   valid briefing reply) raises =user-error= AND NONE of the three kit
+   buffers exists afterwards (parse-all-then-render).
+9. Kit source line: unsaved temp buffer -> the ="(unsaved buffer)"=
+   fallback; saved temp file -> the =file:...::LINE= org link with the
+   heading's real line number (spec 012 link law).
+10. Explain core end-to-end (mocked choke, mocked =org-id-get-create=):
+    =(org-learn-ai--explain-miss "Q?" "my wrong answer")= records
+    EXACTLY ONE choke call whose system message is the explain defconst
+    and whose user turn embeds the context, the question and the answer;
+    returns a buffer named =*org-learn-ai-explain*= in =org-mode= whose
+    text contains the =#+TITLE= line, the =[[id:...][heading]]= Source
+    line, the Missed question and My answer lines, the body and the
+    footer.
+11. Explain cite law, real org-id: file-visiting temp Org buffer ->
+    =org-learn-ai--explain-source-cite= really inserts the =:ID:=
+    property (buffer string contains =":ID:"=) and the cite is
+    =[[id:<that-id>][heading]]=; unsaved temp buffer -> the =org-id-new=
+    branch still yields an in-buffer =:ID:= property and an =id:= link,
+    NO =user-error= (honest degradation).  Note for the implementer: the
+    batch =org-id-locations= read message ("Could not read
+    `org-id-locations'...") is expected HOME noise — assert on the
+    property and the link string, never on output silence.
+12. Guard order, both cores: point in an Org buffer with no heading, and
+    in a non-Org buffer, each raises =user-error= with ZERO recorded
+    choke calls AND ZERO =org-id-get-create= calls (mock both; guard
+    before network and before any org-id write).
+13. Reset law: two consecutive kit generations leave ONLY the latest
+    text in all three kit buffers; two explains leave only the latest
+    in the explain buffer.
+14. Command laws: =org-learn-ai-study-kit= and =org-learn-ai-explain-miss=
+    are commands (=commandp=); with =read-string= / =completing-read=
+    mocked (the FOCUS-test mocking precedent) and the choke mocked, the
+    kit command sends the three system prompts in order, pops the guide
+    buffer and messages the pinned ready line; the explain command sends
+    the explain system prompt, pops the explain buffer, and its
+    save-offer fires only when the source buffer is file-visiting.
+15. Quiz rider (lands with the rider, after spec 012 merges): mocked
+    choke + per-question =yes-or-no-p= mock; a wrong grade (quality 1)
+    with the explain offer accepted -> exactly one extra choke call
+    whose system message is the explain defconst, and the explain buffer
+    exists; the offer declined -> no explain call; a correct grade
+    (quality 5) -> the explain offer is never asked (the =yes-or-no-p=
+    mock records the question count); rider additivity: spec 012's
+    LEARN_QUIZZES / LEARN_QUIZ_MISSES persistence still lands in the
+    same run (assert the entry properties).
+16. Gate: byte-compile 0 warnings (=org-learn-ai.el=), checkdoc 0 on
+    the touched files, the suite all green in both worlds (stub world
+    always; real-dep world loud-skips when the org-roadmap sibling is
+    unmounted), one segment, one report @lead with RESULT: DONE |
+    PARTIAL | BLOCKED.
+
+* Laws
+
+- Choke law: exactly one =org-learn-ai--complete= call per artifact —
+  three for the kit (pinned order), one for the explain; the backend
+  law (spec 007) and the SECRET LAW (key never logged) are inherited
+  unchanged.
+- Pure-path law: prompt dispatch, messages, parse, render, the kit
+  source line and the explain cite are pure (or invoking-buffer-local)
+  functions; the two cores are the only stateful pieces (buffer resets,
+  and the explain's org-id property write).
+- Additive-only law: no existing symbol is renamed, re-signatured or
+  re-behaved; the AI family's existing 30 tests must not change.  New
+  top-level require is =org-id= only (bundled with Org — declared above).
+- org-roadmap boundary untouched (declared in the package header,
+  org-learn.el:7; never required here).
+- Coordination law (TODO-020): the Lead's board item says to coordinate
+  acceptance criteria via the TODO-020 research digest.  At authoring
+  time (chat tail scanned 2026-11-04 ~07:2xZ) the digest has NOT landed
+  in CHAT.org (the devin seat is provisional).  This spec therefore pins
+  acceptance from the DoE notice's own mapping (study guide + glossary
+  + briefing doc; explain-the-miss with source citation; topic/
+  difficulty control) NOW, so the implementing segment is never blocked
+  on a provisional seat.  When the digest lands, the Lead may board
+  deltas as spec amendments (the spec 007 amendment precedent); the
+  implementing segment re-reads the digest before coding.
+- Board files never ride feature commits; TIME LAW effort + deadline
+  are the Lead's at boarding (already set on TODO-019: EFFORT 2:00 per
+  the DoE notice, DEADLINE <2026-11-05 Thu 06:00> UTC).
+
+* Gate
+
+#+begin_src sh
+emacs -Q --batch -L . --eval "(byte-compile-file \"org-learn-ai.el\")"
+emacs -Q --batch -L . -l tests/test-org-learn.el \
+      -f ert-run-tests-batch-and-exit
+#+end_src
+
+(checkdoc on =org-learn-ai.el= and =tests/test-org-learn-ai.el= is part
+of acceptance row 16.)

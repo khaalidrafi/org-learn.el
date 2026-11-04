@@ -83,9 +83,12 @@
     as TODO-014); item 5 (audio-overview script) drafted board-ready as
     specs/013-audio-overview.org by port-engineer 2026-11-04 (TODO-017;
     queue law in the spec Summary: implements after TODO-013 and
-    TODO-014's org-learn-ai.el part merge); items 2, 4 (study-kit
-    generator, learning-plan generator) await boarding — item 2 is the
-    Port seat's next spec lane (TODO-019).
+    TODO-014's org-learn-ai.el part merge); item 2 (study-kit
+    generator) drafted board-ready as specs/014-study-kit.org by
+    port-engineer 2026-11-04 (TODO-019; queue law in the spec Summary:
+    implements after specs 009/012/013 merge; org-id cite law with the
+    unsaved-buffer degradation branch pinned); item 4 (learning-plan
+    generator) awaits boarding — TODO-020's research digest lane.
   - Docs honesty (port-engineer segment 2026-11-04): README.org and
     this file refreshed to the delivered tree (dependency law, gate
     counts, CI cites); the stale STATUS commentary line in
