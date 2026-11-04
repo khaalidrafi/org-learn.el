@@ -630,6 +630,52 @@
   criteria.  One segment, one report @lead with RESULT.
   :LOGBOOK:
   - 2026-11-04 lead: clock opened at dispatch.
+  - 2026-11-04 port-engineer (goose seat, branch
+    ai/turn-20261104-0805) — segment closed out.  The spec was authored
+    and merged by the 07:35Z turn (292bafe, branch
+    ai/turn-20261104-0725, merged 5bd9869) but that turn shipped
+    without the LOGBOOK/chat close-out; this turn verified
+    board-readiness against the live tree and landed exactly that (the
+    TODO-017 close-out shape, 221de4e).  No .el touched.
+    * VERIFIED board-ready — every pinned cite re-proven on the live
+      tree: org-learn-ai.el --complete :211, --cap-context :308,
+      --context :318, --system-message :143, --user-message :147,
+      --extract-json-array :500, --cards-from-array :526,
+      --flashcards-messages :575, --subtree-check :689; quiz loop
+      :635-686 (source-buffer capture :649, inner let* :653,
+      scheduling offer :680-684, continue prompt :685); defcustoms
+      :106/:113; org-learn-mode.el six AI keys :70-79 + Learn menu
+      :114-119; org-learn.el:7 org-roadmap header declaration; 30
+      existing tests (tests/test-org-learn-ai.el); DoE notice item 2
+      quote matches TODOS.org NOTICES :49-53.
+    * ADDITIVE LAW holds: zero org-id symbols and zero spec-014
+      symbols (kit/explain cores, prompt defconsts, glossary parser,
+      renderers, buffer consts, defcustom) in the tree today — the
+      first-use declarations are accurate.
+    * QUEUE LAW still accurate: specs 009/012/013 all unmerged on
+      ai/main (no org-learn-ai-guide.el; no LEARN_QUIZZES/:quizzes;
+      no audio symbols; TODO-014's bde8708 only on
+      origin/ai/turn-20261104-0520) — "implement strictly after
+      009/012/013 merge" stands; the rider composition law stays
+      load-bearing.
+    * RIDER precedents verified live: yes-or-no-p cl-letf mocks at
+      tests/test-org-learn-ai.el:382/:407/:589/:621; erase-buffer reset
+      pattern org-learn-ai.el:371; backend dispatch law (defcustom
+      :76, pcase :223, spec 007).
+    * TODO-020 digest still not landed (no devin chat entries; board
+      clock-open only) — the spec's Coordination law (acceptance pinned
+      from the DoE notice now, amendments after the digest) remains
+      the honest call.
+    * GATE re-proven: byte-compile 8/8 root .el exit 0 zero warnings;
+      ERT exact CI command "Ran 93 tests, 89 results as expected, 0
+      unexpected, 4 skipped" exit 0 (Emacs 30.1, org 9.7.11); spec
+      org-parse clean (17 headlines); checkdoc org-learn-ai.el 0
+      diagnostics — tests/test-org-learn-ai.el:227 carries the ONE
+      pre-existing "C-c keycode" nit (with test-org-learn-mode.el:73),
+      already boarded as TODO-013's rider; not this spec's debt.
+    * ENV: ROLE_LARK_WEBHOOK unset — Lark post skipped per law;
+      TYPESAFE_API_KEY unset — Jev self-audit performed instead (all
+      10 brief steps checked).
   :END:
 * TODO Research digest v2 — acceptance criteria for wave items 2/4 (study-kit, learning-plan) :research:
   :PROPERTIES:
