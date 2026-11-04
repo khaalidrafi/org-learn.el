@@ -1,0 +1,145 @@
+#+TITLE: Spec 012 — Mastery tracker / growth areas (Owner AI-education wave, DoE item 3)
+#+FILETAGS: :spec:dashboard:mastery:
+#+DATE: <2026-11-04 Tue>
+#+STATUS: SPEC — authored by port-engineer (fallback-lane segment 2026-11-04;
+#+STATUS: chat report to @lead with the boarding proposal).  Boards as the
+#+STATUS: Lead's next TODO.  Source: DoE notice item 3 in agent-team/TODOS.org
+#+STATUS: * NOTICES [2026-11-03 19:2xZ] — "per-topic mastery rollup from SM-2
+#+STATUS: lapses + drill leeches + quiz misses; dashboard 'growth areas' line
+#+STATUS: + agenda jump" (NotebookLM study-tools mapping).  Suggested EFFORT
+#+STATUS: 1:00 per the DoE notice; the Lead decides effort + deadline (TIME LAW).
+
+* Source
+
+DoE notice item 3 (agent-team/TODOS.org, * NOTICES, 2026-11-03): the
+dashboard should answer "where am I weak", not only "what is due".
+Extends the spec 005 dashboard's pure compute path — same batch-safe,
+nothing-stored laws.  No collision with TODO-013 (spec 009 owns
+org-learn-ai.el's guide mode; this spec's single org-learn-ai.el change
+is the quiz persistence law below, queued to implement AFTER TODO-013
+merges).
+
+* Data sources (persisted facts only)
+
+- SM-2 per entry: LEARN_REPS / LEARN_LAPSES / LEARN_EASE (spec 002
+  law; `org-learn-dashboard--scan-file' already reads them).
+- Leech flag: the :leech: tag the drill sets at
+  `org-learn-drill-leech-threshold' (spec 003 law; the scan already
+  reads it as :leech).
+- Quiz counters (NEW persistence law, next section): LEARN_QUIZZES and
+  LEARN_QUIZ_MISSES entry properties.
+
+* Quiz persistence law (org-learn-ai.el, org-learn-ai-quiz)
+
+After EVERY graded answer (quality from `org-learn-ai--grade-quality'):
+1. increment LEARN_QUIZZES on the entry at point (org-entry-put);
+2. when quality = 1 (grade word wrong/incorrect) also increment
+   LEARN_QUIZ_MISSES; "partly" (quality 3) counts as an attempt, never
+   as a miss;
+3. the counters persist INDEPENDENT of the scheduling offer — they are
+   written even when the user declines the spaced-review prompt;
+4. save-buffer on the entry's file (same persistence moment as the
+   existing scheduling branch).
+
+Pinned so the rollup math is deterministic and the mocked-choke-point
+tests can assert exact property values.
+
+* Deliverables
+
+1. Scan: `org-learn-dashboard--scan-file' reads LEARN_QUIZZES /
+   LEARN_QUIZ_MISSES (string-to-number, missing = 0) as additive
+   :quizzes / :quiz-misses entry keys.
+2. Stats: `org-learn-dashboard--topic-stats' gains additive keys:
+   :leeches (count of :leech: items), :quizzes and :quiz-misses (sums
+   over the topic's items), plus :file and :line — the topic heading's
+   own file and line, which the growth-area links need (the stat plist
+   carries the topic title today but not its location).
+3. =org-learn-dashboard--mastery= (pure): one topic-stat plist ->
+   integer 0..100 or nil.  Component law (each component nil = no
+   evidence for it):
+   - retention component = the stat's :retention (nil when reps = 0);
+   - leech component = round (100 * (1 - leeches / items)), nil when
+     items = 0;
+   - quiz component = round (100 * (1 - quiz-misses / quizzes)), nil
+     when quizzes = 0.
+   Mastery = round of the weighted mean over the PRESENT components,
+   weights retention 0.5, leech 0.25, quiz 0.25, renormalized over the
+   present components (a single present component IS the mastery).
+   nil when NO component is present — a zero-evidence topic is
+   unstarted, never a growth area.
+   Worked example (pinned for the audit): retention 75, 2 leeches of
+   10 items (leech component 80), 2 quiz misses of 6 attempts (quiz
+   component 67) -> round (0.5*75 + 0.25*80 + 0.25*67) = round 74.25
+   = 74.
+4. =org-learn-dashboard--growth-areas= (pure): the stats list ->
+   growth-area plists (:topic :mastery :file :line) for topics whose
+   mastery is strictly below
+   `org-learn-dashboard-growth-threshold', worst-first (mastery
+   ascending; ties broken by topic title, string<).  No cap — mirrors
+   the Stats table's completeness law.
+5. Defcustom =org-learn-dashboard-growth-threshold= (natnum 0..100,
+   default 50, group org-learn-dashboard): "Mastery below which a
+   topic counts as a growth area."
+6. Data + render: `org-learn-dashboard--data' carries :growth (the
+   growth-areas list); the *Today* section gains one "Growth areas"
+   bullet AFTER the spec 011 Roadmap line — worst-first, each topic an
+   org link file:LINE to the topic heading with its mastery percent,
+   comma-separated, reusing the review-queue
+   org-link-make-string "file:%s::%d" law (RET jumps; the read-only
+   buffer law is unchanged).  Silent (no bullet) when the list is
+   empty — the Roadmap line's silence law.
+   Scope cut (the DoE's "agenda jump"): an org-agenda custom command
+   is NOT in this spec; the file:line link IS the jump.  Smaller, and
+   agenda integration deserves the Lead's own boarding decision.
+
+* Acceptance criteria (tests land FIRST, red before green)
+
+Extend tests/test-org-learn-dashboard.el; the quiz persistence tests
+extend tests/test-org-learn-ai.el with the org-learn-ai--complete
+choke point mocked as always (zero network in tests):
+
+- Mastery math table (>= 8 exact rows): the pinned worked example
+  (74); retention-only renormalization (retention 40 -> 40);
+  leech-only; quiz-only; leech+quiz renormalization with retention
+  absent; zero-evidence topic -> nil; a leech-fraction rounding row
+  (e.g. 1 leech of 3 items -> 67); the threshold boundary row
+  (mastery exactly equal to the threshold is NOT a growth area —
+  strict <).
+- Growth areas: worst-first ordering including a title tie; strict
+  threshold; empty stats -> nil.
+- `org-learn-dashboard--data' carries :growth; the scan parses the
+  quiz properties (missing -> 0); topic-stats sums them per topic.
+- Render: the Growth areas bullet is present with links and percents
+  when the data has growth areas, absent when empty; every existing
+  dashboard test stays green (they assert key-by-key via plist-get, so
+  additive keys are safe — no assertion may be weakened).
+- Quiz persistence (mocked choke point): a wrong grade writes
+  LEARN_QUIZZES 1 + LEARN_QUIZ_MISSES 1; a partly grade writes
+  LEARN_QUIZZES 1 only; declining the scheduling offer still persists
+  both counters.
+- Gate: byte-compile 0 warnings (org-learn-dashboard.el,
+  org-learn-ai.el), checkdoc 0 on the touched files, the suite all
+  green in both worlds (stub world always; real-dep world loud-skips
+  when the org-roadmap sibling is unmounted), one segment, one report
+  @lead with RESULT: DONE | PARTIAL | BLOCKED.
+
+* Laws
+
+- No new file; no new public command (one defcustom plus internal
+  double-dash functions; the org-learn-dashboard command and the
+  read-only buffer law are unchanged).
+- Pure compute path law (spec 005): mastery and growth areas live in
+  the batch-safe pure path; no display APIs there.
+- org-roadmap boundary untouched (the spec 011 featurep guards stand
+  as they are).
+- Board files never ride feature commits; TIME LAW effort + deadline
+  are the Lead's at boarding.
+
+* Gate
+
+#+begin_src sh
+emacs -Q --batch -L . --eval "(byte-compile-file \"org-learn-dashboard.el\")"
+emacs -Q --batch -L . --eval "(byte-compile-file \"org-learn-ai.el\")"
+emacs -Q --batch -L . -l tests/test-org-learn.el \
+      -f ert-run-tests-batch-and-exit
+#+end_src

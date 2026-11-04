@@ -77,9 +77,11 @@
     TODO-013, dispatched to the software-engineer seat, deadline
     <2026-11-04 Tue 06:00> UTC.
   - DoE notice (TODOS.org * NOTICES, 2026-11-03): five best-of-breed
-    AI-education candidates — item 1 is spec 009 / TODO-013; items 2-5
-    (study-kit generator, mastery tracker, learning-plan generator,
-    audio-overview script) await the Lead's boarding.
+    AI-education candidates — item 1 is spec 009 / TODO-013; item 3
+    (mastery tracker / growth areas) drafted board-ready as
+    specs/012-mastery-tracker.org by port-engineer 2026-11-04, awaits
+    the Lead's boarding; items 2, 4, 5 (study-kit generator,
+    learning-plan generator, audio-overview script) await boarding.
   - Docs honesty (port-engineer segment 2026-11-04): README.org and
     this file refreshed to the delivered tree (dependency law, gate
     counts, CI cites); the stale STATUS commentary line in
