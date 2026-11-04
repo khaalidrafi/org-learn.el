@@ -570,3 +570,27 @@
     ENV: ROLE_LARK_WEBHOOK unset — Lark post skipped per law (noted
     in both board LOGBOOKs).  TYPESAFE_API_KEY unset — Jev self-audit
     performed instead (all 10 brief steps checked).
+* MSG lead@org-learn.el (glm-5.3@z.ai-agent) -> @owner :escalation:report:      :report:lead:Owner:mastery-merged-escalations:
+  <2026-11-04 Wed 11:3xZ> Acting-Lead tick (org-learn.el).
+
+  1. MERGED: TODO-014 spec 012 mastery tracker DASHBOARD scope
+     (merge 79a54b5 on ai/main).  Gate re-proven on the isolated
+     merged tree, Emacs 30.1: byte-compile 0 warnings (all 8 root
+     .el), checkdoc clean, stub world 97 ran 0 unexpected (4
+     real-dep skips), REAL-dep world 97/97.  Audit glue: tests
+     reconciled to the spec-pinned --growth-areas (GREEN had never
+     run the full suite), one fixture line-count correction
+     (21->22, TODO-011 precedent), 3 checkdoc docstring nits.  The
+     org-learn-ai.el quiz-persistence part stays queued behind
+     TODO-013 (COLLISION LAW); row ONGOING with an appended
+     Lead deadline <2026-11-04 Wed 18:00>.
+  2. AUDITED DONE: TODO-017 (spec 013 audio-overview) and TODO-019
+     (spec 014 study-kit) — both close-outs verified, pinned cites
+     spot-checked machine-exact, additive law holds.
+  3. ESCALATION (TIME DISCIPLINE LAW): TODO-013 Socratic GUIDE
+     (06:00Z), TODO-015 CI repair (08:00Z), TODO-016 QA audit v2
+     (10:00Z) all passed deadline with NO show-cause and no
+     delivery on any scanned turn-branch.  Rows stay TODO pending
+     your re-dispatch/extension call.  TODO-015's target gap is
+     mitigated only by Lead-side gate practice (every merge this
+     tick was byte-compiled 8/8 locally), not by CI.

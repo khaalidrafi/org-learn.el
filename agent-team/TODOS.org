@@ -489,9 +489,15 @@
   RESULT: DONE|PARTIAL|BLOCKED.
   :LOGBOOK:
   - 2026-11-03 lead: clock opened at dispatch.
+  - 2026-11-04 lead: DEADLINE ESCALATION (TIME DISCIPLINE LAW) — the
+    06:00Z deadline passed with NO show-cause filed (LOGBOOK had only
+    the clock-open entry; no spec 009 segment on any turn-branch
+    scanned this tick: no org-learn-ai-guide anywhere).  Escalated to
+    the Owner (CHAT.org lead -> @owner :escalation:).  Row stays TODO
+    pending the Owner's re-dispatch/extension call.
   :END:
 
-* TODO Implement spec 012 — mastery tracker + dashboard growth areas (DoE wave item 3) :spec-012:dashboard:mastery:
+* ONGOING Implement spec 012 — mastery tracker + dashboard growth areas (DoE wave item 3) :spec-012:dashboard:mastery:
   :PROPERTIES:
   :EFFORT: 1:00
   :ID: TODO-014
@@ -514,6 +520,33 @@
   one report @lead with RESULT: DONE|PARTIAL|BLOCKED.
   :LOGBOOK:
   - 2026-11-04 lead: clock opened at dispatch.
+  - 2026-11-04 seat glm-5.3@z.ai-agent (branch ai/turn-20261104-0520,
+    bde8708 + landing glue ae30c3a/059f3c4) — dashboard scope of spec
+    012 DELIVERED and Lead audit ACCEPTED, merged 79a54b5:
+    * SPEC-FIDELITY: LEARN_QUIZZES/LEARN_QUIZ_MISSES additive scan,
+      topic-stats :leeches/:quizzes/:quiz-misses + topic :file/:line,
+      pure --mastery (0.5/0.25/0.25 renormalized), --growth-areas
+      (strict < threshold, worst-first, title tiebreak), --data
+      :growth + Growth areas bullet (org links file:LINE, silent when
+      empty), defcustom growth-threshold 50 — all per spec 012.
+    * AUDIT FIXES (Lead landing glue, ratified): tests called public
+      org-learn-dashboard-growth-areas but spec 012:74 pins the
+      PRIVATE --growth-areas (GREEN had never run the full suite) —
+      reconciled to spec; Beta :line expectation corrected 21->22
+      (backslash-newline is elided; * Beta sits at line 22 — TODO-011
+      fixture-semantics precedent); 3 checkdoc docstring nits re-flowed.
+    * GATE on the isolated merged tree (Emacs 30.1): byte-compile 0
+      warnings all 8 root .el; checkdoc clean on both touched files;
+      stub world 97 ran 0 unexpected 4 skipped; REAL-dep world 97/97
+      with the sibling mounted (rollup path proven).  Collision law
+      honored: zero org-learn-ai.el touch.
+  - 2026-11-04 lead: EXTENSION (Lead-only, appended) — the queued
+    org-learn-ai.el quiz-persistence part (writes the counters, miss =
+    quality 1) stays blocked by the COLLISION LAW until TODO-013
+    merges; its deadline is now <2026-11-04 Wed 18:00> measured from
+    board time, whichever the TODO-013 merge makes later show-cause
+    first.  Row stays ONGOING for that part only; the dashboard scope
+    is DONE and merged.
   :END:
 * TODO CI repair — byte-compile ALL root feature files, not just org-learn.el :ci:release:
   :PROPERTIES:
@@ -532,6 +565,13 @@
   RESULT.
   :LOGBOOK:
   - 2026-11-04 lead: clock opened at dispatch.
+  - 2026-11-04 lead: DEADLINE ESCALATION (TIME DISCIPLINE LAW) — the
+    08:00Z deadline passed with no show-cause and no delivery (CI
+    still byte-compiles org-learn.el only).  Escalated to the Owner
+    (CHAT.org lead -> @owner :escalation:).  NOTE: the TODO-014 merge
+    (79a54b5) was gated locally with the FULL 8-file byte-compile, so
+    the gap the row targets is currently mitigated by Lead-side gate
+    practice, not by CI.  Row stays TODO pending the Owner's call.
   :END:
 * TODO Whole-repo compliance audit v2 + verify TODO-015 CI coverage on the merged tree :qa:audit:
   :PROPERTIES:
@@ -549,8 +589,12 @@
   RESULT.
   :LOGBOOK:
   - 2026-11-04 lead: clock opened at dispatch.
+  - 2026-11-04 lead: DEADLINE ESCALATION (TIME DISCIPLINE LAW) — the
+    10:00Z deadline passed with no show-cause and no audit report.
+    Escalated to the Owner (CHAT.org lead -> @owner :escalation:).
+    Row stays TODO pending the Owner's call.
   :END:
-* TODO Author spec 013 — audio-overview script (DoE wave item 5) :spec-013:ai:audio:
+* DONE Author spec 013 — audio-overview script (DoE wave item 5) :spec-013:ai:audio:
   :PROPERTIES:
   :EFFORT: 0:50
   :ID: TODO-017
@@ -621,7 +665,13 @@
       strictly after 009/012/013 merge" stands.
     * ENV: ROLE_LARK_WEBHOOK unset — Lark post skipped per law;
       TYPESAFE_API_KEY unset — Jev self-audit performed instead.
-    Row stays TODO — the DONE gate is the Lead's audit.
+  - 2026-11-04 lead: audit ACCEPTED — spec 013 present in tree
+    (specs/013-audio-overview.org); pinned cites spot-checked
+    machine-exact on the merged tree (--complete :211, --subtree-check
+    :689, six AI keys org-learn-mode.el:70-79); additive law holds
+    (zero 'audio' symbols tree-wide); queue law consistent with
+    TODO-014's dashboard scope now merged (79a54b5) and TODO-013 still
+    unmerged.  Both close-outs read; the 0835Z re-proof was audited.
   :END:
 * TODO Docs honesty sweep — README/QUICKSTART vs the delivered tree :docs:
   :PROPERTIES:
@@ -639,7 +689,7 @@
   :LOGBOOK:
   - 2026-11-04 lead: clock opened at dispatch.
   :END:
-* TODO Author spec 014 — study-kit generator (DoE wave item 2) :spec-014:ai:study-kit:
+* DONE Author spec 014 — study-kit generator (DoE wave item 2) :spec-014:ai:study-kit:
   :PROPERTIES:
   :EFFORT: 0:50
   :ID: TODO-019
@@ -731,7 +781,12 @@
       (devin lane, provisional) — the spec's Coordination law stands.
     * ENV: ROLE_LARK_WEBHOOK unset — Lark post skipped per law;
       TYPESAFE_API_KEY unset — Jev self-audit performed instead.
-    Row stays TODO — the DONE gate is the Lead's audit.
+  - 2026-11-04 lead: audit ACCEPTED — spec 014 present in tree
+    (specs/014-study-kit.org); 12 pinned cites spot-checked
+    machine-exact on the merged tree (quiz loop :635-686, defcustoms
+    :106/:113, AI keys :70-79); additive law holds (zero org-id and
+    zero spec-014 symbols tree-wide); the rider composition + queue
+    laws stand with TODO-014 dashboard merged (79a54b5).
   :END:
 * TODO Research digest v2 — acceptance criteria for wave items 2/4 (study-kit, learning-plan) :research:
   :PROPERTIES:
