@@ -293,5 +293,217 @@ SCHEDULED: <2020-01-01 Wed>
   "Spec 005: the dashboard feature never loads org-roadmap either."
   (should-not (featurep 'org-roadmap)))
 
+;;; Mastery math (pure, spec 012 acceptance rows).
+
+(ert-deftest org-learn-dashboard-mastery-math ()
+  "Spec 012: mastery = rounded weighted mean, renormalized over \
+the present components; nil at zero evidence.  Pinned rows."
+  ;; 1. Worked example (spec): retention 75, leech 80, quiz 67 -> 74.
+  (should (= 74 (org-learn-dashboard--mastery
+                 (list :retention 75 :items 10 :leeches 2
+                       :quizzes 6 :quiz-misses 2))))
+  ;; 2. Retention only (renormalized single component): 40 -> 40.
+  (should (= 40 (org-learn-dashboard--mastery
+                 (list :retention 40 :items 0 :leeches 0
+                       :quizzes 0 :quiz-misses 0))))
+  ;; 3. Leech only: 2 leeches of 10 items -> 80.
+  (should (= 80 (org-learn-dashboard--mastery
+                 (list :retention nil :items 10 :leeches 2
+                       :quizzes 0 :quiz-misses 0))))
+  ;; 4. Quiz only: 2 misses of 6 attempts -> 67.
+  (should (= 67 (org-learn-dashboard--mastery
+                 (list :retention nil :items 0 :leeches 0
+                       :quizzes 6 :quiz-misses 2))))
+  ;; 5. Leech + quiz renormalized (0.5/0.5): 80 and 60 -> 70.
+  (should (= 70 (org-learn-dashboard--mastery
+                 (list :retention nil :items 10 :leeches 2
+                       :quizzes 5 :quiz-misses 2))))
+  ;; 6. Zero-evidence topic -> nil (unstarted, never a growth area).
+  (should (null (org-learn-dashboard--mastery
+                 (list :retention nil :items 0 :leeches 0
+                       :quizzes 0 :quiz-misses 0))))
+  ;; 7. Leech-fraction rounding: 1 leech of 3 items -> 67.
+  (should (= 67 (org-learn-dashboard--mastery
+                 (list :retention nil :items 3 :leeches 1
+                       :quizzes 0 :quiz-misses 0))))
+  ;; 8. All components perfect: 100.
+  (should (= 100 (org-learn-dashboard--mastery
+                  (list :retention 100 :items 4 :leeches 0
+                        :quizzes 9 :quiz-misses 0)))))
+
+;;; Growth areas (pure, spec 012: strict threshold, worst-first, ties).
+
+(ert-deftest org-learn-dashboard-growth-areas-order-and-threshold ()
+  "Spec 012: growth areas are strictly below the threshold,
+worst-first, ties broken by title; nil on empty stats."
+  (let ((stats (list (list :topic "Zeta" :retention 10 :items 0 :leeches 0
+                           :quizzes 0 :quiz-misses 0 :file "a.org" :line 1)
+                     (list :topic "Alpha" :retention 90 :items 0 :leeches 0
+                           :quizzes 0 :quiz-misses 0 :file "a.org" :line 2)
+                     (list :topic "Mid" :retention 50 :items 0 :leeches 0
+                           :quizzes 0 :quiz-misses 0 :file "a.org" :line 3)
+                     (list :topic "Tie-a" :retention 30 :items 0 :leeches 0
+                           :quizzes 0 :quiz-misses 0 :file "a.org" :line 4)
+                     (list :topic "Tie-b" :retention 30 :items 0 :leeches 0
+                           :quizzes 0 :quiz-misses 0 :file "a.org" :line 5)
+                     (list :topic "None" :retention nil :items 0 :leeches 0
+                           :quizzes 0 :quiz-misses 0 :file "a.org" :line 6))))
+    (let ((growth (org-learn-dashboard-growth-areas stats)))
+      ;; Default threshold 50, strict <: Zeta, Tie-a, Tie-b grow;
+      ;; Alpha 90 and Mid 50 (the boundary row) stay out; None is nil.
+      (should (equal (list "Zeta" "Tie-a" "Tie-b")
+                     (mapcar (lambda (row) (plist-get row :topic)) growth)))
+      ;; Worst-first: 10, 30, 30; the 30 tie orders by title.
+      (should (equal (list 10 30 30)
+                     (mapcar (lambda (row) (plist-get row :mastery)) growth)))
+      ;; Rows carry the link coordinates of the topic heading.
+      (should (equal 4 (plist-get (nth 1 growth) :line)))
+      (should (equal "a.org" (plist-get (nth 2 growth) :file)))))
+  ;; Empty stats -> nil (the Roadmap line's silence law).
+  (should (null (org-learn-dashboard-growth-areas nil))))
+
+;;; Compute path (spec 012: quiz scan keys, sums, :growth).
+
+(ert-deftest org-learn-dashboard-data-growth-and-quiz-scan ()
+  "Spec 012: the scan parses LEARN_QUIZZES / LEARN_QUIZ_MISSES \
+(missing -> 0), topic-stats sums them per topic with :leeches and \
+the topic's own :file/:line, and --data carries :growth."
+  (let* ((file (make-temp-file "org-learn-dash-growth-" nil ".org"))
+         (org-learn-file file)
+         (org-learn-review-scope 'file)
+         buffer)
+    (unwind-protect
+        (progn
+          (setq buffer (find-file-noselect file))
+          (with-current-buffer buffer
+            (insert "\
+* Alpha
+** card one :leech:
+SCHEDULED: <2020-01-01 Wed>
+:PROPERTIES:
+:LEARN_REPS: 6
+:LEARN_LAPSES: 4
+:LEARN_QUIZZES: 3
+:LEARN_QUIZ_MISSES: 2
+:END:
+   body one
+
+** card two
+SCHEDULED: <2020-01-02 Thu>
+:PROPERTIES:
+:LEARN_REPS: 2
+:LEARN_LAPSES: 0
+:LEARN_QUIZZES: 5
+:LEARN_QUIZ_MISSES: 4
+:END:
+   body two
+
+* Beta
+** card three
+SCHEDULED: <2020-01-03 Fri>
+:PROPERTIES:
+:LEARN_REPS: 1
+:END:
+   body three
+"))
+          (let ((data (org-learn-dashboard--data (list file))))
+            (let ((stats (plist-get data :stats))
+                  (alpha-stats nil))
+              (should (= 2 (length stats)))
+              (setq alpha-stats (nth 0 stats))
+              ;; Alpha: quiz sums 3+5, misses 2+4, 1 leech of 2 items.
+              (should (equal "Alpha" (plist-get alpha-stats :topic)))
+              (should (= 2 (plist-get alpha-stats :items)))
+              (should (= 1 (plist-get alpha-stats :leeches)))
+              (should (= 8 (plist-get alpha-stats :quizzes)))
+              (should (= 6 (plist-get alpha-stats :quiz-misses)))
+              ;; The topic's own location rides the stat plist.
+              (should (equal file (plist-get alpha-stats :file)))
+              (should (= 1 (plist-get alpha-stats :line)))
+              ;; Beta: no quiz properties anywhere -> 0 (missing -> 0).
+              (let ((beta-stats (nth 1 stats)))
+                (should (equal "Beta" (plist-get beta-stats :topic)))
+                (should (= 0 (plist-get beta-stats :quizzes)))
+                (should (= 0 (plist-get beta-stats :quiz-misses)))
+                (should (= 21 (plist-get beta-stats :line))))
+              ;; Alpha mastery: retention 50 (4 lapses of 8 reps),
+              ;; leech 50 (1 of 2), quiz 25 (6 misses of 8) -> 44.
+              ;; Beta mastery 100 (perfect retention + no leeches).
+              (let ((growth (plist-get data :growth)))
+                (should (= 1 (length growth)))
+                (should (equal "Alpha" (plist-get (nth 0 growth) :topic)))
+                (should (= 44 (plist-get (nth 0 growth) :mastery)))
+                (should (equal file (plist-get (nth 0 growth) :file)))
+                (should (= 1 (plist-get (nth 0 growth) :line)))))))
+      (org-learn-dashboard-test--kill-file-buffer file)
+      (org-learn-dashboard-test--kill-dashboard)
+      (when (file-exists-p file)
+        (delete-file file)))))
+
+;;; Presentation (spec 012: the Growth areas bullet).
+
+(ert-deftest org-learn-dashboard-renders-growth-areas ()
+  "Spec 012: one Growth areas bullet after the Roadmap line, \
+worst-first links with percents; silent when empty."
+  (let* ((file (make-temp-file "org-learn-dashgrow-" nil ".org"))
+         (org-learn-file file)
+         (org-learn-review-scope 'file))
+    (unwind-protect
+        (progn
+          ;; Seeded: Alpha weak (mastery 44), Beta perfect (100).
+          (write-region "\
+* Alpha
+** card one :leech:
+SCHEDULED: <2020-01-01 Wed>
+:PROPERTIES:
+:LEARN_REPS: 6
+:LEARN_LAPSES: 4
+:LEARN_QUIZZES: 3
+:LEARN_QUIZ_MISSES: 2
+:END:
+   body one
+
+** card two
+SCHEDULED: <2020-01-02 Thu>
+:PROPERTIES:
+:LEARN_REPS: 2
+:LEARN_LAPSES: 0
+:LEARN_QUIZZES: 5
+:LEARN_QUIZ_MISSES: 4
+:END:
+   body two
+
+* Beta
+** card three
+SCHEDULED: <2020-01-03 Fri>
+:PROPERTIES:
+:LEARN_REPS: 1
+:END:
+   body three
+" nil file nil 'quiet)
+          (org-learn-dashboard)
+          (with-current-buffer org-learn-dashboard--buffer
+            (let ((text (buffer-string)))
+              (should buffer-read-only)
+              ;; The bullet carries the link and the mastery percent.
+              (should (string-match-p
+                       "^- Growth areas: \\[\\[file:.*::1\\]\\[Alpha\\]\\] 44%$"
+                       text))
+              ;; It sits in Today, after the counters, before the queue.
+              (should (< (string-match "- Done today" text)
+                         (string-match "- Growth areas" text)
+                         (string-match "^\\* Review queue" text)))))
+          ;; Empty file -> no Growth areas line at all (silence law).
+          (org-learn-dashboard-test--kill-file-buffer file)
+          (write-region "" nil file nil 'quiet)
+          (org-learn-dashboard)
+          (with-current-buffer org-learn-dashboard--buffer
+            (should-not (string-match-p "Growth areas"
+                                        (buffer-string)))))
+      (org-learn-dashboard-test--kill-dashboard)
+      (org-learn-dashboard-test--kill-file-buffer file)
+      (when (file-exists-p file)
+        (delete-file file)))))
+
 (provide 'test-org-learn-dashboard)
 ;;; test-org-learn-dashboard.el ends here
