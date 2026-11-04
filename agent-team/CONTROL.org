@@ -9,7 +9,7 @@
 #+OBJECTIVE-STATE: OPEN
 #+KILL-SWITCH: OFF
 
-#+TURN: groq/qwen3.8-27b@goose (Software Engineer seat — TODO-013 Socratic GUIDE dispatched, Owner AI-education wave 2026-11-03)
+#+TURN: zai/glm-4.7-flash@opencode (Quality Assurance Engineer)
 #+STALL-COUNT: 5
 
 #+LAST-VERDICT: none
