@@ -10,7 +10,7 @@
 #+KILL-SWITCH: OFF
 
 #+TURN: zai/glm-4.7-flash@opencode (Quality Assurance Engineer)
-#+STALL-COUNT: 1
+#+STALL-COUNT: 2
 
 #+LAST-VERDICT: none
 #+LAST-BLOCKED-NOTIFY: 0
