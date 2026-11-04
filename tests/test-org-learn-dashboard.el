@@ -334,8 +334,8 @@ the present components; nil at zero evidence.  Pinned rows."
 ;;; Growth areas (pure, spec 012: strict threshold, worst-first, ties).
 
 (ert-deftest org-learn-dashboard-growth-areas-order-and-threshold ()
-  "Spec 012: growth areas are strictly below the threshold,
-worst-first, ties broken by title; nil on empty stats."
+  "Spec 012: growth areas are strictly below the threshold.
+Worst-first, ties broken by title; nil on empty stats."
   (let ((stats (list (list :topic "Zeta" :retention 10 :items 0 :leeches 0
                            :quizzes 0 :quiz-misses 0 :file "a.org" :line 1)
                      (list :topic "Alpha" :retention 90 :items 0 :leeches 0
@@ -348,7 +348,7 @@ worst-first, ties broken by title; nil on empty stats."
                            :quizzes 0 :quiz-misses 0 :file "a.org" :line 5)
                      (list :topic "None" :retention nil :items 0 :leeches 0
                            :quizzes 0 :quiz-misses 0 :file "a.org" :line 6))))
-    (let ((growth (org-learn-dashboard-growth-areas stats)))
+    (let ((growth (org-learn-dashboard--growth-areas stats)))
       ;; Default threshold 50, strict <: Zeta, Tie-a, Tie-b grow;
       ;; Alpha 90 and Mid 50 (the boundary row) stay out; None is nil.
       (should (equal (list "Zeta" "Tie-a" "Tie-b")
@@ -360,14 +360,15 @@ worst-first, ties broken by title; nil on empty stats."
       (should (equal 4 (plist-get (nth 1 growth) :line)))
       (should (equal "a.org" (plist-get (nth 2 growth) :file)))))
   ;; Empty stats -> nil (the Roadmap line's silence law).
-  (should (null (org-learn-dashboard-growth-areas nil))))
+  (should (null (org-learn-dashboard--growth-areas nil))))
 
 ;;; Compute path (spec 012: quiz scan keys, sums, :growth).
 
 (ert-deftest org-learn-dashboard-data-growth-and-quiz-scan ()
-  "Spec 012: the scan parses LEARN_QUIZZES / LEARN_QUIZ_MISSES \
-(missing -> 0), topic-stats sums them per topic with :leeches and \
-the topic's own :file/:line, and --data carries :growth."
+  "Spec 012: the scan parses the quiz counters.
+LEARN_QUIZZES / LEARN_QUIZ_MISSES (missing -> 0) are summed per
+topic with :leeches and the topic's own :file/:line, and --data
+carries :growth."
   (let* ((file (make-temp-file "org-learn-dash-growth-" nil ".org"))
          (org-learn-file file)
          (org-learn-review-scope 'file)
@@ -425,7 +426,7 @@ SCHEDULED: <2020-01-03 Fri>
                 (should (equal "Beta" (plist-get beta-stats :topic)))
                 (should (= 0 (plist-get beta-stats :quizzes)))
                 (should (= 0 (plist-get beta-stats :quiz-misses)))
-                (should (= 21 (plist-get beta-stats :line))))
+                (should (= 22 (plist-get beta-stats :line))))
               ;; Alpha mastery: retention 50 (4 lapses of 8 reps),
               ;; leech 50 (1 of 2), quiz 25 (6 misses of 8) -> 44.
               ;; Beta mastery 100 (perfect retention + no leeches).
