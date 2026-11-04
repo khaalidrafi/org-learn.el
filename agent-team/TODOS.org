@@ -672,6 +672,33 @@
     (zero 'audio' symbols tree-wide); queue law consistent with
     TODO-014's dashboard scope now merged (79a54b5) and TODO-013 still
     unmerged.  Both close-outs read; the 0835Z re-proof was audited.
+  - 2026-11-04 port-engineer (goose seat, branch ai/turn-20261104-1322)
+    — RE-PROOF #2 on the MOVED tree (ai/main b36d63e; the spec-012
+    dashboard merge 79a54b5 landed after the 08:41Z proof — Lead tick
+    11:3xZ).  Every certification re-proven machine-exact on the new
+    tree:
+    * GATE: byte-compile 8/8 root .el exit 0 zero warnings; ERT exact
+      CI command "Ran 97 tests, 93 results as expected, 0 unexpected,
+      4 skipped" exit 0 (Emacs 30.1, 13:2xZ; suite grew 93->97 with
+      spec 012's dashboard tests); checkdoc org-learn-ai.el +
+      org-learn-mode.el exit 0 (tests/test-org-learn-ai.el:227 C-c nit
+      unchanged — TODO-013's rider, SW lane).
+    * CITES still exact post-merge: org-learn-ai.el --complete :211,
+      --cap-context :308, --context :318, --cards-from-array :526,
+      --flashcards-messages :575, --subtree-check :689, --mode-chat
+      :698 (79a54b5 touched org-learn-dashboard.el + its tests ONLY —
+      git show --stat); org-learn-mode.el six AI keys :70-79 + Learn
+      menu :114-119; 30 AI tests (ert-deftest count); zero 'audio'
+      symbols in any .el tree-wide (additive law holds); spec
+      org-parse clean (15 headlines).
+    * QUEUE LAW: spec 009 still unmerged (no org-learn-ai-guide.el;
+      TODO-013 deadline 06:00Z passed, Lead escalated to @owner
+      11:3xZ, row TODO) — "implement strictly after 009/012/013
+      merge" stands; spec 012's DASHBOARD scope merged (79a54b5) but
+      its org-learn-ai.el write side stays queued behind TODO-013
+      (collision law; Lead extension <2026-11-04 Wed 18:00>).
+    * ENV: ROLE_LARK_WEBHOOK unset — Lark post skipped per law;
+      TYPESAFE_API_KEY unset — Jev self-audit performed instead.
   :END:
 * TODO Docs honesty sweep — README/QUICKSTART vs the delivered tree :docs:
   :PROPERTIES:
@@ -787,6 +814,42 @@
     :106/:113, AI keys :70-79); additive law holds (zero org-id and
     zero spec-014 symbols tree-wide); the rider composition + queue
     laws stand with TODO-014 dashboard merged (79a54b5).
+  - 2026-11-04 port-engineer (goose seat, branch ai/turn-20261104-1322)
+    — RE-PROOF #2 on the MOVED tree (ai/main b36d63e; spec-012
+    dashboard merge 79a54b5 landed after the 08:41Z proof).  Every
+    certification re-proven machine-exact:
+    * GATE: byte-compile 8/8 root .el exit 0 zero warnings; ERT exact
+      CI command "Ran 97 tests, 93 results as expected, 0 unexpected,
+      4 skipped" exit 0 (Emacs 30.1, 13:2xZ); checkdoc
+      org-learn-ai.el + org-learn-dashboard.el +
+      tests/test-org-learn-dashboard.el exit 0 (test-org-learn-ai.el
+      :227 nit = TODO-013's rider, SW lane).
+    * CITES still exact post-merge: org-learn-ai.el --complete :211,
+      --cap-context :308, --context :318, --system-message :143,
+      --user-message :147, --extract-json-array :500,
+      --cards-from-array :526, --flashcards-messages :575,
+      --subtree-check :689; quiz loop :635-686 exact (source-buffer
+      :649, inner let* :653, scheduling offer :680-684, continue
+      :685); defcustoms :106/:113; org-learn-mode.el six AI keys
+      :70-79 + Learn menu :114-119; org-learn.el:7 org-roadmap header
+      declaration; 30 AI tests; spec org-parse clean (17 headlines).
+    * ADDITIVE LAW holds: zero org-id and zero spec-014 symbols
+      tree-wide.
+    * QUEUE LAW RESTATED honestly post-merge: spec 012's DASHBOARD
+      scope is now MERGED (79a54b5 — org-learn-dashboard.el +158,
+      tests +213; its scan READS LEARN_QUIZZES/LEARN_QUIZ_MISSES,
+      org-learn-dashboard.el:59-60/:160-161), so the old "no
+      LEARN_QUIZZES tree-wide" claim is retired; the org-learn-ai.el
+      WRITE side (:quizzes/:quiz-misses entry properties, miss =
+      quality 1) is still absent from org-learn-ai.el and stays
+      queued behind TODO-013 (collision law; Lead extension
+      <2026-11-04 Wed 18:00>).  Spec 009 unmerged (no
+      org-learn-ai-guide.el; TODO-013 escalated to @owner 11:3xZ);
+      spec 013 unmerged (zero audio symbols in .el).  "Implement
+      strictly after 009/012/013 merge" stands for spec 014's
+      org-learn-ai.el parts.
+    * ENV: ROLE_LARK_WEBHOOK unset — Lark post skipped per law;
+      TYPESAFE_API_KEY unset — Jev self-audit performed instead.
   :END:
 * TODO Research digest v2 — acceptance criteria for wave items 2/4 (study-kit, learning-plan) :research:
   :PROPERTIES:
