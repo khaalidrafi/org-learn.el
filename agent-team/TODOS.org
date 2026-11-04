@@ -597,6 +597,31 @@
     * ENV: ROLE_LARK_WEBHOOK empty — Lark post skipped per law;
       TYPESAFE_API_KEY empty — Jev self-audit performed instead (all
       10 brief steps checked).
+  - 2026-11-04 port-engineer (goose seat, branch ai/turn-20261104-0835)
+    — RE-PROOF on the unchanged live tree (ai/main 5a18270; nothing
+    merged since the 08:13Z close-out — the Lead audits this exact
+    tree).  Every certification re-proven machine-exact:
+    * GATE: byte-compile 8/8 root .el exit 0 zero warnings; ERT exact
+      CI command "Ran 93 tests, 89 results as expected, 0 unexpected,
+      4 skipped" exit 0 (Emacs 30.1, 08:38Z); checkdoc org-learn-ai.el
+      exit 0 (tests/test-org-learn-ai.el:227 nit = TODO-013's rider,
+      SW lane, not this spec's debt).
+    * CITES exact (sed -n line checks): org-learn-ai.el --complete
+      :211, --cap-context :308, --context :318, --cards-from-array
+      :526, --flashcards-messages :575, --subtree-check :689;
+      org-learn-mode.el six AI keys :70-79 + Learn menu :114-119;
+      --mode-chat :698; 30 AI tests (ert-deftest count = 30); spec
+      org-parse clean (15 headlines).
+    * ADDITIVE LAW holds: zero 'audio' symbols tree-wide.
+    * QUEUE LAW holds: spec 009 unmerged (no org-learn-ai-guide.el;
+      TODO-013 deadline <2026-11-04 Tue 06:00> UTC passed, no merge —
+      SW show-cause re-cited); spec 012 unmerged (no
+      LEARN_QUIZZES/:quizzes); TODO-014's bde8708 only on
+      origin/ai/turn-20261104-0520, absent from ai/main.  "Implement
+      strictly after 009/012/013 merge" stands.
+    * ENV: ROLE_LARK_WEBHOOK unset — Lark post skipped per law;
+      TYPESAFE_API_KEY unset — Jev self-audit performed instead.
+    Row stays TODO — the DONE gate is the Lead's audit.
   :END:
 * TODO Docs honesty sweep — README/QUICKSTART vs the delivered tree :docs:
   :PROPERTIES:
@@ -676,6 +701,37 @@
     * ENV: ROLE_LARK_WEBHOOK unset — Lark post skipped per law;
       TYPESAFE_API_KEY unset — Jev self-audit performed instead (all
       10 brief steps checked).
+  - 2026-11-04 port-engineer (goose seat, branch ai/turn-20261104-0835)
+    — RE-PROOF on the unchanged live tree (ai/main 5a18270; nothing
+    merged since the 08:13Z close-out — the Lead audits this exact
+    tree).  Every certification re-proven machine-exact:
+    * GATE: byte-compile 8/8 root .el exit 0 zero warnings; ERT exact
+      CI command "Ran 93 tests, 89 results as expected, 0 unexpected,
+      4 skipped" exit 0 (Emacs 30.1, 08:38Z); checkdoc org-learn-ai.el
+      + org-learn-dashboard.el + tests/test-org-learn-dashboard.el
+      exit 0 (tests/test-org-learn-ai.el:227 nit = TODO-013's rider,
+      SW lane, not this spec's debt).
+    * CITES exact (sed -n line checks): org-learn-ai.el --complete
+      :211, --cap-context :308, --context :318, --system-message
+      :143, --user-message :147, --extract-json-array :500,
+      --cards-from-array :526, --flashcards-messages :575,
+      --subtree-check :689; quiz loop :635-686 exact (source-buffer
+      :649, inner let* :653, scheduling offer :680-684, continue
+      :685); defcustoms :106/:113; org-learn-mode.el six AI keys :70-79
+      + Learn menu :114-119; org-learn.el:7 org-roadmap header
+      declaration; 30 AI tests; spec org-parse clean (17 headlines).
+    * ADDITIVE LAW holds: zero org-id symbols and zero spec-014
+      symbols (kit/explain/glossary cores, prompt defconsts, buffer
+      consts, defcustom) tree-wide — first-use declarations accurate.
+    * QUEUE LAW holds: specs 009/012/013 all unmerged on ai/main (no
+      org-learn-ai-guide.el; no LEARN_QUIZZES/:quizzes/:quiz-misses;
+      no audio symbols; TODO-014's bde8708 only on
+      origin/ai/turn-20261104-0520) — "implement strictly after
+      009/012/013 merge" stands; TODO-020 digest still not landed
+      (devin lane, provisional) — the spec's Coordination law stands.
+    * ENV: ROLE_LARK_WEBHOOK unset — Lark post skipped per law;
+      TYPESAFE_API_KEY unset — Jev self-audit performed instead.
+    Row stays TODO — the DONE gate is the Lead's audit.
   :END:
 * TODO Research digest v2 — acceptance criteria for wave items 2/4 (study-kit, learning-plan) :research:
   :PROPERTIES:
