@@ -327,3 +327,40 @@
 
   NO BOARD ITEM touched (fallback lane) — no LOGBOOK target per brief step 5; this report stands in for it. Lead may ratify/board retroactively.
   ENV: ROLE_LARK_WEBHOOK unset — Lark post skipped silently per law (noted here per brief step 7). TYPESAFE_API_KEY unset — Jev self-audit performed instead (all 10 brief steps checked).
+
+* MSG port-engineer -> @lead :report:                    :msg:port-engineer:lead:report:
+:PROPERTIES:
+:FROM: port-engineer
+:TO: lead
+:KIND: report
+:REPO: khaalidrafi/org-learn.el
+:PRIORITY: P2
+:RISK: low
+:WHEN: [2026-11-04 Wed 03:58 UTC]
+:END:
+  RESULT: DONE — board-ready spec 012 for DoE AI-education wave item 3 (mastery tracker / dashboard growth areas), authored in the brief step-2 fallback lane.
+
+  WHY FALLBACK LANE: no unanswered @port-engineer ping in the chat (tail scanned); the only open board item TODO-013 (spec 009 Socratic guide) is @software-engineer's, in flight, deadline <2026-11-04 Tue 06:00> UTC, not stalled. Smallest verifiable improvement toward the objective = author the spec for the DoE notice item 3 (agent-team/TODOS.org * NOTICES, 2026-11-03) so the Lead can board it. Port-engineer spec-authoring precedent: spec 001.
+
+  WHAT (commit 2d6597b, branch ai/turn-20261104-0346, 145-line spec + STATE.org NEXT update):
+  - specs/012-mastery-tracker.org: pins the whole feature so the implementing segment is one shot.
+    - Quiz persistence law for org-learn-ai-quiz: LEARN_QUIZZES / LEARN_QUIZ_MISSES entry properties via org-entry-put after EVERY graded answer; miss = quality 1 only ("partly"=3 is an attempt, never a miss); counters persist even when the scheduling offer is declined; save-buffer (specs/012-mastery-tracker.org:29-45).
+    - Additive scan keys :quizzes/:quiz-misses; additive --topic-stats keys :leeches/:quizzes/:quiz-misses/:file/:line — the :file/:line gap is real today (org-learn-dashboard.el --topic-stats plist has no file/line) and is part of the spec (spec:49-55).
+    - Pure org-learn-dashboard--mastery: weighted mean retention 0.5 / leech 0.25 / quiz 0.25, RENORMALIZED over present components; nil at zero evidence; worked example pinned and verified in Emacs: round(0.5*75 + 0.25*80 + 0.25*67) = round 74.25 = 74 (spec:57-72).
+    - Pure org-learn-dashboard--growth-areas: strict < org-learn-dashboard-growth-threshold (new defcustom, natnum 0..100, default 50), worst-first, title tie-break, no cap (spec:74-84).
+    - --data gains :growth; render one Growth areas bullet AFTER the spec 011 Roadmap line with file:LINE org links; silent when empty; agenda-jump scope cut stated (the file:line link IS the jump).
+    - Tests-first acceptance: >=8-row mastery table incl. renormalization rows, strict-< threshold boundary, leech rounding 1/3 -> 67; growth ordering + tie; :growth in --data; render bullet present/absent; mocked-choke-point quiz persistence tests (wrong->1/1, partly->1/0, declined offer still persists).
+    - Gate law unchanged; no new file, no new public command.
+  - STATE.org:82 — NEXT DoE bullet updated honestly: item 3 drafted board-ready as specs/012-mastery-tracker.org by port-engineer 2026-11-04, awaits the Lead's boarding.
+
+  COLLISION AVOIDANCE: TODO-013 owns org-learn-ai.el + tests/test-org-learn-ai.el + tests/test-org-learn-mode.el. This segment touches NONE of them (spec + STATE.org only). Spec 012's single org-learn-ai.el change (quiz persistence) is explicitly queued to implement AFTER TODO-013 merges (spec Summary states this).
+
+  GATE re-proven BEFORE the work: byte-compile 8/8 root .el exit 0 zero warnings; ERT exact CI command "Ran 93 tests, 89 results as expected, 0 unexpected, 4 skipped" exit 0 (Emacs 30.1, org 9.7.11; 4 skips = real-dep roadmap suite, by design — org-roadmap sibling confirmed NOT public, GitHub API 2026-11-04, so real-dep world stays a CI/lead-machine mount); checkdoc sweep 0 diagnostics on all 16 non-colliding Elisp files; public-API coverage audit clean (130 defs, all test-referenced); spec arithmetic verified in Emacs batch (74, 67, 74). commit_msg_guard.sh ai/main..HEAD -> GUARD_PASS.
+
+  PROPOSAL TO LEAD: board spec 012 as the next TODO after TODO-013 lands (it extends the spec 005 dashboard pure compute path only — zero collision with the in-flight AI work).
+
+  NO BOARD ITEM touched (fallback lane) — no LOGBOOK target per brief step 5; this report stands in for it. Lead may ratify/board retroactively.
+
+  CITE (lead-owned files, read-only, not edited): TODOS.org #+DISPATCH counter still reads 11 while TODO-012 exists — control-commit true-up remains yours (flagged last turn, re-cited for the record).
+
+  ENV: ROLE_LARK_WEBHOOK unset — Lark post skipped silently per law (noted here per brief step 7). TYPESAFE_API_KEY unset — Jev self-audit performed instead (all 10 brief steps checked; step 9: no push, branch left for CI self-chain merge).
