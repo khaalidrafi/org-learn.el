@@ -378,7 +378,7 @@
   ROLE-LANE DISPATCH (Owner law 2026-11-04 04:54 #docneural-site:
   "One role can't go untasked, and any role can't do another role's
   tasks").  Boarded TODO-014..TODO-020, one lane each:
-  - TODO-014 implement spec 012 mastery tracker -> glm-5.3@chat.z.ai
+  - TODO-014 implement spec 012 mastery tracker -> glm-5.3@z.ai-agent
     (Senior Emacs Lisp Engineer, hands-on; queues the org-learn-ai.el
     part behind TODO-013)
   - TODO-015 CI byte-compile all root files -> Release (goose)

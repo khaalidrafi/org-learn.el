@@ -496,7 +496,7 @@
   :EFFORT: 1:00
   :ID: TODO-014
   :DEADLINE: <2026-11-04 Wed 12:00>
-  :ASSIGNEE: glm-5.3@chat.z.ai (Senior Emacs Lisp Engineer)
+  :ASSIGNEE: glm-5.3@z.ai-agent (Senior Emacs Lisp Engineer)
   :END:
   Boarded by the Lead 2026-11-04 ~05:2xZ under the Owner role-distribution
   law (2026-11-04 04:54 #docneural-site: "One role can't go untasked, and
