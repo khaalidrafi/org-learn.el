@@ -1,6 +1,6 @@
 #+TITLE: TODOS.org — team board (single source of truth)
 #+TODO: TODO ONGOING PROGRESS BLOCKED REVIEW | DONE CANCELLED DEFERRED
-# DISPATCH counter: 11
+# DISPATCH counter: 20
 #+COLUMNS: %40ITEM %TODO %EFFORT %CLOCKSUM(Clocked)
 #+PROPERTY: Effort_ALL 0 0:25 0:50 1:00 2:00 4:00
 # TIME LAW (Owner 2026-10-26 10:42 #hq): every TODO the Lead assigns sets
@@ -489,4 +489,132 @@
   RESULT: DONE|PARTIAL|BLOCKED.
   :LOGBOOK:
   - 2026-11-03 lead: clock opened at dispatch.
+  :END:
+
+* TODO Implement spec 012 — mastery tracker + dashboard growth areas (DoE wave item 3) :spec-012:dashboard:mastery:
+  :PROPERTIES:
+  :EFFORT: 1:00
+  :ID: TODO-014
+  :DEADLINE: <2026-11-04 Wed 12:00>
+  :ASSIGNEE: glm-5.3@chat.z.ai (Senior Emacs Lisp Engineer)
+  :END:
+  Boarded by the Lead 2026-11-04 ~05:2xZ under the Owner role-distribution
+  law (2026-11-04 04:54 #docneural-site: "One role can't go untasked, and
+  any role can't do another role's tasks") — this is the Senior Emacs Lisp
+  Engineer's hands-on lane; the Lead may not take it.  Deliver
+  specs/012-mastery-tracker.org (authored by port-engineer, merged 2d6597b)
+  exactly: quiz persistence (:quizzes/:quiz-misses entry properties, miss =
+  quality 1 only), additive topic-stats keys, pure
+  org-learn-dashboard--mastery (0.5/0.25/0.25 renormalized) +
+  --growth-areas (strict < threshold, worst-first), --data :growth, render
+  bullet with file:LINE links.  COLLISION LAW: the org-learn-ai.el quiz
+  persistence part lands only AFTER TODO-013 merges (spec Summary pins
+  this); dashboard parts may start immediately.  Tests first, red before
+  green.  Gate: bc 0, checkdoc 0, suite green both worlds.  One segment,
+  one report @lead with RESULT: DONE|PARTIAL|BLOCKED.
+  :LOGBOOK:
+  - 2026-11-04 lead: clock opened at dispatch.
+  :END:
+* TODO CI repair — byte-compile ALL root feature files, not just org-learn.el :ci:release:
+  :PROPERTIES:
+  :EFFORT: 0:25
+  :ID: TODO-015
+  :DEADLINE: <2026-11-04 Wed 08:00>
+  :ASSIGNEE: groq/qwen3.8-27b@goose (Release Engineer)
+  :END:
+  Boarded by the Lead 2026-11-04 ~05:2xZ (role law).  QA audit CITES
+  (CHAT 2026-11-04, item 1): .github/workflows/agent-team.yml:92-99
+  byte-compiles org-learn.el ONLY — the 7 feature files are never proven
+  warning-free in CI.  Fix the CI step to compile every root
+  org-learn*.el (e.g. `for f in org-learn*.el`).  Workflow file ONLY —
+  no feature .el edits (that's another role's lane).  Gate: workflow yaml
+  sane, one CI run green after push.  One segment, one report @lead with
+  RESULT.
+  :LOGBOOK:
+  - 2026-11-04 lead: clock opened at dispatch.
+  :END:
+* TODO Whole-repo compliance audit v2 + verify TODO-015 CI coverage on the merged tree :qa:audit:
+  :PROPERTIES:
+  :EFFORT: 0:50
+  :ID: TODO-016
+  :DEADLINE: <2026-11-04 Wed 10:00>
+  :ASSIGNEE: zai/glm-4.7-flash@opencode (Quality Assurance Engineer)
+  :END:
+  Boarded by the Lead 2026-11-04 ~05:2xZ (role law).  Owns the ERT suite
+  + whole-repo compliance (duty law).  After TODO-015 merges: verify the
+  CI byte-compile step covers all 8 root .el; re-run the audit sweep
+  (bc 0, checkdoc 0, ERT green, secret law, commit law) on origin/ai/main;
+  re-state the 4-skip real-dep set; report CITES with file:line.  Audit
+  ONLY — no repairs (that's Release's lane).  One report @lead with
+  RESULT.
+  :LOGBOOK:
+  - 2026-11-04 lead: clock opened at dispatch.
+  :END:
+* TODO Author spec 013 — audio-overview script (DoE wave item 5) :spec-013:ai:audio:
+  :PROPERTIES:
+  :EFFORT: 0:50
+  :ID: TODO-017
+  :DEADLINE: <2026-11-04 Wed 12:00>
+  :ASSIGNEE: antling/Ling-3.1-flash@opencode (Port Engineer)
+  :END:
+  Boarded by the Lead 2026-11-04 ~05:2xZ (role law; spec-authoring is the
+  Port lane per spec 001/012 precedent).  Board-ready spec for the
+  audio-overview script: Brief / Deep-dive / two-host Debate script from
+  a subtree via the org-learn-ai--complete choke point (mock-network
+  tests), TTS playback OUT of scope for the first segment; collisions
+  avoided with TODO-013/014 (declare the target file + queue order in the
+  spec Summary).  Tests-first acceptance table like spec 012.  One
+  segment, one report @lead with RESULT.
+  :LOGBOOK:
+  - 2026-11-04 lead: clock opened at dispatch.
+  :END:
+* TODO Docs honesty sweep — README/QUICKSTART vs the delivered tree :docs:
+  :PROPERTIES:
+  :EFFORT: 0:50
+  :ID: TODO-018
+  :DEADLINE: <2026-11-04 Wed 14:00>
+  :ASSIGNEE: nvidia/nemotron-3.5-lightning:free@cline (QA + Docs Engineer)
+  :END:
+  Boarded by the Lead 2026-11-04 ~05:2xZ (role law).  Every documented
+  command/binding/feature must exist in the tree (org-learn-mode keymap,
+  quickstart wizard, roadmap lines, dashboard flags, AI verbs); flag any
+  stale claim with file:line; fix README.org/QUICKSTART text only — no
+  .el edits (another role's lane).  Gate: docs-only diff, no code touch.
+  One report @lead with RESULT.
+  :LOGBOOK:
+  - 2026-11-04 lead: clock opened at dispatch.
+  :END:
+* TODO Author spec 014 — study-kit generator (DoE wave item 2) :spec-014:ai:study-kit:
+  :PROPERTIES:
+  :EFFORT: 0:50
+  :ID: TODO-019
+  :DEADLINE: <2026-11-05 Thu 06:00>
+  :ASSIGNEE: antling/Ling-3.1-flash@opencode (Port Engineer)
+  :END:
+  Boarded by the Lead 2026-11-04 ~05:2xZ (role law; queued AFTER
+  TODO-017 — one segment at a time).  Study-kit generator spec: from an
+  org subtree generate study guide + glossary + briefing doc as org
+  buffers; quiz misses get "explain" citing the source heading (org-id
+  link back); topic/difficulty controls; choke point + mock-network test
+  law.  Coordinate via TODO-020's research digest for acceptance
+  criteria.  One segment, one report @lead with RESULT.
+  :LOGBOOK:
+  - 2026-11-04 lead: clock opened at dispatch.
+  :END:
+* TODO Research digest v2 — acceptance criteria for wave items 2/4 (study-kit, learning-plan) :research:
+  :PROPERTIES:
+  :EFFORT: 0:50
+  :ID: TODO-020
+  :DEADLINE: <2026-11-05 Thu 12:00>
+  :ASSIGNEE: devin@devin.ai (Cloud Agent, provisional — Owner fiat)
+  :END:
+  Boarded by the Lead 2026-11-04 ~05:2xZ (role law; provisional seat per
+  Round-4 law — runs only while the Owner's fiat stands).  Digest the
+  NotebookLM study-kit + Guided Learning plan features into concrete
+  acceptance criteria for specs 014/015 (topic/difficulty control shape,
+  citation form, milestone-to-roadmap flow); report to CHAT @lead only —
+  NO board or repo file edits (research lane).  Cite public sources with
+  URLs.  One report with RESULT.
+  :LOGBOOK:
+  - 2026-11-04 lead: clock opened at dispatch.
   :END:
