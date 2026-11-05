@@ -22,9 +22,11 @@
     trip against the real 0-arg =org-roadmap-progress= API when it is
     (gate: =-L= the sibling repo; TODO-011/012 audits).
 
-* GATE — re-proven 2026-11-05 13:2xZ (port-engineer, Emacs 30.1, org
-  9.7.11; tree 151dea6 = ai/main tip, incl. the spec-015 docs merge
-  2b41266; spec-012 dashboard merge 79a54b5 underneath)
+* GATE — re-proven 2026-11-05 21:2xZ (port-engineer, Emacs 30.1, org
+  9.7.11; tree e286d79 = ai/main tip; the .el + tests/ tree is
+  byte-identical to 151dea6 since the 13:2xZ proof — only STATE.org,
+  agent-team/CONTROL.org and agent-team/TODOS.org changed after it,
+  `git diff 151dea6..HEAD -- '*.el' tests/` empty)
   - byte-compile, all eight root .el files, warning-free (exit 0 each):
     #+begin_src sh
       for f in org-learn.el org-learn-ai.el org-learn-dashboard.el \
@@ -42,8 +44,9 @@
             -f ert-run-tests-batch-and-exit
     #+end_src
     -> exit 0, "Ran 97 tests, 93 results as expected, 0 unexpected,
-    4 skipped" (2026-11-05 13:21:30+0000, 1.098020 sec; identical
-    result 2026-11-04 13:2xZ on b36d63e).  The 4 skips are the
+    4 skipped" (2026-11-05 21:25:02+0000, 0.924390 sec; identical
+    result 2026-11-05 13:21:30Z on 151dea6 and 2026-11-04 13:2xZ on
+    b36d63e).  The 4 skips are the
     real-dependency roadmap suite
     (org-roadmap sibling not mounted in this container); they RUN and
     pass when it is mounted (TODO-011/012 audit evidence).
@@ -59,8 +62,8 @@
     the mitigation.)
   - History: gate first proven 2026-11-01 (TODO-001: byte-compile +
     ERT 4/4); suite grew with every spec segment since; re-proven
-    every port segment since (latest 2026-11-05 13:2xZ, tree
-    151dea6).
+    every port segment since (latest 2026-11-05 21:2xZ, tree
+    e286d79; prior 2026-11-05 13:2xZ on 151dea6).
 
 * COMPLIANCE AUDIT 2026-11-01 (root AGENTS.md + ci/AGENTS.md) — history
   - FIXED      ERT suite landed — tests/test-org-learn.el (commit
@@ -82,7 +85,8 @@
                drift).
 
 * NEXT
-  - Feature wave status 2026-11-05 13:2xZ (tree 151dea6): specs
+  - Feature wave status 2026-11-05 21:2xZ (tree e286d79; .el +
+    tests/ byte-identical to 151dea6): specs
     001-008, 010, 011 DONE on ai/main; spec 012 DASHBOARD scope
     (mastery + growth areas) MERGED 79a54b5 — its org-learn-ai.el
     quiz-persistence part stays queued behind TODO-013 (collision
@@ -101,12 +105,21 @@
     :81/:86/:95/:113-151/:153/:167), additive law holds (zero spec-015
     symbols tree-wide; no collision with the spec-006
     org-learn-plan-from-roadmap family), queue law unchanged (AI
-    rider strictly after specs 009/012/013 merge).  STILL UNBOARDED:
-    no TODO row, #+DISPATCH counter still 20 (TODOS.org:3), no
-    TODO-021; boarding requested 2026-11-04 (chat a3436da — stranded
-    on unmerged origin/ai/turn-20261104-1739, never reached @lead)
-    and RE-REQUESTED 2026-11-05 13:2xZ; core implementable
-    immediately on boarding.
+    rider strictly after specs 009/012/013 merge).  RE-VERIFIED AGAIN
+    2026-11-05 21:2xZ on e286d79 (cites unchanged — .el tree
+    byte-identical to 151dea6; additive scan still zero spec-015
+    symbols).  STILL UNBOARDED: no TODO row, #+DISPATCH counter still
+    20 (TODOS.org:3), no TODO-021.  Boarding requests: #1 2026-11-04
+    (chat entry on origin/ai/turn-20261104-1739 tip a3436da — branch
+    never merged, never reached @lead); #2 2026-11-05 13:2xZ
+    (STATE-only, d47cd04); #3 2026-11-05 21:26Z — CHAT.org entry
+    "port-engineer -> @lead :request:" committed on branch
+    ai/turn-20261105-2120 (merges with the segment) — the first
+    request to actually ride the one-chat protocol to @lead.  Core
+    implementable immediately on boarding.  MESH-LAW EVIDENCE: chat
+    appends live in the branch working tree — entries on unmerged
+    branches (a3436da) never reach the Lead; the port boarding
+    request stranded twice before this fix-forward.
   - DoE notice (TODOS.org * NOTICES, 2026-11-03): five best-of-breed
     AI-education candidates — item 1 is spec 009 / TODO-013; item 3
     (mastery tracker / growth areas) drafted board-ready as
@@ -122,11 +135,14 @@
     the spec Summary: implements after specs 009/012/013 merge; org-id
     cite law with the unsaved-buffer degradation branch pinned);
     item 4 (learning-plan
-    generator) awaits boarding — TODO-020's research digest lane;
-    TODO-020's deadline <2026-11-05 Thu 12:00> passed at the 13:21Z
-    gate run with the digest still unlanded (devin@devin.ai
-    provisional row, clock-open only — cited to @lead under the time
-    discipline law; Lead's call).
+    generator) awaits boarding — boarding request #3 rides CHAT.org
+    (2026-11-05 21:26Z, branch ai/turn-20261105-2120); spec's
+    coordination law stands (acceptance pinned from the DoE notice
+    now, digest amendments after TODO-020 lands).  TODO-020's
+    deadline <2026-11-05 Thu 12:00> passed with the digest still
+    unlanded (devin@devin.ai provisional row, clock-open only — cited
+    to @lead 13:30Z via d47cd04 and re-cited in the 21:2xZ chat
+    report under the time discipline law; Lead's call).
   - Docs honesty (port-engineer segment 2026-11-04; re-confirmed by
     full read 2026-11-05 13:2xZ, stale lines unchanged): README.org
     and this file refreshed to the delivered tree (dependency law,
