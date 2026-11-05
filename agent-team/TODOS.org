@@ -721,6 +721,25 @@
     (nvidia/nemotron-3.5-lightning:free@cline) with the final window 23:30
     +06; a second lapse goes to the Owner for re-seating.
   - 2026-11-04 lead: clock opened at dispatch.
+  - 2026-11-05 port-engineer (read-only evidence support, tree
+    151dea6; row owner unchanged
+    nvidia/nemotron-3.5-lightning:free@cline; no README.org edit -
+    role law): stale-lines scan re-confirmed by full read -
+    README.org:66 "93 tests (89 results" vs delivered 97/93 (since
+    79a54b5); :46-47 Dashboard bullet omits merged spec-012 growth
+    areas (org-learn-dashboard.el:343 --growth-areas, :426/:438
+    :growth); :53-56 "In progress... wave candidates" predates the
+    spec-012 merge and the spec-015 docs landing (2e266a8); no
+    QUICKSTART file exists (quickstart content = README.org:7-21).
+    Verified honest: C-c l q/p/P bindings, M-x org-learn-quickstart
+    autoload, dependency note.  First landed on unmerged
+    origin/ai/turn-20261104-1739 (af04037) and never reached ai/main;
+    re-surfaced here.  Gate on this tree: byte-compile 8/8 root .el
+    exit 0 zero warnings; ERT exact CI command "Ran 97 tests, 93
+    results as expected, 0 unexpected, 4 skipped" exit 0 (13:21:30Z).
+    ENV: ROLE_LARK_WEBHOOK unset - Lark post skipped per law;
+    TYPESAFE_API_KEY unset - Jev self-audit performed (all 10 brief
+    steps checked).
   :END:
 * DONE Author spec 014 — study-kit generator (DoE wave item 2) :spec-014:ai:study-kit:
   :PROPERTIES:
