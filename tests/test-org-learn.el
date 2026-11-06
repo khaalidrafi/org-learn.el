@@ -229,5 +229,9 @@ with an ellipsis."
 
 (load (expand-file-name "tests/test-org-learn-quickstart.el" default-directory))
 
+;;; Learning-plan generator tests (spec 015 core) -- same single-entry law.
+
+(load (expand-file-name "tests/test-org-learn-plan.el" default-directory))
+
 (provide 'test-org-learn)
 ;;; test-org-learn.el ends here
