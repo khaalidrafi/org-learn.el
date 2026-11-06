@@ -19,7 +19,9 @@
 ;; ERT suite for the spec 002 review scheduler
 ;; (specs/002-review-scheduler.org): the SM-2 math table, the
 ;; process-entry round trip on a temp Org file, the due selection
-;; order, the scope custom and the agenda command.  Loaded by
+;; order (incl. the same-date tie-break), the scope custom and the
+;; agenda command with its section-rendering law (due oldest-first,
+;; lapsed/new items after the "* New" separator).  Loaded by
 ;; tests/test-org-learn.el so the single CI entry runs everything.
 
 ;;; Code:
@@ -351,6 +353,161 @@ SCHEDULED: <2026-11-02 Mon>
             (beginning-of-line)
             (should (equal (org-learn-review--entry-content)
                            "Child"))))
+      (when (buffer-live-p buffer)
+        (with-current-buffer buffer
+          (set-buffer-modified-p nil))
+        (kill-buffer buffer))
+      (when (file-exists-p file)
+        (delete-file file)))))
+
+(defun org-learn-review-test--line-containing (text needle)
+  "Return the first line of TEXT containing NEEDLE, or nil."
+  (catch 'found
+    (dolist (line (split-string text "\n" t))
+      (when (string-match-p (regexp-quote needle) line)
+        (throw 'found line)))))
+
+;;; Agenda command rendering law (spec 002: due items first, oldest
+;;; SCHEDULED first; new items = LEARN_REPS missing/0, shown after
+;;; due -- a lapsed item has REPS 0, so it is a NEW item even when
+;;; its SCHEDULED date is due today).
+
+(ert-deftest org-learn-review-agenda-view-renders-due-and-new ()
+  "Spec 002 agenda integration: the command renders the due section \
+(oldest first), then a \"* New\" separator and the new items; a \
+lapsed item (REPS 0, due today) lists under New, not Due; \
+future-scheduled items never list."
+  (let* ((dir (make-temp-file "org-learn-agview-" t))
+         (file (expand-file-name "notes.org" dir))
+         (yesterday (org-learn-review-test--org-date -1))
+         (today (org-learn-review-test--org-date 0))
+         buffer)
+    (unwind-protect
+        (progn
+          (write-region (format "\
+* TODO due-oldest
+SCHEDULED: %s
+  :PROPERTIES:
+  :LEARN_REPS: 2
+  :END:
+  body
+
+* TODO lapsed-today
+SCHEDULED: %s
+  :PROPERTIES:
+  :LEARN_REPS: 0
+  :END:
+  body
+
+* TODO fresh
+  body, never reviewed
+
+* TODO future
+SCHEDULED: <2030-01-01 Tue>
+  :PROPERTIES:
+  :LEARN_REPS: 3
+  :END:
+  body
+" yesterday today) nil file)
+          (let ((org-learn-agenda-files (list file)))
+            (org-learn-agenda-view))
+          (setq buffer (get-buffer "*Org Learn Agenda*"))
+          (should buffer)
+          (with-current-buffer buffer
+            (let ((text (buffer-string)))
+              (should (string-match-p
+                       "#\\+TITLE: org-learn review agenda" text))
+              ;; Due section: the reviewed item, oldest schedule first.
+              (should (string-match-p
+                       (format "\\- due %s, reps 2: " yesterday) text))
+              ;; New section exists and carries the unscheduled item.
+              (should (string-match-p "\n\\* New\n" text))
+              (should (string-match-p "\\- new: " text))
+              ;; Ordering law: due < * New < lapsed < fresh.
+              (let ((pos-due (string-match "due-oldest" text))
+                    (pos-new-header (string-match "\n\\* New\n" text))
+                    (pos-lapsed (string-match "lapsed-today" text))
+                    (pos-fresh (string-match "fresh" text)))
+                (should pos-due)
+                (should pos-new-header)
+                (should pos-lapsed)
+                (should pos-fresh)
+                (should (< pos-due pos-new-header))
+                (should (< pos-new-header pos-lapsed))
+                (should (< pos-lapsed pos-fresh)))
+              ;; A lapsed item (REPS 0) is a NEW item per spec 002:
+              ;; its line carries the new prefix, not the due prefix.
+              (should (string-match-p
+                       "\\`- new: "
+                       (org-learn-review-test--line-containing
+                        (with-current-buffer buffer (buffer-string))
+                        "lapsed-today")))
+              ;; Future-scheduled items never list.
+              (should-not (string-match-p "future" text)))))
+      (when (buffer-live-p buffer)
+        (kill-buffer buffer))
+      (delete-directory dir t))))
+
+(ert-deftest org-learn-review-agenda-view-empty-renders-nothing-due ()
+  "Spec 002 agenda integration: a file with no review items renders \
+the \"(nothing due)\" placeholder."
+  (let* ((dir (make-temp-file "org-learn-agempty-" t))
+         (file (expand-file-name "notes.org" dir))
+         buffer)
+    (unwind-protect
+        (progn
+          ;; A future-scheduled item never lists (spec 002 due law),
+          ;; so the agenda has no items at all.
+          (write-region (format "\
+* TODO future-only
+SCHEDULED: <2030-01-01 Tue>
+  :PROPERTIES:
+  :LEARN_REPS: 3
+  :END:
+  body
+") nil file)
+          (let ((org-learn-agenda-files (list file)))
+            (org-learn-agenda-view))
+          (setq buffer (get-buffer "*Org Learn Agenda*"))
+          (should buffer)
+          (with-current-buffer buffer
+            (should (string-match-p "(nothing due)" (buffer-string)))))
+      (when (buffer-live-p buffer)
+        (kill-buffer buffer))
+      (delete-directory dir t))))
+
+;;; Due selection tie-break law (spec 002: due first, oldest
+;;; SCHEDULED first; equal dates keep file order).
+
+(ert-deftest org-learn-review-due-selection-same-date-keeps-file-order ()
+  "Spec 002 due law: equal SCHEDULED dates keep file order; older \
+dates still come first."
+  (let* ((file (make-temp-file "org-learn-tie-" nil ".org"))
+         (today (org-learn-review-test--org-date 0))
+         (yesterday (org-learn-review-test--org-date -1))
+         buffer)
+    (unwind-protect
+        (progn
+          (setq buffer (find-file-noselect file))
+          (with-current-buffer buffer
+            (insert (format "\
+* TODO tie-first
+SCHEDULED: %s
+  body
+
+* TODO tie-second
+SCHEDULED: %s
+  body
+
+* TODO stale-yesterday
+SCHEDULED: %s
+  body
+" today today yesterday))
+            (let ((items (org-learn-review--collect-items
+                          (current-buffer))))
+              (should (equal (org-learn-review-test--titles items)
+                             (list "stale-yesterday" "tie-first"
+                                   "tie-second"))))))
       (when (buffer-live-p buffer)
         (with-current-buffer buffer
           (set-buffer-modified-p nil))
