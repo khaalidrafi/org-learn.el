@@ -664,5 +664,167 @@ accepting the offer calls the generator."
   "Spec 004: the AI feature never loads org-roadmap either."
   (should-not (featurep 'org-roadmap)))
 
+;;; Guide mode (spec 009).
+
+(ert-deftest org-learn-ai-guide-prompt-names-the-principles ()
+  "Spec 009: the system prompt names the five LearnLM principles
+and the never-answer law, verbatim-named."
+  (should (string-match-p "active learning" org-learn-ai--guide-prompt))
+  (should (string-match-p "cognitive-load management"
+                          org-learn-ai--guide-prompt))
+  (should (string-match-p "adapt to the learner"
+                          org-learn-ai--guide-prompt))
+  (should (string-match-p "stimulate curiosity"
+                          org-learn-ai--guide-prompt))
+  (should (string-match-p "deepen metacognition"
+                          org-learn-ai--guide-prompt))
+  (should (string-match-p "Never answer outright"
+                          org-learn-ai--guide-prompt)))
+
+(ert-deftest org-learn-ai-guide-demand-and-attempt-classifiers ()
+  "Spec 009: answer-demands climb the ladder, attempts never match."
+  (dolist (demand '("just tell me the answer"
+                    "what is the answer"
+                    "I don't know"
+                    "the answer please"
+                    "just give me the answer"))
+    (should (org-learn-ai--guide-demand-p demand))
+    (should-not (org-learn-ai--guide-attempt-p demand)))
+  (dolist (attempt '("the hippocampus consolidates it"
+                     "I think it is about spacing, maybe?"))
+    (should (org-learn-ai--guide-attempt-p attempt))
+    (should-not (org-learn-ai--guide-demand-p attempt)))
+  ;; blank input is neither an attempt nor a demand; it exits the loop
+  (should-not (org-learn-ai--guide-attempt-p "   ")))
+
+(ert-deftest org-learn-ai-guide-cycle-renders-in-order ()
+  "Spec 009: probe -> answer -> grade-without-revealing -> next
+probe render in order, each call carrying the guide system prompt."
+  (let ((calls nil) (step 0) (scheduled nil) (quality nil))
+    (unwind-protect
+        (with-temp-buffer
+          (org-mode)
+          (insert "* Spacing\n  Spacing beats cramming.\n")
+          (goto-char (point-min))
+          (cl-letf* (((symbol-function 'org-learn-ai--complete)
+                      (lambda (messages)
+                        (setq calls (append calls (list messages)))
+                        (setq step (1+ step))
+                        (if (= step 1)
+                            "Why does spacing beat cramming?"
+                          "Strength: you tied it to consolidation.\nGap: the timing.\nNext probe: when would you review first?")))
+                     ((symbol-function 'read-string)
+                      (lambda (&rest _)
+                        (if (< step 2) "because memory needs time" "")))
+                     ((symbol-function 'yes-or-no-p)
+                      (lambda (&rest _) nil))
+                     ((symbol-function 'org-learn-review--process-entry)
+                      (lambda (q) (setq quality q) (setq scheduled t))))
+            (org-learn-ai-guide))
+          ;; every call carries the guide prompt (the mock captured it)
+          (dolist (call calls)
+            (should (equal (cdr (assq 'content (car call)))
+                           org-learn-ai--guide-prompt)))
+          (should (= (length calls) 2)) ; probe + one graded answer
+          (with-current-buffer org-learn-ai--chat-buffer
+            (let ((text (buffer-string)))
+              (should (< (string-match-p
+                          "Why does spacing beat cramming\\?" text)
+                         (string-match-p
+                          "^> My answer: because memory needs time$" text)))
+              (should (< (string-match-p
+                          "^> My answer: because memory needs time$" text)
+                         (string-match-p "Strength: you tied it" text)))
+              (should (string-match-p "Next probe: when would you review"
+                                      text))))
+          ;; declining the offers schedules nothing
+          (should-not scheduled) (should-not quality))
+      (org-learn-ai-test--kill-chat))))
+
+(ert-deftest org-learn-ai-guide-hint-ladder-escalates ()
+  "Spec 009: three consecutive answer-demands escalate nudge ->
+scaffold -> worked example; without a written attempt the third
+ask stays on the scaffold and never reveals."
+  (dolist (case '((:third-attempt t
+                   :expect "WORKED EXAMPLE"
+                   :absent "NUDGE level")
+                  (:third-attempt nil
+                   :expect "Stay on the SCAFFOLD level"
+                   :absent "WORKED EXAMPLE")))
+    (let ((third-attempt (plist-get case :third-attempt))
+          (expect-word (plist-get case :expect))
+          (absent-word (plist-get case :absent))
+          (calls nil) (step 0) (asks 0))
+      (unwind-protect
+          (with-temp-buffer
+            (org-mode)
+            (insert "* Axons\n  Axons carry signals.\n")
+            (goto-char (point-min))
+            (cl-letf* (((symbol-function 'org-learn-ai--complete)
+                        (lambda (messages)
+                          (setq calls (append calls (list messages)))
+                          (setq step (1+ step))
+                          (if (= step 1)
+                              "Why do axons matter?"
+                            "A ladder reply.")))
+                       ((symbol-function 'read-string)
+                        (lambda (&rest _)
+                          (setq asks (1+ asks))
+                          (cond ((= asks 1) "tell me the answer")
+                                ((= asks 2) "just give me the answer")
+                                ((= asks 3)
+                                 (if third-attempt
+                                     "i don't know, but my attempt is: myelin speeds it"
+                                   "i don't know"))
+                                (t ""))))
+                       ((symbol-function 'yes-or-no-p)
+                        (lambda (&rest _) nil)))
+              (org-learn-ai-guide))
+            ;; four model calls: probe + three ladder turns
+            (should (= (length calls) 4))
+            ;; the three demand turns climb: 2nd call NUDGE, 3rd
+            ;; SCAFFOLD, 4th per the case under test
+            (let ((turn2 (cdr (assq 'content (car (last (nth 1 calls))))))
+                  (turn3 (cdr (assq 'content (car (last (nth 2 calls))))))
+                  (turn4 (cdr (assq 'content (car (last (nth 3 calls)))))))
+              ;; exact-case ladder words: string-match-p honors
+              ;; case-fold-search, and "WORKED EXAMPLE" must not match
+              ;; the scaffold-repeat's lowercase prose
+              (let ((case-fold-search nil))
+                (should (string-match-p "NUDGE" turn2))
+                (should (string-match-p "SCAFFOLD" turn3))
+                (should (string-match-p expect-word turn4))
+                (should-not (string-match-p absent-word turn4)))))
+        (org-learn-ai-test--kill-chat)))))
+
+(ert-deftest org-learn-ai-guide-exit-offer-maps-quality ()
+  "Spec 009: the exit offer grades the session 5|3|1 through the
+grading seam and schedules via the FOCUS contract internals."
+  (dolist (case '(("correct" 5) ("partly" 3) ("wrong" 1)))
+    (let ((grade-text (car case))
+          (expected (cadr case))
+          (quality nil) (scheduled nil) (step 0))
+      (unwind-protect
+          (with-temp-buffer
+            (org-mode)
+            (insert "* Sleep\n  Sleep consolidates memory.\n")
+            (goto-char (point-min))
+            (cl-letf* (((symbol-function 'org-learn-ai--complete)
+                        (lambda (_messages)
+                          (setq step (1+ step))
+                          (if (= step 1)
+                              "What does sleep do?"
+                            grade-text)))
+                       ((symbol-function 'read-string)
+                        (lambda (&rest _) ""))
+                       ((symbol-function 'yes-or-no-p)
+                        (lambda (&rest _) t))
+                       ((symbol-function 'org-learn-review--process-entry)
+                        (lambda (q) (setq quality q) (setq scheduled t))))
+              (org-learn-ai-guide))
+            (should (equal quality expected))
+            (should scheduled))
+        (org-learn-ai-test--kill-chat)))))
+
 (provide 'test-org-learn-ai)
 ;;; test-org-learn-ai.el ends here
