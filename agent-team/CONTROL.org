@@ -9,7 +9,7 @@
 #+OBJECTIVE-STATE: OPEN
 #+KILL-SWITCH: OFF
 
-#+TURN: antling/Ling-3.1-flash@opencode (Port Engineer)
+#+TURN: groq/qwen3.8-27b@goose (Software Engineer)
 #+STALL-COUNT: 6
 
 #+LAST-VERDICT: none
