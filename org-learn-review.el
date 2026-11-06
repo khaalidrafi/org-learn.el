@@ -268,7 +268,11 @@ plist with :marker, :title, :reps and :scheduled."
         (append due (nreverse new))))))
 
 (defun org-learn-review--agenda-line (item)
-  "Return one display line for agenda ITEM, a plist."
+  "Return one display line for agenda ITEM, a plist.
+Due items (LEARN_REPS above zero) show their SCHEDULED date and
+rep count; new items (LEARN_REPS missing or zero -- lapsed items
+due again today included) show the new prefix.  Spec 002 agenda
+law: new items are listed after the due items."
   (let* ((marker (plist-get item :marker))
          (buffer (and (markerp marker) (marker-buffer marker)))
          (file (and buffer (buffer-file-name buffer)))
@@ -277,7 +281,7 @@ plist with :marker, :title, :reps and :scheduled."
                       (count-lines (point-min) (marker-position marker)))))
          (link (org-link-make-string (format "file:%s::%d" file line)
                                      (plist-get item :title))))
-    (if (plist-get item :scheduled)
+    (if (> (plist-get item :reps) 0)
         (format "- due %s, reps %d: %s"
                 (plist-get item :scheduled) (plist-get item :reps) link)
       (format "- new: %s" link))))
@@ -285,8 +289,9 @@ plist with :marker, :title, :reps and :scheduled."
 ;;;###autoload
 (defun org-learn-agenda-view (&optional _match)
   "Show the org-learn review agenda.
-Lists due items (LEARN_REPS set and SCHEDULED <= today, oldest
-first) followed by new items (LEARN_REPS missing or 0) over
+Lists due items (LEARN_REPS above zero and SCHEDULED <= today,
+oldest first) followed by new items (LEARN_REPS missing or zero --
+lapsed items due again today included) over
 `org-learn-agenda-files'.  Works as a custom agenda command and as
 a standalone command.  MATCH is the agenda match string and is
 ignored."
@@ -310,7 +315,12 @@ ignored."
               (if (null items)
                   (insert "(nothing due)\n")
                 (dolist (item items)
-                  (unless (or (plist-get item :scheduled) new-header-written)
+                  ;; The New separator keys on rep count, not on the
+                  ;; SCHEDULED property: a lapsed item (REPS 0) due
+                  ;; again today is a NEW item per spec 002 and must
+                  ;; list after the due section.
+                  (unless (or (> (plist-get item :reps) 0)
+                              new-header-written)
                     (insert "* New\n")
                     (setq new-header-written t))
                   (insert (org-learn-review--agenda-line item) "\n"))))
