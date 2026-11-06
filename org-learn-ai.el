@@ -779,6 +779,10 @@ user says stop; \\[keyboard-quit] exits at any point."
                 (org-learn-ai--quiz-messages context history grade-turn))))
              (quality (org-learn-ai--grade-quality reply)))
         (message "org-learn-ai quiz grade: %s" reply)
+        ;; spec 012 quiz persistence: the counters land on the entry
+        ;; before any offer, so declining the review cannot lose them
+        (with-current-buffer source-buffer
+          (org-learn-ai--record-quiz quality))
         (setq history
               (append history
                       (list (org-learn-ai--user-message
@@ -792,6 +796,27 @@ user says stop; \\[keyboard-quit] exits at any point."
             (when (buffer-file-name)
               (save-buffer))))
         (setq continue (yes-or-no-p "Another question? "))))))
+
+;;; Quiz persistence (spec 012, the part queued behind TODO-013).
+
+(defun org-learn-ai--record-quiz (quality)
+  "Persist one graded quiz answer on the entry at point (spec 012).
+LEARN_QUIZZES counts every graded answer; LEARN_QUIZ_MISSES also
+counts quality 1 (the wrong/incorrect grade); \"partly\" (quality
+3) is an attempt, never a miss.  The counters are written here,
+independent of the scheduling offer: the evidence lands even when
+the learner declines the review."
+  (save-excursion
+    (org-back-to-heading t)
+    (let ((n (string-to-number
+              (or (org-entry-get (point) "LEARN_QUIZZES") "0"))))
+      (org-entry-put (point) "LEARN_QUIZZES"
+                     (number-to-string (1+ n))))
+    (when (equal quality 1)
+      (let ((m (string-to-number
+                (or (org-entry-get (point) "LEARN_QUIZ_MISSES") "0"))))
+        (org-entry-put (point) "LEARN_QUIZ_MISSES"
+                       (number-to-string (1+ m)))))))
 
 ;;; Tutor modes (spec 007).
 
