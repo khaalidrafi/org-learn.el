@@ -1,0 +1,18 @@
+#+title: AI-REVIEW — org-learn.el
+
+* How this file is used
+
+Owner law (global AGENTS.md): AI-generated code must be easy to review.
+Anything the owner or a reviewer should personally look at lands here as
+a TODO tree, kept current with the code that prompted it.
+
+* Review tree (initial — 2026-11-07)
+
+- TODO Review the =ci= submodule pin: a working clone showed a dirty
+  submodule pointer on 2026-11-07 — confirm the intended pin on ai/main
+  and record it here.
+- TODO Review tests/ coverage against specs/ (no root Makefile gate;
+  entry points are the ci harness and the ERT files under tests/).
+- TODO No certification recorded yet: byte-compile / ERT state on
+  emacs 30.1 is not measured for ai/main HEAD — run it and record the
+  numbers here before any landing claim.
