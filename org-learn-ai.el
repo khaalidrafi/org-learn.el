@@ -138,6 +138,115 @@ kept and the cut is noted in a trailing line."
   "You are a study tutor using the CLEAR method: reply with exactly three takeaway bullets of the core ideas, then exactly three cloze card suggestions in the [answer||hint] form.  Answer in plain text without markdown."
   "System prompt for `org-learn-ai-clear' (spec 007): three takeaway\nbullets plus three [answer||hint] cloze suggestions.")
 
+(defconst org-learn-ai--guide-prompt
+  "You are a Socratic study GUIDE.  Never answer outright: probe with open-ended questions, decompose problems step by step, and check understanding before revealing anything.  Follow five learning-science principles: active learning (the learner writes, you probe), cognitive-load management (one idea per turn), adapt to the learner (each probe follows from the last answer), stimulate curiosity, deepen metacognition.  After each learner answer reply with a grade WITHOUT revealing the answer -- one strength, one gap -- then your next probe adapted to that answer.  Answer in plain text without markdown."
+  "System prompt for `org-learn-ai-guide' (spec 009): the five
+LearnLM learning-science principles by name, the never-answer law
+and the grade-without-revealing turn contract.")
+
+(defconst org-learn-ai--guide-demand-regexp
+  (concat "\\b\\(?:just \\)?\\(?:tell\\|give\\) me the answer\\b\\|"
+          "\\bwhat is the answer\\b\\|\\bthe answer please\\b\\|"
+          "\\bi \\(?:do not\\|don't\\|dont\\) know\\b\\|"
+          "\\bjust show me\\b")
+  "What an outright answer-demand looks like (spec 009).
+Case-insensitive; the hint ladder counts these, nothing else.")
+
+;;; Guide mode (spec 009, Socratic).
+
+(defun org-learn-ai--guide-demand-p (input)
+  "Return non-nil when INPUT demands the answer outright.
+The learner asking for the answer is what climbs the hint ladder;
+matching is case-insensitive."
+  (let ((case-fold-search t))
+    (string-match-p org-learn-ai--guide-demand-regexp input)))
+
+(defun org-learn-ai--guide-attempt-p (input)
+  "Return non-nil when INPUT carries a written learner attempt.
+The demand phrases are stripped first, case-insensitively: a turn
+that both demands the answer and carries an attempt is a demand
+WITH an attempt -- exactly what the ladder's third rung needs
+(the worked example only follows a written attempt, spec 009).
+What survives must still say something: non-blank, with letters."
+  (and (stringp input)
+       (let ((rest (string-trim
+                    (let ((case-fold-search t))
+                      (replace-regexp-in-string
+                       org-learn-ai--guide-demand-regexp " " input)))))
+         (and (not (string-empty-p rest))
+              (string-match-p "[[:alpha:]]" rest)))))
+
+(defun org-learn-ai--guide-ladder-turn (level attempt)
+  "Return the turn instruction for hint-ladder LEVEL.
+ATTEMPT is the learner's raw input this turn, demanded because it
+must count: the worked example, ladder level three, fires only
+after the learner has written an attempt -- without one the
+scaffold repeats and asks for the attempt first (spec 009).  The
+function is total: any level maps to an instruction."
+  (pcase level
+    (1 "The learner asks for the answer outright (1st ask).  Reply with the NUDGE level of the hint ladder: a guiding question that points at the missing idea, still no answer.")
+    (2 "The learner asks for the answer outright (2nd ask).  Reply with the SCAFFOLD level of the hint ladder: the first concrete step of the solution, laid out so the learner can continue it, still no full answer.")
+    (_ (if (org-learn-ai--guide-attempt-p attempt)
+           "The learner asks for the answer outright (3rd ask) and has written an attempt.  Reply with the WORKED EXAMPLE level of the hint ladder: the full worked solution, step by step, referencing the learner's attempt."
+         "The learner asks for the answer outright again but has written no attempt.  Stay on the SCAFFOLD level: repeat the scaffold and ask for a written attempt first -- the worked example only follows one."))))
+
+;;;###autoload
+(defun org-learn-ai-guide ()
+  "GUIDE the current subtree, Socratic-style (spec 009).
+The model probes with open-ended questions and never answers
+outright; each learner answer is graded without revealing (one
+strength, one gap) and the next probe adapts to it.  An outright
+answer-demand climbs the hint ladder: nudge (1st ask), scaffold
+(2nd), worked example (3rd, only after a written attempt).  The
+loop runs in the *org-learn-ai-chat* buffer until an empty answer
+or \\[keyboard-quit]; at the exit the command offers to schedule a
+spaced review of the entry, the session graded 5, 3 or 1 through
+`org-learn-ai--grade-quality' and scheduled via
+`org-learn-review--process-entry' (the spec 007 FOCUS contract)."
+  (interactive)
+  (org-learn-ai--subtree-check "org-learn-ai-guide")
+  (let* ((source-buffer (current-buffer))
+         (first-probe
+          (org-learn-ai--mode-chat
+           org-learn-ai--guide-prompt
+           "Ask me your first open-ended probe about this study context.  Reply with the question only."))
+         (level 0)
+         (continue t)
+         quality)
+    (while continue
+      (let* ((answer (read-string
+                      (format "AI guide: %s\nYour answer (empty exits): "
+                              (string-trim first-probe))))
+             (empty (string-empty-p (string-trim answer)))
+             (turn (cond (empty nil)
+                         ((org-learn-ai--guide-demand-p answer)
+                          (setq level (min 3 (1+ level)))
+                          (org-learn-ai--guide-ladder-turn level answer))
+                         (t (concat "My answer: " answer
+                                    "\n\nGrade it WITHOUT revealing the answer: one strength, one gap, then your next probe adapted to this answer.")))))
+        (if empty
+            (setq continue nil)
+          (when turn
+            (setq first-probe
+                  (with-current-buffer org-learn-ai--chat-buffer
+                    (org-learn-ai--chat-turn turn)))))))
+    ;; Exit offer: the spec 007 FOCUS contract, internals reused --
+    ;; the session grade comes from one last grading turn, then the
+    ;; regular scheduling seam maps 5|3|1 onto the review scheduler.
+    (when (yes-or-no-p "Grade this guide session for scheduling? ")
+      (let ((grade-reply
+             (with-current-buffer org-learn-ai--chat-buffer
+               (org-learn-ai--chat-turn
+                "Grade this whole guide session with exactly one of the words correct, partly or wrong, then explain briefly."))))
+        (setq quality (org-learn-ai--grade-quality grade-reply))
+        (message "org-learn-ai guide grade: %s" grade-reply)
+        (when (yes-or-no-p "Schedule a spaced review of this entry? ")
+          (with-current-buffer source-buffer
+            (org-learn-review--process-entry quality)
+            (when (buffer-file-name)
+              (save-buffer))))))))
+
+
 ;;; Network core (the one choke point).
 
 (defun org-learn-ai--system-message (content)
@@ -670,6 +779,10 @@ user says stop; \\[keyboard-quit] exits at any point."
                 (org-learn-ai--quiz-messages context history grade-turn))))
              (quality (org-learn-ai--grade-quality reply)))
         (message "org-learn-ai quiz grade: %s" reply)
+        ;; spec 012 quiz persistence: the counters land on the entry
+        ;; before any offer, so declining the review cannot lose them
+        (with-current-buffer source-buffer
+          (org-learn-ai--record-quiz quality))
         (setq history
               (append history
                       (list (org-learn-ai--user-message
@@ -683,6 +796,27 @@ user says stop; \\[keyboard-quit] exits at any point."
             (when (buffer-file-name)
               (save-buffer))))
         (setq continue (yes-or-no-p "Another question? "))))))
+
+;;; Quiz persistence (spec 012, the part queued behind TODO-013).
+
+(defun org-learn-ai--record-quiz (quality)
+  "Persist one graded quiz answer on the entry at point (spec 012).
+LEARN_QUIZZES counts every graded answer; LEARN_QUIZ_MISSES also
+counts quality 1 (the wrong/incorrect grade); \"partly\" (quality
+3) is an attempt, never a miss.  The counters are written here,
+independent of the scheduling offer: the evidence lands even when
+the learner declines the review."
+  (save-excursion
+    (org-back-to-heading t)
+    (let ((n (string-to-number
+              (or (org-entry-get (point) "LEARN_QUIZZES") "0"))))
+      (org-entry-put (point) "LEARN_QUIZZES"
+                     (number-to-string (1+ n))))
+    (when (equal quality 1)
+      (let ((m (string-to-number
+                (or (org-entry-get (point) "LEARN_QUIZ_MISSES") "0"))))
+        (org-entry-put (point) "LEARN_QUIZ_MISSES"
+                       (number-to-string (1+ m)))))))
 
 ;;; Tutor modes (spec 007).
 
