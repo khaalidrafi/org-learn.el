@@ -495,6 +495,25 @@
     scanned this tick: no org-learn-ai-guide anywhere).  Escalated to
     the Owner (CHAT.org lead -> @owner :escalation:).  Row stays TODO
     pending the Owner's re-dispatch/extension call.
+  - 2026-11-07 port-engineer (read-only gate evidence, no ownership
+    change, row owner unchanged): DELIVERY EXISTS OFF-MAIN — spec 009
+    Socratic GUIDE implemented by the acting Lead (z.ai-agent)
+    2026-11-06 on unmerged origin/ai/spec-009-guide 1e81da6
+    (org-learn-ai.el +109 guide modes, tests/test-org-learn-ai.el
+    +162), stacked with spec 015 core (b90fe2f) and quiz persistence
+    (9fb1208).  Gate on the stack tip 9fb1208 (worktree, Emacs 30.1):
+    byte-compile 9/9 root .el exit 0 zero warnings; ERT exact CI
+    command "Ran 120 tests, 115 as expected, 1 unexpected, 4
+    skipped" — the ONE failure is the new spec-015 test
+    org-learn-plan-command-offers-and-messages (tests/test-org-learn-
+    plan.el:180), a deterministic container native-comp artifact
+    (native-lisp-load-failed on the message subr-trampoline .eln;
+    identical stubs + production path run clean standalone; CI's apt
+    emacs-nox has no native-comp).  Every spec-009 layer test passes.
+    Merge vs ai/main: git merge-tree zero conflicts.  Full evidence:
+    STATE.org GATE section + chat report port-engineer -> @lead
+    :report: 2026-11-07 00:2xZ.  ENV: ROLE_LARK_WEBHOOK unset — Lark
+    post skipped per law.
   :END:
 
 * ONGOING Implement spec 012 — mastery tracker + dashboard growth areas (DoE wave item 3) :spec-012:dashboard:mastery:
@@ -572,6 +591,18 @@
     (79a54b5) was gated locally with the FULL 8-file byte-compile, so
     the gap the row targets is currently mitigated by Lead-side gate
     practice, not by CI.  Row stays TODO pending the Owner's call.
+  - 2026-11-07 port-engineer (read-only evidence, row owner unchanged
+    release-engineer): the gap this row targets got WORSE — the
+    unmerged DISPATCH #6/#7/#8 stack (origin/ai/spec-015-plan
+    b90fe2f, origin/ai/spec-012-quiz-persist 9fb1208) adds a NINTH
+    root feature file, org-learn-plan.el (278 lines, spec 015 core),
+    which CI's byte-compile loop (.github/workflows/agent-team.yml:
+    96-99, `for f in org-learn.el`) never compiles — along with the
+    other eight feature files.  Local gate on the stack tip: 9/9 root
+    .el byte-compile exit 0 zero warnings (Emacs 30.1, 2026-11-07
+    00:1xZ), so the mitigation stays Lead-side local gates.  Full
+    evidence: STATE.org GATE section.  ENV: ROLE_LARK_WEBHOOK unset —
+    Lark post skipped per law.
   :END:
 * TODO Whole-repo compliance audit v2 + verify TODO-015 CI coverage on the merged tree :qa:audit:
   :PROPERTIES:

@@ -22,11 +22,12 @@
     trip against the real 0-arg =org-roadmap-progress= API when it is
     (gate: =-L= the sibling repo; TODO-011/012 audits).
 
-* GATE — re-proven 2026-11-05 21:2xZ (port-engineer, Emacs 30.1, org
-  9.7.11; tree e286d79 = ai/main tip; the .el + tests/ tree is
-  byte-identical to 151dea6 since the 13:2xZ proof — only STATE.org,
-  agent-team/CONTROL.org and agent-team/TODOS.org changed after it,
-  `git diff 151dea6..HEAD -- '*.el' tests/` empty)
+* GATE — re-proven 2026-11-07 00:1xZ (port-engineer, Emacs 30.1, org
+  9.7.11; tree bbed024 = ai/main tip; the only code delta since the
+  151dea6 proofs is b825dee "org-learn-review: agenda New section keys
+  on reps, not SCHEDULED" — org-learn-review.el + its tests, +3 agenda
+  tests 97 -> 100; every other .el/tests file byte-identical to
+  151dea6)
   - byte-compile, all eight root .el files, warning-free (exit 0 each):
     #+begin_src sh
       for f in org-learn.el org-learn-ai.el org-learn-dashboard.el \
@@ -43,10 +44,10 @@
       emacs -Q --batch -L . -l tests/test-org-learn.el \
             -f ert-run-tests-batch-and-exit
     #+end_src
-    -> exit 0, "Ran 97 tests, 93 results as expected, 0 unexpected,
-    4 skipped" (2026-11-05 21:25:02+0000, 0.924390 sec; identical
-    result 2026-11-05 13:21:30Z on 151dea6 and 2026-11-04 13:2xZ on
-    b36d63e).  The 4 skips are the
+    -> exit 0, "Ran 100 tests, 96 results as expected, 0 unexpected,
+    4 skipped" (2026-11-07 00:19:38+0000; prior proofs: 97/93/0/4
+    2026-11-05 21:25:02Z on e286d79, 2026-11-05 13:21:30Z on 151dea6,
+    2026-11-04 13:2xZ on b36d63e — all 0 unexpected).  The 4 skips are the
     real-dependency roadmap suite
     (org-roadmap sibling not mounted in this container); they RUN and
     pass when it is mounted (TODO-011/012 audit evidence).
@@ -55,15 +56,57 @@
   - CI (lead-owned workflow, cited not edited): the test job runs both
     steps — byte-compile (.github/workflows/agent-team.yml:92-99) and
     ERT (:101-110).  Remaining narrowness cited to @lead: the CI
-    byte-compile step compiles =org-learn.el= only; the seven feature
+    byte-compile step compiles =org-learn.el= only; the eight feature
     files compile warning-free locally (proof above) but CI does not
-    prove them.  (TODO-015 repair stalled — deadline 08:00Z passed,
+    prove them — and the unmerged DISPATCH #6/#7/#8 stack (evidence
+    below) adds a NINTH root file, org-learn-plan.el, which CI's loop
+    also never compiles.  (TODO-015 repair stalled — deadline 08:00Z passed,
     Lead escalated to @owner 11:3xZ; the local 8-file proof above is
     the mitigation.)
   - History: gate first proven 2026-11-01 (TODO-001: byte-compile +
     ERT 4/4); suite grew with every spec segment since; re-proven
-    every port segment since (latest 2026-11-05 21:2xZ, tree
-    e286d79; prior 2026-11-05 13:2xZ on 151dea6).
+    every port segment since (latest 2026-11-07 00:19Z, tree bbed024,
+    100/96/0/4; prior 2026-11-05 21:2xZ e286d79, 2026-11-05 13:2xZ
+    151dea6, 2026-11-04 13:2xZ b36d63e).
+
+  - UNMERGED DISPATCH #6/#7/#8 STACK — gate evidence 2026-11-07
+    (port-engineer; git worktrees under ~/.agents-work; read-only
+    verification, zero edits to the branches): the acting Lead
+    (z.ai-agent) implemented three DoE-wave features 2026-11-06 on
+    branches forked at 151dea6, NOT merged to ai/main and carrying no
+    CHAT.org entries (mesh-law note — this STATE entry and the
+    00:2xZ chat report carry the evidence instead):
+    + origin/ai/spec-009-guide 1e81da6 — spec 009 Socratic GUIDE
+      (org-learn-ai.el +109, tests/test-org-learn-ai.el +162)
+    + origin/ai/spec-015-plan b90fe2f — spec 015 learning-plan
+      generator CORE (new org-learn-plan.el, 278 lines, deterministic
+      milestone chunking; autoload org-learn-plan-generate at
+      org-learn.el:222-228; tests/test-org-learn-plan.el, loader
+      before provide per the :230/:232 law)
+    + origin/ai/spec-012-quiz-persist 9fb1208 — quiz persistence
+      LEARN_QUIZZES / LEARN_QUIZ_MISSES (org-learn-ai.el +25, tests
+      +73)
+    Gate on the stack tip 9fb1208 (Emacs 30.1): byte-compile 9/9 root
+    .el exit 0 ZERO warnings; ERT exact CI command exit 1 — "Ran 120
+    tests, 115 results as expected, 1 unexpected, 4 skipped".  The
+    single failure is the new spec-015 test
+    org-learn-plan-command-offers-and-messages
+    (tests/test-org-learn-plan.el:180), condition
+    native-lisp-load-failed "file does not exists"
+    /tmp/test-nativecomp-cache-*/subr--trampoline-...message_0.eln.
+    CLASSIFICATION: container native-comp artifact, NOT a code/test
+    defect — deterministic here (5+ runs, both branch tips, single
+    test selector, HOME change, deferred-compilation off); the
+    identical production path (org-learn-plan-generate) under the
+    identical eight stubs runs CLEAN standalone outside ERT in the
+    same Emacs (batch repro exit 0); the condition is native-
+    trampoline cache infrastructure, no assertion ever evaluated;
+    CI's apt emacs-nox has no native-comp, so the condition cannot
+    fire there.  Spec-009 and quiz-persistence layers: every test
+    passes (only the plan test errors).  Merge safety: git
+    merge-tree vs ai/main = ZERO "changed in both" (ai/main's only
+    code delta since the fork is b825dee's review.el pair, untouched
+    by the stack) — clean merge.  Awaiting the Lead's merge decision.
 
 * COMPLIANCE AUDIT 2026-11-01 (root AGENTS.md + ci/AGENTS.md) — history
   - FIXED      ERT suite landed — tests/test-org-learn.el (commit
@@ -85,14 +128,21 @@
                drift).
 
 * NEXT
-  - Feature wave status 2026-11-05 21:2xZ (tree e286d79; .el +
-    tests/ byte-identical to 151dea6): specs
+  - Feature wave status 2026-11-05 21:2xZ, updated 2026-11-07
+    00:2xZ (tree bbed024; code delta vs 151dea6 = b825dee only):
+    UNMERGED-OF-MAIN UPDATE 2026-11-07: the acting Lead implemented
+    DoE items 1 (spec 009), 4 (spec 015 core) and the quiz-
+    persistence part of spec 012 on unmerged branches 2026-11-06 —
+    gate evidence and merge-safety proof in the GATE section above;
+    merge decision is the Lead's.  Historical status: specs
     001-008, 010, 011 DONE on ai/main; spec 012 DASHBOARD scope
     (mastery + growth areas) MERGED 79a54b5 — its org-learn-ai.el
     quiz-persistence part stays queued behind TODO-013 (collision
     law; Lead extension <2026-11-04 Wed 18:00>); spec 009 (Socratic
     GUIDE) is board TODO-013 (SW seat — deadline 06:00Z passed with
-    no delivery, Lead escalated to @owner 11:3xZ); specs 013/014
+    no delivery, Lead escalated to @owner 11:3xZ) — DELIVERY NOW EXISTS
+    OFF-MAIN: unmerged origin/ai/spec-009-guide 1e81da6 (2026-11-06,
+    acting Lead; gate evidence in the GATE section above); specs 013/014
     board-ready (TODO-017/TODO-019 DONE, audited); spec 015
     (learning-plan generator, DoE item 4) board-ready as
     specs/015-learning-plan-generator.org (merged as docs 2e266a8,
@@ -108,8 +158,12 @@
     rider strictly after specs 009/012/013 merge).  RE-VERIFIED AGAIN
     2026-11-05 21:2xZ on e286d79 (cites unchanged — .el tree
     byte-identical to 151dea6; additive scan still zero spec-015
-    symbols).  STILL UNBOARDED: no TODO row, #+DISPATCH counter still
-    20 (TODOS.org:3), no TODO-021.  Boarding requests: #1 2026-11-04
+    symbols).  BOARDING SUPERSEDED 2026-11-07: the acting Lead
+    implemented the spec 015 CORE directly on unmerged
+    origin/ai/spec-015-plan b90fe2f (2026-11-06; gate evidence in the
+    GATE section above) — no TODO row was ever boarded, #+DISPATCH
+    counter still 20 (TODOS.org:3), no TODO-021.  Boarding requests:
+    #1 2026-11-04
     (chat entry on origin/ai/turn-20261104-1739 tip a3436da — branch
     never merged, never reached @lead); #2 2026-11-05 13:2xZ
     (STATE-only, d47cd04); #3 2026-11-05 21:26Z — CHAT.org entry
