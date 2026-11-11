@@ -10,6 +10,26 @@ install hint when it is missing.  org-roadmap is a sibling package under
 the khaalidrafi profile, still under development — nothing here blocks
 on it.
 
+* Installation
+
+Requires Emacs 30 or newer (for the built-in =use-package= =:vc=
+keyword, backed by =package-vc-install=).  Neither package is on any
+archive, so install org-learn and its org-roadmap dependency straight
+from their Git repositories:
+
+#+begin_src elisp
+(use-package org-roadmap
+  :vc (:url "https://github.com/khaalidrafi/org-roadmap" :rev :newest))
+
+(use-package org-learn
+  :vc (:url "https://github.com/khaalidrafi/org-learn.el" :rev :newest))
+#+end_src
+
+=:rev :newest= tracks the latest commit; drop it to pin to the last
+tagged release, and run =M-x package-vc-update= to update either
+package later.  The =C-c l= keymap comes with =org-learn-mode=; finish
+setup with =M-x org-learn-quickstart= (next section).
+
 * Quickstart
 
 Run =M-x org-learn-quickstart= (or press =C-c l q= in an Org buffer with
