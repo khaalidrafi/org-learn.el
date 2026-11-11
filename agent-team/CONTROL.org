@@ -10,7 +10,7 @@
 #+KILL-SWITCH: OFF
 
 #+TURN: groq/qwen3.8-27b@goose (Software Engineer)
-#+STALL-COUNT: 15
+#+STALL-COUNT: 16
 
 #+LAST-VERDICT: none
 #+LAST-BLOCKED-NOTIFY: 0
