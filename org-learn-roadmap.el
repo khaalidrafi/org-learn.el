@@ -78,6 +78,16 @@
   :type 'integer
   :group 'org-learn-roadmap)
 
+(defcustom org-learn-roadmap-menu-directory
+  (expand-file-name "roadmaps" (or (bound-and-true-p org-directory)
+                                   "~/org"))
+  "Directory the one-click roadmap menu saves imported roadmaps into.
+One Org file per roadmap, named roadmap-SLUG.org; re-picking the
+same roadmap re-imports into the same file (the importer appends,
+org-learn's plan step is idempotent)."
+  :type 'directory
+  :group 'org-learn-roadmap)
+
 (defconst org-learn-roadmap-progress-buffer "*org-learn-progress*"
   "Name of the read-only progress report buffer.")
 
@@ -527,6 +537,34 @@ import, offer `org-learn-plan-from-roadmap' on the imported tree."
   (when (y-or-n-p "Plan review items from the imported roadmap? ")
     (when (and output-file (not (derived-mode-p 'org-mode)))
       (find-file output-file))
+    (org-learn-plan-from-roadmap)))
+
+;;; One-click roadmap menu (spec 016).
+
+;;;###autoload
+(defun org-learn-roadmap-menu ()
+  "One click from zero to studying: menu, import, review plan.
+Pick any official roadmap.sh roadmap from `org-roadmap-catalog'
+(via `org-roadmap-catalog-pick' -- every role-based and skill-based
+roadmap, no URL typing); the pick imports as an Org TODO tree into
+`org-learn-roadmap-menu-directory'/roadmap-SLUG.org, the file
+opens, and `org-learn-plan-from-roadmap' boards one :drill: review
+item per topic.  From there the study loop is
+`org-learn-review' (C-c l r), `org-learn-drill' (C-c l d) and
+`org-learn-progress-report' (C-c P).  Needs org-roadmap installed."
+  (interactive)
+  (org-learn-roadmap--require)
+  (let* ((pick (org-roadmap-catalog-pick))
+         (default (expand-file-name
+                   (format "roadmap-%s.org" (car pick))
+                   org-learn-roadmap-menu-directory))
+         (file (read-file-name "Study file: "
+                               (file-name-directory default)
+                               default
+                               nil
+                               (file-name-nondirectory default))))
+    (org-roadmap-import-roadmap-sh (cdr pick) file)
+    (find-file file)
     (org-learn-plan-from-roadmap)))
 
 (provide 'org-learn-roadmap)

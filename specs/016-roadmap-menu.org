@@ -1,0 +1,47 @@
+#+TITLE: Spec 016 — one-click roadmap menu (Owner fast start)
+#+STATUS: SPEC — Owner-ordered 2026-11-11 (Discord #hq): "ALL roadmap.sh
+#+STATUS: roadmaps with a menu to import and quickstart in 1 click".
+#+STATUS: Implemented by the Director of Engineering (hands-on by Owner
+#+STATUS: order); the board is untouched (DoE does not command seats).
+
+* Source
+
+Owner verbatim (above).  Spec 006 made org-learn depend on org-roadmap;
+spec 011 proved it against the real package.  The one remaining manual
+step was knowing a URL and running two commands.  This spec deletes it.
+
+* Command
+
+~org-learn-roadmap-menu~ (org-learn-roadmap.el, autoloaded, C-c l m):
+
+1. ~(org-learn-roadmap--require)~ — the real org-roadmap must be there.
+2. ~(org-roadmap-catalog-pick)~ — completing-read over EVERY official
+   roadmap.sh roadmap (org-roadmap spec 003 catalog: 87 slugs, verified
+   live 2026-11-11).
+3. import via ~org-roadmap-import-roadmap-sh~ into
+   ~org-learn-roadmap-menu-directory~/roadmap-SLUG.org (default
+   ~$org-directory/roadmaps~), file opens.
+4. ~org-learn-plan-from-roadmap~ — one :drill: review item per topic,
+   idempotent.
+
+One command, zero URL typing, straight into the loop (C-c l r review,
+C-c l d drill, C-c P progress).
+
+* Wiring
+
+- org-learn.el: ~;;;###autoload~ + autoload declaration.
+- org-learn-mode.el: C-c l m → menu, C-c l i → org-learn-roadmap-import
+  (URL/JSON import keeps its own key).
+- New defcustom ~org-learn-roadmap-menu-directory~.
+
+* Tests
+
+- test-org-learn-roadmap-real.el :: menu command exists, real
+  org-roadmap catalog non-empty, ~org-roadmap-catalog-url~ contract.
+- test-org-learn-mode.el :: C-c l m / C-c l i bound on the prefix
+  (lazy like every key there).
+
+* Non-goals
+
+No new import logic (spec 006 law: the bridge passes through to
+org-roadmap); no network in tests.

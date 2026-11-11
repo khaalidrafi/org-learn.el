@@ -113,5 +113,19 @@ Buffers switched to Org after the toggle are picked up too."
         (when (buffer-live-p buf)
           (kill-buffer buf))))))
 
+(ert-deftest org-learn-mode-binds-the-roadmap-menu ()
+  "Spec 016: C-c l m (menu) and C-c l i (import) sit on the prefix.
+The binds stay lazy like every other key here: the commands are
+autoloaded, so an org-roadmap-less Emacs keeps the keys and the
+commands report the missing dependency themselves."
+  (dolist (pair '((?m . org-learn-roadmap-menu)
+                  (?i . org-learn-roadmap-import)
+                  (?p . org-learn-plan-from-roadmap)
+                  (?q . org-learn-quickstart)))
+    (ert-info ((format "key %c" (car pair)))
+      (should (eq (lookup-key org-learn-mode-keymap-prefix
+                              (vector (car pair)))
+                  (cdr pair))))))
+
 (provide 'test-org-learn-mode)
 ;;; test-org-learn-mode.el ends here

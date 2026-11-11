@@ -10,18 +10,54 @@ install hint when it is missing.  org-roadmap is a sibling package under
 the khaalidrafi profile, still under development — nothing here blocks
 on it.
 
+* Installation
+
+Both packages live on GitHub and install with straight.el (package-vc
+works too: =M-x package-vc-install RET https://github.com/khaalidrafi/org-roadmap RET=).
+org-roadmap is a REAL dependency (spec 006): install it first, then
+org-learn.
+
+#+begin_src elisp
+;; org-roadmap — the planning/progress engine + roadmap.sh importer
+(use-package org-roadmap
+  :straight (org-roadmap :type git :host github
+                         :repo "khaalidrafi/org-roadmap")
+  :bind (("C-c r g" . org-roadmap-generate)          ; ASCII roadmap of the tree
+         ("C-c r i" . org-roadmap-import-roadmap-sh) ; import by URL / JSON
+         ("C-c r m" . org-roadmap-import-menu)       ; menu: every roadmap.sh roadmap
+         ("C-c r a" . org-roadmap-agenda)))
+
+;; org-learn — capture -> review -> drill loop on top
+(use-package org-learn
+  :straight (org-learn :type git :host github
+                       :repo "khaalidrafi/org-learn.el")
+  :hook (org-mode . org-learn-mode)
+  :custom
+  (org-learn-file "~/org/learning.org"))  ; where review items live
+#+end_src
+
+In an Org buffer with org-learn-mode on, the whole loop sits under
+=C-c l= (=C-c l ?= lists every key).
+
 * Quickstart
 
-Run =M-x org-learn-quickstart= (or press =C-c l q= in an Org buffer with
-org-learn-mode on): one command walks you from zero to the full loop in
-four skippable steps — learning file, first capture, first review, and
-a tour of the =C-c l= keymap.  The wizard never clobbers an existing
-learning file.
+Fastest start — one click from zero to studying: run =M-x
+org-learn-roadmap-menu= (=C-c l m=), pick any official roadmap.sh
+roadmap (every role-based and skill-based roadmap is offered), accept
+the study file, and the roadmap imports as an Org TODO tree, opens,
+and gets one =:drill:= review item per topic — ready for =C-c l r=
+(review) and =C-c l d= (drill).
+
+Or the wizard: run =M-x org-learn-quickstart= (or press =C-c l q= in
+an Org buffer with org-learn-mode on): one command walks you from zero
+to the full loop in four skippable steps — learning file, first
+capture, first review, and a tour of the =C-c l= keymap.  The wizard
+never clobbers an existing learning file.
 
 The loop in three commands:
 
-1. =M-x org-learn-quickstart= — set up your learning file and see what
-   every key does (=C-c l q=)
+1. =M-x org-learn-roadmap-menu= (=C-c l m=) — one click: pick a
+   roadmap.sh roadmap, import it, board the review items
 2. =C-c l c= — capture a learning note (=M-x org-learn-capture=)
 3. =C-c l r= — review what is due (=M-x org-learn-review=)
 

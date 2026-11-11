@@ -195,6 +195,10 @@ for TITLE (default: the region text, truncated)."
 (autoload 'org-learn-roadmap-import "org-learn-roadmap"
   "Import a roadmap.sh roadmap, then offer to plan review items." t)
 
+;;;###autoload
+(autoload 'org-learn-roadmap-menu "org-learn-roadmap"
+  "One click: pick an official roadmap.sh roadmap, import, plan." t)
+
 ;;; Spec 008 -- one-keymap entry point autoloads (specs/008-learn-mode.org).
 
 ;; org-learn-mode.el is the single keymap over the whole loop; it binds

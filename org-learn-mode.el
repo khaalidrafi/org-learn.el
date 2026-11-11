@@ -72,6 +72,8 @@
     (define-key map (kbd "Q") 'org-learn-ai-quiz)
     (define-key map (kbd "D") 'org-learn-dashboard)
     (define-key map (kbd "p") 'org-learn-plan-from-roadmap)
+    (define-key map (kbd "i") 'org-learn-roadmap-import)
+    (define-key map (kbd "m") 'org-learn-roadmap-menu)
     (define-key map (kbd "P") 'org-learn-progress-report)
     (define-key map (kbd "s") 'org-learn-study)
     (define-key map (kbd "T") 'org-learn-ai-trace)

@@ -296,5 +296,19 @@ never ends on stub definitions."
       (should (equal (file-truename (symbol-file 'org-roadmap-get-todo-tree))
                      (file-truename real))))))
 
+(ert-deftest org-learn-roadmap-real-menu-command ()
+  "Spec 016: the one-click roadmap menu is real-dep wired end to end.
+The command exists, the REAL org-roadmap is loaded, its catalog is
+non-empty, and the public `org-roadmap-catalog-url' builds the
+roadmap.sh page URL `org-learn-roadmap-menu' imports from.  The
+keymap binding (C-c l m) is asserted in test-org-learn-mode.el --
+this suite never loads org-learn-mode."
+  (org-learn-roadmap-real-test--require-real)
+  (should (fboundp 'org-learn-roadmap-menu))
+  (should (boundp 'org-roadmap-catalog))
+  (should (> (length org-roadmap-catalog) 50))
+  (should (equal (org-roadmap-catalog-url "ai-engineer")
+                 "https://roadmap.sh/ai-engineer")))
+
 (provide 'test-org-learn-roadmap-real)
 ;;; test-org-learn-roadmap-real.el ends here
