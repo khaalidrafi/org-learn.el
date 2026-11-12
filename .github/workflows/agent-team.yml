@@ -111,8 +111,15 @@ jobs:
         # Header law (:4-5): CI verifies the same things we verify locally --
         # ert suite AND byte-compile, not one without the other.  Gap cited
         # by the port engineer TODO-001 (lead-owned edit, 2026-11-01).
+        # nativecomp: the runner emacs (30.2, native-enabled) can request
+        # subr trampoline .eln loads on cl-letf restores; JIT compilation
+        # makes that racy ("native-lisp-load-failed ... trampoline ... .eln",
+        # run 43162961942).  Synchronous compiles keep the suite
+        # deterministic on native builds; non-native emacs ignore the var.
         run: |
-          emacs -Q --batch -L . -l tests/test-org-learn.el \
+          emacs -Q --batch -L . \
+            --eval "(setq native-comp-jit-compilation nil)" \
+            -l tests/test-org-learn.el \
             -f ert-run-tests-batch-and-exit
 
 
