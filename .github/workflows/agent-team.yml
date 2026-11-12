@@ -98,6 +98,15 @@ jobs:
               "(unless (byte-compile-file \"$f\") (kill-emacs 1))"
           done
 
+      - name: Drop-in load gate
+        # Regression gate (Owner 2026-11-12 report: "Cannot open load file:
+        # No such file or directory, org-learn-review"): loading org-learn.el
+        # DIRECTLY -- `emacs -Q -l', M-x load-file, eval-buffer from a fresh
+        # clone -- must work with no -L and no package.el.  The load-path
+        # bootstrap in org-learn.el makes the sibling feature files findable;
+        # this step fails the build the moment that breaks again.
+        run: emacs -Q --batch -l org-learn.el
+
       - name: ERT suite
         # Header law (:4-5): CI verifies the same things we verify locally --
         # ert suite AND byte-compile, not one without the other.  Gap cited

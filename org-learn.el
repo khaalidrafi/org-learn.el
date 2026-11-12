@@ -44,6 +44,18 @@
 
 ;;; Code:
 
+;; Load-path bootstrap for direct loads.  Loading this file directly
+;; (`emacs -Q -l org-learn.el', `M-x load-file', `eval-buffer' from a
+;; checkout) puts no directory on `load-path', so the sibling feature
+;; files (org-learn-review.el & co) required below are unfindable and
+;; the load aborts with "Cannot open load file: org-learn-review".
+;; Push this file's own directory once; package.el, `use-package :vc'
+;; and `:load-path' installs already carry the identical directory on
+;; `load-path', and `add-to-list' deduplicates those exact entries.
+(add-to-list 'load-path
+             (file-name-directory
+              (or load-file-name buffer-file-name default-directory)))
+
 (require 'org)
 (require 'subr-x)
 (require 'thingatpt)

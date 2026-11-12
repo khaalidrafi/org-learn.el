@@ -681,7 +681,7 @@ and the never-answer law, verbatim-named."
   (should (string-match-p "Never answer outright"
                           org-learn-ai--guide-prompt)))
 
-(ert-deftest org-learn-ai-guide-demand-and-attem[REDACTED:pattern] ()
+(ert-deftest org-learn-ai-guide-demand-and-attempt-classifiers ()
   "Spec 009: answer-demands climb the ladder, attempts never match."
   (dolist (demand '("just tell me the answer"
                     "what is the answer"
