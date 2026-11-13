@@ -1,0 +1,75 @@
+#+TITLE: CONTROL.org — CI turn control (the Owner's switches)
+#+ROLE: read by .github/workflows/agent-team.yml `turn` job every run.
+        OBJECTIVE FLOW (Owner order 2026-10-20): the Owner does NOT edit
+        this file — he states the objective to the Team Lead (Discord #hq)
+        and the LEAD transcribes it into #+OBJECTIVE verbatim in intent.
+        One line per switch, do not reformat the keywords.
+
+#+OBJECTIVE: complete org-learn.el into the ultimate learning tool for Emacs powered by Org — Owner order 2026-11-01 #hq verbatim intent: "Is org-learn.el complete, the ultimate learning tool for Emacs powered by Org? Read the Org manual and WORG on orgmode.org to brainstorm cool ideas for learning, and add features there." + standing Owner law "AI ENHANCEMENTS ARE A MUST!" — research digest agent-team/IDEAS.org, specs 002-005 boarded as TODO-003..TODO-006; org-roadmap stays at the boundary (declared, never required, do not block)
+#+OBJECTIVE-STATE: OPEN
+#+KILL-SWITCH: OFF
+
+#+TURN: antling/Ling-3.1-flash@opencode (Port Engineer)
+#+STALL-COUNT: 4
+
+#+LAST-VERDICT: none
+#+LAST-BLOCKED-NOTIFY: 0
+#+PAUSE-AFTER-TODO: ON
+#+CHAIN-PAUSE: OFF
+#+CHANNEL: agent-team/CHAT.org (single-buffer team chat, direct @pings —
+           mailbox/ DEPRECATED per Owner order 2026-10-20 16:55 #hq; the turn
+           brief scans the chat tail)
+
+#+DISPATCH: 2026-11-01 #hq — Owner: 'Teamify them' (agent-shepherd,
+# unslop.el, org-learn.el, org-roadmap taken up by the umbrella team).
+#+DISPATCH: 2026-11-01 #hq — Owner: 'The learn and roadmap pkgs will be
+# handled by the lead@docneural.' — handling moves to the docneural
+# lead (EM glm-5.3-flash@chat.z.ai); umbrella (z.ai-agent) keeps
+# agent-shepherd + unslop.el. Chain law unchanged; see CHAT.org.
+
+#+DISPATCH: 2026-11-01 #hq — docneural-lead takeover + lane repair: Qoder
+# free tier EXPIRED (~2026-10-30, QoderAuthError token rejected — run
+# 41290677537); the 2026-10-30 fuel law is SUPERSEDED; Port Engineer
+# (antling/Ling-3.1-flash, burn-verified direct lane) takes TODO-001;
+# BR-01 stall law installed (auto-halt at 12 straight no-progress
+# segments, arms #+CHAIN-PAUSE), CHAIN-PAUSE is now actually parsed,
+# concurrency cancels older runs.#+DISPATCH: 2026-11-01 #hq — docneural-lead: rotation re-pointed at the Port
+# Engineer (antling/Ling-3.1-flash direct, the one lane with live proof) for
+# TODO-001 — the shared zai lane is rate-limited (429) and qoder stays dead.
+# CHAIN-PAUSE cleared after the ANTLING_API_KEY passthrough repair.
+#+DISPATCH: 2026-11-01 #hq — docneural-lead: re-pointed at the Port Engineer
+# after a draining pre-takeover run re-pinned the Platform seat (old fuel-law
+# rotation map). TODO-001 runs on the antling direct lane, as delivered on
+# org-roadmap (DONE, ert 7/7).
+#+DISPATCH: 2026-11-01 13:32Z — docneural-lead un-stall tick (Owner order
+# 13:13Z #hq): the finalize rotation map was a qoder SELF-LOOP (release and
+# platform both rotated back into the benched qoder seat) — 23 straight
+# no-progress segments.  Workflow synced from org-roadmap: cancel-in-progress
+# ON, CHAIN-PAUSE parse, BR-01 12-stall halt, antling lane mapping + BODIES,
+# live-lane rotation (SW -> QA -> Release -> Port -> SW).  #+TURN re-pointed
+# at the Port Engineer; #+STALL-COUNT 23 -> 0.
+#+DISPATCH: 2026-11-01 14:40Z — docneural-lead first tick (Owner order
+# 13:13Z, re-sent 14:32Z #hq): TODO-001 audit = DONE accepted (gate proven
+# byte-compile exit 0 + ERT 4/4; fixes 9b004eb / c4c7b81 / babbc6b; boundary
+# verified zero require hits).  Cited lead gap closed: ERT suite wired into
+# the CI test job (header law :4-5) + AGENT_CHAT_REPO workaround for the
+# kit chat-repo regex bug.  TODO-002 boarded (spec 001 capture, tests
+# first, EFFORT 0:50); #+TURN set at the Software Engineer on the live zai
+# lane (the QA segment between ticks ran zero-progress — the two no-op
+# segments are the SW/QA seats finding no boarded TODO for their seats);
+# #+STALL-COUNT 2 -> 0.
+#+DISPATCH: 2026-11-01 15:35Z — docneural-lead feature wave (Owner order
+# 15:12Z #hq): research vs orgmode.org done (WORG org-contrib/org-drill,
+# contrib index, manual index) -> agent-team/IDEAS.org; specs
+# 002-review-scheduler, 003-drill-sessions, 004-ai-tutor, 005-dashboard
+# landed; TODO-003..TODO-006 boarded on the Software Engineer seat
+# (EFFORT per ladder).  NAME-COLLISION flagged for the Owner:
+# org-contrib ships its own org-learn.el (SuperMemo scheduler used by
+# org-drill) — MELPA rename decision is the Owner's, not blocking.
+# #+TURN stays at the Software Engineer; #+STALL-COUNT 0.
+#+DISPATCH: 2026-11-01 18:35Z — docneural-lead (Owner order 18:28Z #hq):
+# org-roadmap becomes a REAL dependency for planning/progress (law
+# change, AGENTS.md updated; TODO-007 spec 006); docneural tutor modes
+# TRACE/FOCUS/CLEAR integrate the custody projects (TODO-008 spec 007);
+# org-learn-mode one-keymap FAST start (TODO-009 spec 008).
+# TODO-004+006 (drill+dashboard) re-dispatched after a canceled run.
