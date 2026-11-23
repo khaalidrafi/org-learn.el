@@ -1,0 +1,48 @@
+#+TITLE: Spec 017 — Discipline engine: goals, streaks, integrations
+#+FILETAGS: :spec:discipline:
+#+DATE: <2026-11-23 Mon>
+#+STATUS: SPEC — landed same day (Owner directive 2026-11-23: "org-learn
+#+STATUS: should build ... dashboards, stats and other tools to help
+#+STATUS: build discipline" and "integrate with org-activity, org-docs,
+#+STATUS: loophabits etc. other pkgs").
+
+* Summary
+
+- TARGET FILES: =org-learn-discipline.el= (new) +
+  =tests/test-org-learn-discipline.el= (new), plus the additive
+  dashboard patch (the spec 011 Roadmap-line pattern: =:discipline=
+  in =org-learn-dashboard--data= via featurep, lines rendered silent
+  when the module is absent).
+- Data: =org-learn-discipline--data= is pure over the scoped file
+  list — :done-today, :goal-reviews, :streak, :best, :minutes-today,
+  :goal-minutes, :chain, :forecast, :habit, :activity.
+- Streaks: consecutive review days ending today (alive through
+  yesterday while today is still empty — the day is not over); the
+  best run overall; evidence = the spec 002 LOGBOOK notes.
+- Chain strip: last 28 days, one cell per day, a dot for no reviews.
+- Forecast: due counts per day for the next 7 days from SCHEDULED.
+- Minutes today: =org-clock-sum= over the scoped files — study and
+  practice sessions clock in, so the evidence already exists.
+- Integrations (silence law — nothing required, lines only when the
+  feature is already loaded): *loophabits* (habit streak, score,
+  done-today for =org-learn-discipline-habit=, default "org-learn")
+  and *org-activity* (Emacs minutes today).  "org-docs"-side
+  integration lands through the existing docneural tutor modes
+  (spec 007); nothing here duplicates it.
+- Report: =org-learn-discipline-report= renders Today, the chain
+  strip, the forecast and the integration lines read-only.
+
+* Honesty clause
+
+Streaks and chain calendars are habit tools — the "don't break the
+chain" popularized by Seinfeld; habit formation via implementation
+intentions (Gollwitzer 1999, American Psychologist).  They make
+showing up visible; they do not teach.  The teaching is specs 002
+and 016.
+
+* Law
+
+- Pure compute path, batch-safe: every function takes data in and
+  returns data; files are read tolerantly (missing file = no facts).
+- No new stored state: the discipline facts are derived, never
+  written.

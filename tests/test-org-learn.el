@@ -229,5 +229,14 @@ with an ellipsis."
 
 (load (expand-file-name "tests/test-org-learn-quickstart.el" default-directory))
 
+;;; Evidence-based techniques (spec 016), discipline (spec 017) and
+;;; notifications/widgets (spec 018) -- same single-entry law.
+
+(load (expand-file-name "tests/test-org-learn-study.el" default-directory))
+
+(load (expand-file-name "tests/test-org-learn-discipline.el" default-directory))
+
+(load (expand-file-name "tests/test-org-learn-notify.el" default-directory))
+
 (provide 'test-org-learn)
 ;;; test-org-learn.el ends here

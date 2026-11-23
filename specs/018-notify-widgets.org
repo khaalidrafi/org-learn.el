@@ -1,0 +1,41 @@
+#+TITLE: Spec 018 — Notifications (Android-first) and elwidget widgets
+#+FILETAGS: :spec:notify:widget:
+#+DATE: <2026-11-23 Mon>
+#+STATUS: SPEC — landed same day (Owner directive 2026-11-23: "Read the
+#+STATUS: Emacs manual on notifications in Android.  org-learn should
+#+STATUS: ofc have its widgets via elwidget").
+
+* Summary
+
+- TARGET FILES: =org-learn-notify.el= (new) +
+  =tests/test-org-learn-notify.el= (new), plus wiring (Makefile SRCS,
+  mode keymap =N=, test-suite loads, README status row).
+- =org-learn-notify= is the one notification entry point, written
+  against the GNU Emacs Lisp Reference Manual node "Desktop
+  Notifications" (https://www.gnu.org/software/emacs/manual/
+  html_node/elisp/Desktop-Notifications.html): an Emacs built as an
+  Android application displays notifications through
+  =android-notifications-notify= — no callbacks, at most three
+  actions, a stable :urgency/:group pair per kind, :icon from
+  android.R.drawable, silently disregarded without the Android 13+
+  notification permission.  D-Bus desktops get
+  =notifications-notify=; everything else degrades to =message=.  A
+  notification never raises.
+- =org-learn-notify-mode=: a global timer mode checking the due queue
+  every =org-learn-notify-interval= minutes inside
+  =org-learn-notify-hours=; announces threshold-crossing due counts
+  (deduplicated), and one evening nudge per day while the review goal
+  is unmet (=org-learn-notify-evening-hour=).
+- Widgets (the loophabits pattern, soft elwidget dependency):
+  =org-learn-register-widgets= defines "org-learn" 4x2 — due and new
+  counts, the daily-goal progress bar, the streak, and
+  Review / Drill / Report buttons whose taps run the real commands in
+  Emacs through =:on-event=.
+
+* Law
+
+- Seams: the Android and desktop notify targets are defcustom
+  function symbols; tests bind recording stubs, no daemon needed.
+- The widget tree is pure given the data functions; tests stub them.
+- No polling from Elisp beyond the one timer; the Android side's own
+  refresh cycle stays authoritative for rendering.

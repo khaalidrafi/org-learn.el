@@ -1,0 +1,49 @@
+#+TITLE: Spec 016 — Evidence-based study techniques
+#+FILETAGS: :spec:study:
+#+DATE: <2026-11-23 Mon>
+#+STATUS: SPEC — landed same day (Owner directive 2026-11-23: "Look up
+#+STATUS: online on learning techniques and best ways to learn a new
+#+STATUS: skill from prominent/trusted sources and implement what you
+#+STATUS: find into org-learn.el").
+
+* Summary
+
+- TARGET FILES: =org-learn-study.el= (new) + =tests/test-org-learn-study.el=
+  (new), plus one-line wiring: Makefile SRCS, mode keymap/menu binds,
+  dashboard legend, test-suite loads, README status rows.
+- The four techniques the research backs, each named with its source:
+
+1. *Interleaving* — =org-learn-review-interleaved= walks the SAME due
+   queue as =org-learn-review= (same SM-2 grading) but interleaved:
+   a deterministic day-seeded Fisher-Yates shuffle plus a repair pass
+   that spreads same-topic neighbors apart
+   (=org-learn-study--interleave=, pure).  Sources: Taylor & Rohrer,
+   "The Effect of Interleaving Practice", Applied Cognitive
+   Psychology 2010 (interleaving doubled next-day test scores;
+   https://digitalcommons.usf.edu/psy_facpub/1760); Rohrer et al.,
+   "A randomized controlled trial of interleaved mathematics
+   practice", 2020 (https://psycnet.apa.org/record/2019-26066-001).
+2. *Feynman technique* — =org-learn-feynman= files a dated child
+   heading with a plain-language explanation; subheadings never enter
+   the review prompt, so reviews stay prompt-first (active recall).
+   Sources: fs.blog/feynman-technique; University of York study
+   guide, subjectguides.york.ac.uk (explain as if to a child).
+3. *Deliberate practice* — =org-learn-practice= clocks a focused
+   session with an explicit LEARN_GOAL; =org-learn-practice-end=
+   files the reflection (goal + what improved/next).  Sources:
+   Ericsson, Krampe & Tesch-Römer 1993 (Psychological Review);
+   Ericsson 2008 (https://pubmed.ncbi.nlm.nih.gov/18778378).
+4. *Pomodoro* — =org-learn-pomodoro= runs focus/break cycles over
+   org-timer; phase changes notify through the study notify seam.
+   Honest caveat (the spec discloses it): the evidence for timed
+   blocks themselves is thinner than for the techniques above; the
+   cycles exist to make sessions startable and bounded.
+
+* Law
+
+- Seams only: clock, timer and notifier are defcustom functions; the
+  ERT suite never needs a live clock, timer or daemon.
+- The session reuse is explicit: interleaving reuses
+  =org-learn-review--collect-items=, =--entry-content=,
+  =--prompt-quality= and =--process-entry= — one scheduler, many
+  orders.

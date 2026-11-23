@@ -83,6 +83,10 @@
 (declare-function org-learn-roadmap-rollup-files "org-learn-roadmap" (files))
 (declare-function org-learn-roadmap-rollup-line
                   "org-learn-roadmap" (rollup &optional next-review-days))
+(declare-function org-learn-discipline--data
+                  "org-learn-discipline" (files))
+(declare-function org-learn-discipline-dashboard-lines
+                  "org-learn-discipline" (data))
 
 (defgroup org-learn-dashboard nil
   "Study sessions and dashboard for org-learn."
@@ -423,7 +427,9 @@ no topic is below the growth threshold."
          (next-review (org-learn-dashboard--next-review-days entries))
          (roadmap (when (featurep 'org-learn-roadmap)
                     (org-learn-roadmap-rollup-files files)))
-         (growth (org-learn-dashboard--growth-areas stats)))
+         (growth (org-learn-dashboard--growth-areas stats))
+         (discipline (when (featurep 'org-learn-discipline)
+                       (org-learn-discipline--data files))))
     (list :due (length due)
           :new (length new)
           :done-today (seq-count (lambda (entry)
@@ -435,7 +441,8 @@ no topic is below the growth threshold."
           :stats stats
           :next-review next-review
           :roadmap roadmap
-          :growth growth)))
+          :growth growth
+          :discipline discipline)))
 
 ;;; Presentation (read-only, rebuilt from scratch).
 
@@ -467,6 +474,12 @@ no topic is below the growth threshold."
                          (format " %d%%" (plist-get row :mastery))))
                growth ", ")
               "\n")))
+  ;; Discipline (spec 017): goals, streak and integration lines,
+  ;; silent without the discipline module.
+  (let ((discipline (plist-get data :discipline)))
+    (when discipline
+      (dolist (line (org-learn-discipline-dashboard-lines discipline))
+        (insert line "\n"))))
   (insert "\n")
   ;; 2. Review queue
   (insert "* Review queue\n\n")
@@ -514,8 +527,10 @@ no topic is below the growth threshold."
   ;; 5. Commands legend
   (insert "* Commands\n\n")
   (insert "- M-x org-learn-review — grade the due items (SM-2)\n")
+  (insert "- M-x org-learn-review-interleaved — the same, topics interleaved\n")
   (insert "- M-x org-learn-drill — drill the flashcards\n")
   (insert "- M-x org-learn-study — clock a study session\n")
+  (insert "- M-x org-learn-discipline-report — goals, streak, forecast\n")
   (insert "- M-x org-learn-ai-ask — ask the AI tutor about a subtree\n"))
 
 ;;;###autoload

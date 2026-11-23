@@ -77,6 +77,13 @@
     (define-key map (kbd "T") 'org-learn-ai-trace)
     (define-key map (kbd "F") 'org-learn-ai-focus)
     (define-key map (kbd "C") 'org-learn-ai-clear)
+    (define-key map (kbd "i") 'org-learn-review-interleaved)
+    (define-key map (kbd "e") 'org-learn-feynman)
+    (define-key map (kbd "v") 'org-learn-practice)
+    (define-key map (kbd "V") 'org-learn-practice-end)
+    (define-key map (kbd "m") 'org-learn-pomodoro)
+    (define-key map (kbd "R") 'org-learn-discipline-report)
+    (define-key map (kbd "N") 'org-learn-notify-mode)
     (define-key map (kbd "q") 'org-learn-quickstart)
     (define-key map (kbd "?") 'org-learn-mode-help)
     map)
@@ -104,10 +111,16 @@ a friendly `user-error' when invoked."
     ["Open the notes file" org-learn-open]
     "--"
     ["Review what is due" org-learn-review]
+    ["Review, topics interleaved" org-learn-review-interleaved]
     ["Drill the cards" org-learn-drill]
     ["Start a study session" org-learn-study]
+    ["Start a pomodoro run" org-learn-pomodoro]
+    ["Feynman-explain this note" org-learn-feynman]
+    ["Practice deliberately" org-learn-practice]
     "--"
     ["Show the dashboard" org-learn-dashboard]
+    ["Discipline report" org-learn-discipline-report]
+    ["Due notifications" org-learn-notify-mode]
     ["Plan review from the roadmap" org-learn-plan-from-roadmap]
     ["Show the progress report" org-learn-progress-report]
     "--"

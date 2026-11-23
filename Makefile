@@ -8,7 +8,8 @@ LOAD = -L .
 
 SRCS = org-learn.el org-learn-review.el org-learn-drill.el \
   org-learn-dashboard.el org-learn-roadmap.el org-learn-ai.el \
-  org-learn-mode.el org-learn-quickstart.el
+  org-learn-mode.el org-learn-quickstart.el org-learn-study.el \
+  org-learn-discipline.el org-learn-notify.el
 
 all: compile
 

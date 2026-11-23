@@ -49,6 +49,12 @@ complete end to end — delivered modules (one spec each, specs/):
   real org-roadmap API (specs 006, 011)
 - Fast start — =org-learn-mode= with one =C-c l= keymap, plus the
   quickstart wizard (specs 008, 010)
+- Evidence-based techniques — interleaved review, Feynman notes,
+  deliberate practice, pomodoro cycles (spec 016)
+- Discipline — daily goals, streaks, the don't-break-the-chain strip,
+  the due forecast, org-activity and loophabits lines (spec 017)
+- Notifications and widgets — Android-first notifications and the
+  elwidget home-screen widget (spec 018)
 
 In progress on the team board (agent-team/TODOS.org): the Socratic
 GUIDE tutor mode (spec 009) and the best-of-breed AI-education wave
